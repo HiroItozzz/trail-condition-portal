@@ -2,8 +2,15 @@ FROM python:3.13-slim
 
 WORKDIR /code
 
-COPY pyproject.toml .
-RUN pip install --no-cache-dir -e .
+# Poetryをインストール
+RUN pip install --no-cache-dir poetry
+
+# pyproject.tomlとpoetry.lockをコピー
+COPY pyproject.toml poetry.lock* ./
+
+# venvを作らずに依存関係をインストール
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-root
 
 COPY ./app /code/app
 

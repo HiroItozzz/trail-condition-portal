@@ -13,3 +13,13 @@ dependencies = [
 [build-system]
 requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = [
+    "ruff (>=0.14.9,<0.15.0)",
+    "pytest (>=9.0.2,<10.0.0)",
+    "mypy (>=1.19.0,<2.0.0)"
+]
+
+[tool.ruff]
+line-length = 120
