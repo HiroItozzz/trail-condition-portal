@@ -1,0 +1,29 @@
+{
+  // global 設定
+  "editor.formatOnSave": true, // 保存時にフォーマットするか。
+  "editor.formatOnPaste": false, // 貼り付け時にフォーマットするか。
+  "editor.formatOnType": false, // 入力時にフォーマットするか。
+  "editor.formatOnSaveMode": "file", // "file": 常にファイル全体をフォーマット、 "modifications": 修正された所のみフォーマット。SourceControlが必要。 "modificationsIfAvailable": 修正された所のみフォーマットを試みる。SourceControlが無い場合、ファイル全体をフォーマット。
+  // "editor.defaultFormatter": "charliermarsh.ruff" // デフォルトのformatterにruffを指定。
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit", // (デフォルトに設定されているもので)fixAllを実行。
+    // "source.fixAll.ruff": "explicit", // ruffのfixAllを明示的に使用。
+    "source.organizeImports": "explicit", // (デフォルトに設定されているもので)organizeImportsを実行。
+    "source.organizeImports.ruff": "explicit" //ruffのorganizeImportsを明示的に使用。
+  },
+
+  // python file
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": false,
+    "editor.formatOnType": false,
+    "editor.formatOnSaveMode": "file",
+    "editor.defaultFormatter": "charliermarsh.ruff", // 別のものを指定するとフォーマットは指定したものになる
+    "editor.codeActionsOnSave": { // 保存時に実行する
+      "source.fixAll": "explicit", // (登録した)fixAllを実行。
+      // "source.fixAll.ruff": "explicit", // ruffのfixAllを明示的に使用。
+      "source.organizeImports": "explicit", // (登録した)organizeImportsを実行。
+      "source.organizeImports.ruff": "explicit" //ruffのorganizeImportsを明示的に使用。
+    }
+  },
+}

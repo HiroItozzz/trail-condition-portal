@@ -1,0 +1,25 @@
+[project]
+name = "trail-condition-search"
+version = "0.1.0"
+requires-python = ">=3.13"  # 3.13以上を指定
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "psycopg2-binary>=2.9.9",
+    "sqlalchemy>=2.0.36",
+    "python-dotenv>=1.0.1",
+]
+
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = [
+    "ruff (>=0.14.9,<0.15.0)",
+    "pytest (>=9.0.2,<10.0.0)",
+    "mypy (>=1.19.0,<2.0.0)"
+]
+
+[tool.ruff]
+line-length = 120
