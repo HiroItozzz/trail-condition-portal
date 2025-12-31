@@ -1,1 +1,1 @@
-# trail-condition-scraper
+# trail-condition-portal

@@ -1,17 +1,16 @@
 FROM python:3.13-slim
 
-WORKDIR /code
+WORKDIR /workspace
 
-# Poetryをインストール
-RUN pip install --no-cache-dir poetry
+# uvをインストール
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# pyproject.tomlとpoetry.lockをコピー
-COPY pyproject.toml poetry.lock* ./
+# pyproject.tomlとuv.lockをコピー
+COPY pyproject.toml uv.lock* ./
 
-# venvを作らずに依存関係をインストール
-RUN poetry config virtualenvs.create false && \
-    poetry install --no-root
+# システム環境に直接インストール
+RUN uv sync --dev --frozen
 
-COPY ./app /code/app
+COPY . .
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

@@ -2,7 +2,7 @@ from fastapi import Depends, FastAPI
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal, engine
-from app.models.danger import Base, DangerInfo
+from app.models.condition import Base, ConditionInfo
 
 Base.metadata.create_all(bind=engine)
 
@@ -29,13 +29,13 @@ def health_check():
 
 @app.get("/api/search")
 async def search_dangers(mountain: str = None, keyword: str = None, db: Session = Depends(get_db)):
-    query = db.query(DangerInfo)
+    query = db.query(ConditionInfo)
 
     if mountain:
-        query = query.filter(DangerInfo.mountain_name.contains(mountain))
+        query = query.filter(ConditionInfo.mountain_name.contains(mountain))
 
     if keyword:
-        query = query.filter(DangerInfo.description.contains(keyword))
+        query = query.filter(ConditionInfo.description.contains(keyword))
 
     results = query.all()
 

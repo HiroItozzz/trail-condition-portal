@@ -2,5 +2,5 @@
   "name": "Trail Condition Search",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "web",
-  "workspaceFolder": "/code"
+  "workspaceFolder": "/workspace"
 }

@@ -8,11 +8,19 @@ dependencies = [
     "psycopg2-binary>=2.9.9",
     "sqlalchemy>=2.0.36",
     "python-dotenv>=1.0.1",
+    "pydantic-settings (>=2.12.0,<3.0.0)",
+    "httpx (>=0.28.1,<0.29.0)",
+    "beautifulsoup4 (>=4.14.3,<5.0.0)",
+    "requests>=2.32.5",
+    "django>=6.0",
 ]
 
 [build-system]
 requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*", "scrapers*"]
 
 [dependency-groups]
 dev = [

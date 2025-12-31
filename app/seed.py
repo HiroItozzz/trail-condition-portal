@@ -1,6 +1,6 @@
 from datetime import datetime
 from app.database import SessionLocal
-from app.models.danger import DangerInfo
+from app.models.condition import DangerInfo
 
 def seed_data():
     db = SessionLocal()

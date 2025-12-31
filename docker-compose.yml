@@ -4,7 +4,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/code/app
+      - ./app:/workspace/app
     environment:
       - DATABASE_URL=postgresql://user:password@db:5432/trail_db
     depends_on:
