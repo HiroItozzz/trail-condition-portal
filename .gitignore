@@ -1,3 +1,15 @@
 .env
 .venv/
-__pycache__/
+**/__pycache__/
+*.pyc
+help/
+*.log
+*.log.1
+
+.pytest_cache
+
+*.egg-info/
+dist/
+build/
+temp/
+.ipynb_checkpoints/

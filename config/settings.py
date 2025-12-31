@@ -40,10 +40,11 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     "django.contrib.admin",  # 管理サイト
     "django.contrib.auth",  # 認証システム
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
+    "django.contrib.contenttypes",  # コンテンツタイプフレームワーク
+    "django.contrib.sessions",  # セッションフレームワーク
+    "django.contrib.messages",  # メッセージフレームワーク
+    "django.contrib.staticfiles",  # 静的ファイルの管理フレームワーク
+    "trail_status",
 ]
 
 # ミドルウェア
