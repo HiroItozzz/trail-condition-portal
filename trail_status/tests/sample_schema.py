@@ -17,5 +17,5 @@ class TrailConditionSchema(BaseModel):
     status: StatusType = Field(description="状況種別")
 
 
-schema = TrailConditionSchema.model_json_schema()
+schema = TrailConditionSchema.model_json_schema(mode="validation")
 pprint(schema)
