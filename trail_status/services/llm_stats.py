@@ -9,14 +9,14 @@ class TokenStats:
         self,
         input_tokens: int,
         thoughts_tokens: int,
-        output_tokens: int,
+        pure_output_tokens: int,
         input_letter_count: int,
         output_letter_count: int,
         model: str,
     ):
         self.input_tokens = input_tokens
         self.thoughts_tokens = thoughts_tokens
-        self.output_tokens = output_tokens
+        self.pure_output_tokens = pure_output_tokens
         self.input_letter_count = input_letter_count
         self.output_letter_count = output_letter_count
         self.model_name = model
@@ -38,17 +38,31 @@ class TokenStats:
         return self._thoughts_fee
 
     @property
-    def output_fee(self) -> float:
+    def pure_output_fee(self) -> float:
         if self._output_fee is None:
-            self._output_fee = LlmFee(self.model_name).calculate(self.output_tokens, "output")
+            self._output_fee = LlmFee(self.model_name).calculate(self.pure_output_tokens, "output")
         return self._output_fee
 
     @property
     def total_fee(self) -> float:
-        return self.input_fee + self.thoughts_fee + self.output_fee
+        return self.input_fee + self.thoughts_fee + self.pure_output_fee
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.__dict__})"
+
+    def to_dict(self) -> dict:
+        return {
+            "model": self.model_name,
+            "input_tokens": self.input_tokens,
+            "thoughts_tokens": self.thoughts_tokens,
+            "output_tokens": self.pure_output_tokens,
+            "input_letter_count": self.input_letter_count,
+            "output_letter_count": self.output_letter_count,
+            "input_fee": self.input_fee,
+            "thoughts_fee": self.thoughts_fee,
+            "output_fee": self.pure_output_fee,
+            "total_fee": self.total_fee,
+        }
 
 
 class BaseLlmFee(ABC):

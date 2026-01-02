@@ -1,13 +1,3 @@
-import os
-import sys
-
-import django
-
-# プロジェクトのルートをパスに追加
-sys.path.append("/code")
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")  # プロジェクト名に合わせて変更
-django.setup()
-
 import asyncio
 import json
 import logging
@@ -17,36 +7,125 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 import yaml
-from llm_stats import TokenStats
+from django.conf import settings
 from openai import AsyncOpenAI
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
-from trail_status.services.schema import TrailConditionSchemaList
+from .llm_stats import TokenStats
+from .schema import TrailConditionSchemaList
 
 logger = logging.getLogger(__name__)
 
-deepseek_api_key = os.environ.get("DEEPSEEK_API_KEY")
-prompt_path = Path("/code/trail_status/services/ai_config/mitake.yaml")
-prompt = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))["prompt"]
-data_path = Path("/code/trail_status/services/sample/sample_mitake.txt")
-data = data_path.read_text(encoding="utf-8")
+
+# ヘルパー関数
+def get_sample_dir() -> Path:
+    """sampleディレクトリのパスを取得"""
+    return settings.BASE_DIR / "trail_status" / "services" / "sample"
+
+
+def get_prompts_dir() -> Path:
+    """promptsディレクトリのパスを取得"""
+    return settings.BASE_DIR / "trail_status" / "services" / "prompts"
 
 
 class LlmConfig(BaseModel):
-    prompt: str = Field(min_length=1, description="AIに送るプロンプト")
+    site_prompt: str = Field(default="", description="サイト固有プロンプト")
+    use_template: bool = Field(default=True, description="template.yamlを使用するか")
     model: str = Field(pattern=r"^(gemini|deepseek)-.+", default="deepseek-chat", description="使用するLLMモデル")
+    data: str = Field(description="解析するテキスト")
     temperature: float = Field(default=0.3, ge=0, le=2.0, description="生成ごとの揺らぎの幅")
-    api_key: str = Field(default=deepseek_api_key, min_length=1, description="API キー")
-    data: str
+    thinking_budget: int = Field(default=5000, ge=-1, le=15000, description="Geminiの思考予算（トークン数）")
+
+    @computed_field
+    @property
+    def full_prompt(self) -> str:
+        """テンプレートとサイト固有プロンプトを結合"""
+        parts = []
+        if self.use_template:
+            parts.append(self._load_template_prompt())
+        if self.site_prompt:
+            parts.append(self.site_prompt)
+        return "\n\n".join(parts) if parts else ""
+
+    @computed_field
+    @property
+    def api_key(self) -> str:
+        """モデルに基づいてAPIキーを自動取得（遅延評価）"""
+        if self.model.startswith("deepseek"):
+            key = os.environ.get("DEEPSEEK_API_KEY")
+            if not key:
+                raise ValueError("環境変数 DEEPSEEK_API_KEY が設定されていません")
+            return key
+        elif self.model.startswith("gemini"):
+            key = os.environ.get("GEMINI_API_KEY")
+            if not key:
+                raise ValueError("環境変数 GEMINI_API_KEY が設定されていません")
+            return key
+        else:
+            raise ValueError(f"サポートされていないモデル: {self.model}")
+
+    @classmethod
+    def from_site(cls, site_name: str, data: str, model: str = "deepseek-reasoner", use_template: bool = True, **kwargs):
+        """
+        サイト設定ファイルからLlmConfigを作成
+
+        Args:
+            site_name: サイト名（例：okutama_vc, mitake_vc）
+            data: 処理対象データ
+            model: 使用するモデル名
+            use_template: template.yamlを使用するか
+            **kwargs: その他のパラメータ（temperature等）
+
+        Returns:
+            LlmConfig: 設定済みのインスタンス
+        """
+        site_prompt = cls._load_site_prompt_safe(site_name)
+        return cls(
+            site_prompt=site_prompt,
+            use_template=use_template,
+            data=data,
+            model=model,
+            **kwargs
+        )
+
+    @staticmethod
+    def _load_site_prompt(site_name: str) -> str:
+        """サイト別プロンプトファイルを読み込み"""
+        prompts_dir = get_prompts_dir()
+        site_path = prompts_dir / f"{site_name}.yaml"
+
+        if not site_path.exists():
+            raise FileNotFoundError(f"サイト設定ファイルが見つかりません: {site_path}")
+
+        config = yaml.safe_load(site_path.read_text(encoding="utf-8"))
+
+        if "base_prompt" not in config:
+            raise ValueError(f"プロンプトが設定されていません: {site_path}")
+
+        return config["base_prompt"]
+    
+    @staticmethod
+    def _load_site_prompt_safe(site_name: str) -> str:
+        """サイト別プロンプトファイルを安全に読み込み（エラー時は空文字）"""
+        try:
+            return LlmConfig._load_site_prompt(site_name)
+        except (FileNotFoundError, ValueError):
+            return ""
+    
+    @staticmethod
+    def _load_template_prompt() -> str:
+        """template.yamlを読み込み"""
+        return LlmConfig._load_site_prompt("template")
 
 
 class ConversationalAi(ABC):
     def __init__(self, config: LlmConfig):
-        self.model = config.model
-        self.temperature = config.temperature
-        self.custom_prompt = config.prompt
-        self.data = config.data
-        self.api_key = config.api_key
+        self.model: str = config.model
+        self.temperature: float = config.temperature
+        self.prompt: str = config.full_prompt  # full_promptを使用
+        self.data: str = config.data
+        self.api_key: str = config.api_key
+        self.thinking_budget: int = config.thinking_budget
 
     @abstractmethod
     async def generate(self) -> tuple[dict, TokenStats]:
@@ -74,31 +153,34 @@ class ConversationalAi(ABC):
         raise
 
     def check_response(self, response_text):
-        output_path = Path(f"/code/trail_status/services/sample/{self.model}_sample.json")
-        output_path.write_text(response_text, encoding="utf-8")
+        # デバッグ用：サンプル出力を保存
+        sample_path = get_sample_dir() / f"{self.model}_sample.json"
+        sample_path.write_text(response_text, encoding="utf-8")
+
         try:
             validated_data = TrailConditionSchemaList.model_validate_json(response_text)
-            data = validated_data.model_dump()
+            dict_validated = validated_data.model_dump()
             logger.warning(f"{self.model}が構造化出力に成功")
         except Exception:
             logger.error(f"{self.model}が構造化出力に失敗。")
 
-            output_path = Path.cwd() / "outputs"
-            output_path.mkdir(exist_ok=True)
-            file_path = output_path / "__summary.txt"
-            file_path.write_text(response_text, encoding="utf-8")
+            # エラー時の出力保存
+            output_dir = settings.BASE_DIR / "outputs"
+            output_dir.mkdir(exist_ok=True)
+            error_file = output_dir / "__summary.txt"
+            error_file.write_text(response_text, encoding="utf-8")
 
-            logger.error(f"{file_path}へ出力を保存しました。")
+            logger.error(f"{error_file}へ出力を保存しました。")
             raise
 
-        return data
+        return dict_validated
 
 
 class DeepseekClient(ConversationalAi):
     @property
-    def prompt(self):
+    def full_prompt(self):
         STATEMENT = f"【重要】次の行から示す要請はこのPydanticモデルに合うJSONで出力してください: {TrailConditionSchemaList.model_json_schema()}\n"
-        return STATEMENT + self.custom_prompt + self.data
+        return STATEMENT + self.prompt + self.data
 
     async def generate(self) -> tuple[dict, TokenStats]:
         logger.warning("Deepseekからの応答を待っています。")
@@ -112,7 +194,7 @@ class DeepseekClient(ConversationalAi):
                 response = await client.chat.completions.create(
                     model=self.model,
                     temperature=self.temperature,
-                    messages=[{"role": "user", "content": self.prompt}],
+                    messages=[{"role": "user", "content": self.full_prompt}],
                     response_format={"type": "json_object"},
                     stream=False,
                 )
@@ -127,15 +209,15 @@ class DeepseekClient(ConversationalAi):
                 elif "401" in str(e):
                     logger.error("エラー：APIキーが誤っているか、入力されていません。")
                     logger.error(f"実行を中止します。詳細：{e}")
-                    sys.exit(1)
+                    raise
                 elif "402" in str(e):
                     logger.error("残高が不足しているようです。アカウントを確認してください。")
                     logger.error(f"実行を中止します。詳細：{e}")
-                    sys.exit(1)
+                    raise
                 elif "422" in str(e):
                     logger.error("リクエストに無効なパラメータが含まれています。設定を見直してください。")
                     logger.error(f"実行を中止します。詳細：{e}")
-                    sys.exit(1)
+                    raise
                 else:
                     super().handle_unexpected_error(e)
 
@@ -150,7 +232,7 @@ class DeepseekClient(ConversationalAi):
             response.usage.prompt_tokens,
             thoughts_tokens,
             output_tokens,
-            len(self.prompt),
+            len(self.full_prompt),
             len(generated_text),
             self.model,
         )
@@ -176,12 +258,12 @@ class GeminiClient(ConversationalAi):
             try:
                 response = await client.aio.models.generate_content(  # リクエスト
                     model=self.model,
-                    contents=self.custom_prompt + "\n" + self.data,
+                    contents=self.prompt + "\n" + self.data,
                     config=types.GenerateContentConfig(
                         temperature=self.temperature,
                         response_mime_type="application/json",  # 構造化出力
                         response_json_schema=TrailConditionSchemaList.model_json_schema(),
-                        thinking_config=types.ThinkingConfig(thinking_budget=2000),
+                        thinking_config=types.ThinkingConfig(thinking_budget=self.thinking_budget),
                     ),
                 )
                 print("Geminiによる要約を受け取りました。")
@@ -199,7 +281,7 @@ class GeminiClient(ConversationalAi):
             response.usage_metadata.prompt_token_count,
             response.usage_metadata.thoughts_token_count,
             response.usage_metadata.candidates_token_count,
-            len(self.custom_prompt),
+            len(self.prompt),
             len(response.text),
             self.model,
         )
@@ -207,34 +289,11 @@ class GeminiClient(ConversationalAi):
         return data, stats
 
 
-if __name__ == "__main__":
-    d_config = LlmConfig(model="deepseek-reasoner", prompt=prompt, data=data)
-    g_config = LlmConfig(model="gemini-3-flash-preview", prompt=prompt, data=data)
-
-    results = [asyncio.run(DeepseekClient(d_config).generate())]
-    # results = [asyncio.run(GeminiClient(g_config).generate())]
-        
-    '''    async def compare():
-            results = await asyncio.gather(
-                DeepseekClient(d_config).generate(), GeminiClient(g_config).generate(), return_exceptions=True
-            )
-
-            return results
-
-        results = asyncio.run(compare())
-    '''
-    from pprint import pprint
-
-    for idx, (output, stats) in enumerate(results, 1):
-        print(f"==================結果{idx}=======================")
-        print()
-        print("=======AIによる出力=======")
-        pprint(output)
-        print("=======AIによるコスト分析=======")
-        pprint(stats)
-
-    '''
-    from openai import OpenAI
-    client = OpenAI(api_key=deepseek_api_key, base_url="https://api.deepseek.com")
-    print(client.models.list())
-    '''
+# テスト用コードは削除されました
+# テスト実行は以下のコマンドを使用してください:
+# docker compose exec web uv run manage.py test_llm
+#
+# 使用例:
+# config = LlmConfig.from_site("okutama", data=scraped_data, model="deepseek-reasoner")
+# client = DeepseekClient(config)  # api_keyは自動取得
+# data, stats = await client.generate()
