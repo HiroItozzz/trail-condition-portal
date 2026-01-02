@@ -13,3 +13,5 @@ dist/
 build/
 temp/
 .ipynb_checkpoints/
+
+outputs/
