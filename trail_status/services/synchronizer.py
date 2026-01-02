@@ -59,10 +59,10 @@ def sync_trail_conditions(source, ai_data_list: list[TrailConditionSchemaInterna
         else:
             # 3. 新規レコードの作成
             # mountain_group は signals.py が MountainAlias に基づいて自動解決する
-            generated_data = data.model_dump(exclude={"source", "mountain_name_raw", "trail_name"})
+            generated_data = data.model_dump(exclude={"mountain_name_raw", "trail_name"})
             TrailCondition.objects.create(
                 source=source,
-                mountain_name_raw=normalized_m_name,
-                trail_name=normalized_t_name,
+                mountain_name_raw=data.mountain_name_raw,
+                trail_name=data.trail_name,
                 **generated_data,
             )
