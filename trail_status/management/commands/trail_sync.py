@@ -1,9 +1,16 @@
 import asyncio
+from decimal import Decimal
+from typing import Any
 
 from django.core.management.base import BaseCommand
+from django.db import transaction
 
+from trail_status.models.llm_usage import LlmUsage
 from trail_status.models.source import DataSource
+from trail_status.services.llm_stats import TokenStats
 from trail_status.services.pipeline import TrailConditionPipeline
+from trail_status.services.schema import TrailConditionSchemaInternal
+from trail_status.services.synchronizer import sync_trail_conditions
 from trail_status.services.types import UpdatedDataList
 
 
@@ -33,13 +40,13 @@ class Command(BaseCommand):
         if source_id:
             try:
                 source = DataSource.objects.get(id=source_id)
-                source_data_list = [{"id": source.id, "name": source.name, "url1": source.url1}]
+                source_data_list = [{"id": source.id, "name": source.name, "url1": source.url1, "prompt_key": source.prompt_key}]
                 self.stdout.write(f"情報源: {source.name}")
             except DataSource.DoesNotExist:
                 self.stdout.write(self.style.ERROR(f"指定された情報源が見つかりません: {source_id}"))
                 return
         else:
-            source_data_list = [{"id": s.id, "name": s.name, "url1": s.url1} for s in DataSource.objects.all()]
+            source_data_list = [{"id": s.id, "name": s.name, "url1": s.url1, "prompt_key": s.prompt_key} for s in DataSource.objects.all()]
             self.stdout.write(f"全ての情報源を処理: {len(source_data_list)}件")
 
         # パイプライン処理を実行（純粋にasync処理のみ）
@@ -56,29 +63,42 @@ class Command(BaseCommand):
 
     def save_results_to_database(self, results: UpdatedDataList):
         """処理結果をDBに保存"""
-        from django.db import transaction
-
-        from trail_status.services.schema import TrailConditionSchemaInternal
-        from trail_status.services.synchronizer import sync_trail_conditions
 
         for source_data, result in results:
             if result.get("success"):
                 source = DataSource.objects.get(id=source_data["id"])
                 # AIの結果をInternal schemaに変換
-                ai_conditions = result["ai_conditions"]
+                new_trail_conditions = result["extracted_trail_conditions"]
                 internal_data_list = [
-                    TrailConditionSchemaInternal(**condition, url1=source_data["url1"]) for condition in ai_conditions
+                    TrailConditionSchemaInternal(**condition, url1=source_data["url1"]) for condition in new_trail_conditions
                 ]
 
-                # DB同期
+                # DB同期とLLM使用履歴記録
                 with transaction.atomic():
                     sync_trail_conditions(source, internal_data_list)
+                    self._save_llm_usage(source, result["stats"], len(new_trail_conditions))
 
                 self.stdout.write(
-                    self.style.SUCCESS(f"DB保存完了: {source_data['name']} - {len(internal_data_list)}件")
+                    self.style.SUCCESS(
+                        f"DB保存完了: {source_data['name']} - {len(internal_data_list)}件 (コスト: ${result['stats']['total_fee']:.4f})"
+                    )
                 )
 
-    def generate_summary(self, results):
+    def _save_llm_usage(self, source: DataSource, stats: TokenStats, conditions_count):
+        """LLM使用履歴をDBに保存"""
+        LlmUsage.objects.create(
+            source=source,
+            model=stats["model"],
+            prompt_tokens=stats["input_tokens"],
+            thinking_tokens=stats["thoughts_tokens"],
+            output_tokens=stats["output_tokens"],
+            cost_usd=Decimal(str(stats["total_fee"])),
+            conditions_extracted=conditions_count,
+            success=True,
+            execution_time_seconds=stats.get("execution_time"),  # Noneでも可
+        )
+
+    def generate_summary(self, results: UpdatedDataList):
         """処理結果のサマリーを生成"""
         summary = {"results": [], "success_count": 0, "error_count": 0, "total_conditions": 0}
 
@@ -88,11 +108,11 @@ class Command(BaseCommand):
                     {
                         "source_name": source_data["name"],
                         "status": "success",
-                        "conditions_count": len(result.get("ai_conditions", [])),
+                        "conditions_count": len(result.get("extracted_trail_conditions", [])),
                     }
                 )
                 summary["success_count"] += 1
-                summary["total_conditions"] += len(result.get("ai_conditions", []))
+                summary["total_conditions"] += len(result.get("extracted_trail_conditions", []))
             else:
                 summary["results"].append(
                     {
@@ -105,7 +125,7 @@ class Command(BaseCommand):
 
         return summary
 
-    def print_summary(self, summary):
+    def print_summary(self, summary: dict[str, Any]):
         """処理結果のサマリーを表示"""
         self.stdout.write("\n" + "=" * 50)
         self.stdout.write("処理結果サマリー")

@@ -14,13 +14,7 @@ class TrailConditionPipeline:
     """登山道状況の自動処理パイプライン（純粋async処理）"""
 
     def __init__(self):
-        self.site_name_mapping = {
-            "奥多摩": "okutama_vc",
-            "okutama": "okutama_vc",
-            "御岳": "mitake",
-            "mitake": "mitake",
-            # 必要に応じて追加
-        }
+        pass
 
     async def process_source_data(self, source_data_list: list[SourceDataSingle], model: str) -> UpdatedDataList:
         """ソースデータリストを並行処理（Django ORM一切なし）"""
@@ -49,13 +43,13 @@ class TrailConditionPipeline:
             ai_result, stats = await self._analyze_with_ai(source_data, scraped_text, model)
 
             # 3. スキーマ変換（DBに依存しない）
-            ai_conditions = self._convert_to_conditions_list(ai_result)
+            extracted_trail_conditions = self._convert_to_conditions_list(ai_result)
 
             return {
                 "success": True,
                 "scraped_length": len(scraped_text),
-                "ai_conditions": ai_conditions,
-                "stats": stats.to_dict(),
+                "extracted_trail_conditions": extracted_trail_conditions,
+                "stats": stats,  # 既に辞書になっている
             }
 
         except Exception as e:
@@ -68,14 +62,17 @@ class TrailConditionPipeline:
 
     async def _analyze_with_ai(
         self, source_data: SourceDataSingle, scraped_text: str, model: str
-    ) -> tuple[list[dict], TokenStats]:
+    ) -> tuple[list[dict], dict]:
         """AI解析処理"""
-        site_name = self._guess_site_name_from_data(source_data)
-
+        import time
+        
+        prompt_filename = self._get_prompt_filename_from_data(source_data)
+        
         try:
-            config = LlmConfig.from_site(site_name, data=scraped_text, model=model)
+            site_prompt = LlmConfig.load_prompt(prompt_filename)
+            config = LlmConfig(site_prompt=site_prompt, data=scraped_text, model=model)
         except FileNotFoundError:
-            raise ValueError(f"サイト設定ファイルが見つかりません: {site_name}")
+            raise ValueError(f"プロンプトファイルが見つかりません: {prompt_filename}")
 
         # AIクライアントの選択
         if model.startswith("deepseek"):
@@ -85,26 +82,27 @@ class TrailConditionPipeline:
         else:
             raise ValueError(f"サポートされていないモデル: {model}")
 
-        return await ai_client.generate()
+        # 実行時間測定
+        start_time = time.time()
+        ai_result, stats = await ai_client.generate()
+        execution_time = time.time() - start_time
+        
+        # stats を辞書に変換し実行時間を追加
+        stats_dict = stats.to_dict()
+        stats_dict["execution_time"] = execution_time
+        
+        return ai_result, stats_dict
 
+    # AIモジュールからの出力をpydanticクラスに変更後、削除予定
     def _convert_to_conditions_list(self, ai_result: list[dict]) -> list[dict]:
         """AIの出力を条件リストに変換"""
         ai_schema_list = TrailConditionSchemaList.model_validate(ai_result)
         return [item.model_dump() for item in ai_schema_list.trail_condition_records]
 
-    ### DBに格納されたレコードから取得に変更予定
-    def _guess_site_name_from_data(self, source_data: SourceDataSingle) -> str:
-        """ソースデータからサイト名を推測"""
-        name_lower = source_data["name"].lower()
+    def _get_prompt_filename_from_data(self, source_data: SourceDataSingle) -> str:
+        """ソースデータからプロンプトファイル名を取得"""
+        # 形式: {id:03d}_{prompt_key}.yaml
+        source_id = source_data["id"]
+        prompt_key = source_data["prompt_key"]
+        return f"{source_id:03d}_{prompt_key}.yaml"
 
-        for keyword, site_name in self.site_name_mapping.items():
-            if keyword in name_lower:
-                return site_name
-
-        # デフォルト
-        return "okutama_vc"
-
-    # ユーティリティ関数
-    def add_site_mapping(self, keyword, site_name):
-        """サイト名マッピングを追加"""
-        self.site_name_mapping[keyword] = site_name

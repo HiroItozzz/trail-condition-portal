@@ -5,6 +5,7 @@
 help/
 *.log
 *.log.1
+*.json
 
 .pytest_cache
 

@@ -20,6 +20,9 @@ class DataSource(models.Model):
         "機関種別", max_length=50, choices=OrganizationType.choices, default=OrganizationType.ASSOCIATION
     )
     prefecture_code = models.CharField("都道府県コード", max_length=2, default="13", blank=True)  # 東京
+    prompt_key = models.CharField(
+        "プロンプトキー", max_length=50, unique=True, help_text="例: okutama_vc, kumotori_hut"
+    )
     url1 = models.URLField("URL①", max_length=500)
     url2 = models.URLField("URL②", max_length=500, blank=True)
     data_format = models.CharField(
@@ -34,6 +37,12 @@ class DataSource(models.Model):
     class Meta:
         verbose_name = "情報源"
         verbose_name_plural = "情報源"
+        ordering = ["id"]
+
+    @property
+    def prompt_filename(self):
+        """プロンプトファイル名: {id:03d}_{prompt_key}.yaml"""
+        return f"{self.id:03d}_{self.prompt_key}.yaml"
 
     def __str__(self):
         return f"{self.name} ({self.get_organization_type_display()})"

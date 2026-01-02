@@ -42,7 +42,7 @@ class LlmConfig(BaseModel):
         """テンプレートとサイト固有プロンプトを結合"""
         parts = []
         if self.use_template:
-            parts.append(self._load_template_prompt())
+            parts.append(self._load_template())
         if self.site_prompt:
             parts.append(self.site_prompt)
         return "\n\n".join(parts) if parts else ""
@@ -64,58 +64,39 @@ class LlmConfig(BaseModel):
         else:
             raise ValueError(f"サポートされていないモデル: {self.model}")
 
-    @classmethod
-    def from_site(cls, site_name: str, data: str, model: str = "deepseek-reasoner", use_template: bool = True, **kwargs):
+    @staticmethod
+    def load_prompt(filename: str) -> str:
         """
-        サイト設定ファイルからLlmConfigを作成
+        プロンプトファイルを読み込み
 
         Args:
-            site_name: サイト名（例：okutama_vc, mitake_vc）
-            data: 処理対象データ
-            model: 使用するモデル名
-            use_template: template.yamlを使用するか
-            **kwargs: その他のパラメータ（temperature等）
+            filename: プロンプトファイル名（例：001_okutama_vc.yaml）
 
         Returns:
-            LlmConfig: 設定済みのインスタンス
+            str: プロンプト文字列
+
+        Raises:
+            FileNotFoundError: ファイルが存在しない場合
+            ValueError: プロンプトが設定されていない場合
         """
-        site_prompt = cls._load_site_prompt_safe(site_name)
-        return cls(
-            site_prompt=site_prompt,
-            use_template=use_template,
-            data=data,
-            model=model,
-            **kwargs
-        )
-
-    @staticmethod
-    def _load_site_prompt(site_name: str) -> str:
-        """サイト別プロンプトファイルを読み込み"""
         prompts_dir = get_prompts_dir()
-        site_path = prompts_dir / f"{site_name}.yaml"
+        prompt_path = prompts_dir / filename
 
-        if not site_path.exists():
-            raise FileNotFoundError(f"サイト設定ファイルが見つかりません: {site_path}")
+        if not prompt_path.exists():
+            raise FileNotFoundError(f"プロンプトファイルが見つかりません: {prompt_path}")
 
-        config = yaml.safe_load(site_path.read_text(encoding="utf-8"))
+        config = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
 
-        if "base_prompt" not in config:
-            raise ValueError(f"プロンプトが設定されていません: {site_path}")
+        if "prompt" not in config:
+            raise ValueError(f"プロンプトが設定されていません: {prompt_path}")
 
-        return config["base_prompt"]
+        return config["prompt"]
+
     
     @staticmethod
-    def _load_site_prompt_safe(site_name: str) -> str:
-        """サイト別プロンプトファイルを安全に読み込み（エラー時は空文字）"""
-        try:
-            return LlmConfig._load_site_prompt(site_name)
-        except (FileNotFoundError, ValueError):
-            return ""
-    
-    @staticmethod
-    def _load_template_prompt() -> str:
+    def _load_template() -> str:
         """template.yamlを読み込み"""
-        return LlmConfig._load_site_prompt("template")
+        return LlmConfig.load_prompt("template.yaml")
 
 
 class ConversationalAi(ABC):

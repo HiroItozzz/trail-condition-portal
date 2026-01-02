@@ -21,7 +21,8 @@ class TrailCondition(models.Model):
 
     source = models.ForeignKey(
         DataSource,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         verbose_name="情報源",
     )
     url1 = models.URLField("情報源URL")
