@@ -9,9 +9,17 @@ from .models.source import DataSource
 
 @admin.register(DataSource)
 class DataSourceAdmin(admin.ModelAdmin):
-    list_display = ["id", "name", "prompt_key", "organization_type", "prefecture_code", "url1"]
-    list_filter = ["organization_type"]
+    list_display = ["name", "id", "prompt_key", "organization_type", "prefecture_code", "url1", "last_scraped_at"]
+    list_filter = ["organization_type", ("last_scraped_at", admin.DateFieldListFilter)]
     search_fields = ["name"]
+    readonly_fields = ["content_hash", "last_scraped_at"]
+
+    fieldsets = (
+        ("基本情報", {"fields": ("name", "organization_type", "prefecture_code", "prompt_key")}),
+        ("URL", {"fields": ("url1", "url2")}),
+        ("データ形式", {"fields": ("data_format",)}),
+        ("ハッシュ追跡", {"fields": ("content_hash", "last_scraped_at"), "classes": ("collapse",)}),
+    )
 
 
 @admin.register(MountainGroup)
@@ -40,6 +48,7 @@ class MountainAliasAdmin(admin.ModelAdmin):
 class TrailConditionAdmin(admin.ModelAdmin):
     list_display = [
         "mountain_name_raw",
+        "updated_at",
         "trail_name",
         "title",
         "description",
@@ -52,11 +61,10 @@ class TrailConditionAdmin(admin.ModelAdmin):
         "status",
         "reported_at",
         "resolved_at",
-        "updated_at",
         "created_at",
         "disabled",
     ]
-    list_filter = ["disabled", ("resolved_at", admin.EmptyFieldListFilter), "status", "area", "source"]
+    list_filter = ["source", "status", "area", ("resolved_at", admin.EmptyFieldListFilter), "disabled"]
     search_fields = ["mountain_name_raw", "trail_name", "description"]
     date_hierarchy = "reported_at"
     readonly_fields = ["created_at", "updated_at"]

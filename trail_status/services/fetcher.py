@@ -1,4 +1,6 @@
+import hashlib
 import logging
+from typing import Optional
 
 import httpx
 import trafilatura
@@ -44,3 +46,41 @@ class DataFetcher:
         except Exception as e:
             logger.exception(f"Unexpected error fetching {url}")
             raise
+
+    def calculate_content_hash(self, html: str) -> str:
+        """
+        HTMLからtrafilaturaで抽出した内容のハッシュ値を計算
+        
+        Args:
+            html: HTML文字列
+            
+        Returns:
+            str: SHA256ハッシュ値（64文字）
+        """
+        # trafilaturaで正規化されたテキストを抽出
+        normalized_content = trafilatura.extract(html, include_comments=False, include_tables=True)
+        
+        if not normalized_content:
+            # 抽出できない場合は空文字列として扱う
+            normalized_content = ""
+        
+        # UTF-8エンコードしてハッシュ計算
+        return hashlib.sha256(normalized_content.encode('utf-8')).hexdigest()
+
+    def has_content_changed(self, html: str, previous_hash: Optional[str]) -> tuple[bool, str]:
+        """
+        コンテンツが変更されているかをハッシュで判定
+        
+        Args:
+            html: 現在のHTML
+            previous_hash: 前回のハッシュ値（None の場合は初回）
+            
+        Returns:
+            tuple[bool, str]: (変更フラグ, 新しいハッシュ値)
+        """
+        current_hash = self.calculate_content_hash(html)
+        
+        # 初回スクレイピングまたはハッシュが異なる場合は変更あり
+        has_changed = previous_hash is None or current_hash != previous_hash
+        
+        return has_changed, current_hash

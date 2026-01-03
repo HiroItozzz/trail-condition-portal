@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 import httpx
 
@@ -7,6 +8,8 @@ from .llm_client import DeepseekClient, GeminiClient, LlmConfig
 from .llm_stats import LlmStats
 from .schema import TrailConditionSchemaList
 from .types import ModelDataSingle, UpdatedDataList, UpdatedDataSingle
+
+logger = logging.getLogger(__name__)
 
 
 class TrailConditionPipeline:
@@ -35,16 +38,36 @@ class TrailConditionPipeline:
         """単一ソースデータの処理パイプライン（純粋async）"""
         try:
             # 1. スクレイピング
-            scraped_text = await self._fetch_content(client, source_data["url1"])
-            if not scraped_text.strip():
+            scraped_html = await self._fetch_raw_content(client, source_data["url1"])
+            if not scraped_html.strip():
                 return {"error": "スクレイピング結果が空でした"}
 
-            # 2. AI解析
+            # 2. ハッシュベース変更検知
+            fetcher = DataFetcher()
+            content_changed, new_hash = fetcher.has_content_changed(scraped_html, source_data.get("content_hash"))
+            
+            if not content_changed:
+                logger.info(f"コンテンツ変更なし（ソースID: {source_data['id']}）- LLM処理をスキップ")
+                return {
+                    "success": True, 
+                    "content_changed": False, 
+                    "new_hash": new_hash,
+                    "scraped_length": len(scraped_html),
+                }
+
+            # 3. trafilaturaでテキスト抽出
+            scraped_text = await self._extract_text_content(client, source_data["url1"])
+            if not scraped_text.strip():
+                return {"error": "テキスト抽出結果が空でした"}
+
+            # 4. AI解析（コンテンツ変更時のみ）
             config, ai_result, stats = await self._analyze_with_ai(source_data, scraped_text, ai_model)
 
             return {
                 "success": True,
-                "scraped_length": len(scraped_text),
+                "content_changed": True,
+                "new_hash": new_hash,
+                "scraped_length": len(scraped_html),
                 "extracted_trail_conditions": ai_result,  # TrailConditionSchemaListのまま
                 "stats": stats,  # LlmStatsオブジェクト
                 "config": config,  # LlmConfigオブジェクト
@@ -53,8 +76,19 @@ class TrailConditionPipeline:
         except Exception as e:
             return {"error": str(e)}
 
-    async def _fetch_content(self, client: httpx.AsyncClient, url: str) -> str:
-        """コンテンツのスクレイピング"""
+    async def _fetch_raw_content(self, client: httpx.AsyncClient, url: str) -> str:
+        """生HTMLのスクレイピング（ハッシュ計算用）"""
+        fetcher = DataFetcher()
+        try:
+            response = await client.get(url, headers=fetcher.headers)
+            response.raise_for_status()
+            return response.text
+        except Exception as e:
+            logger.error(f"HTMLスクレイピング失敗 - URL: {url}, エラー: {e}")
+            raise
+
+    async def _extract_text_content(self, client: httpx.AsyncClient, url: str) -> str:
+        """テキスト抽出（AI解析用）- DataFetcherのリトライロジック活用"""
         fetcher = DataFetcher()
         return await fetcher.fetch_text(client, url)
 
