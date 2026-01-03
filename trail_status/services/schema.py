@@ -1,9 +1,9 @@
-from datetime import date, datetime
+from datetime import date
 
 from pydantic import BaseModel, Field
 
 from ..models.condition import StatusType
-from ..models.mountain import AreaName, MountainGroup
+from ..models.mountain import AreaName
 
 
 class TrailConditionSchemaAi(BaseModel):
@@ -17,8 +17,9 @@ class TrailConditionSchemaAi(BaseModel):
         default="",
         description="状況詳細説明（原文そのまま / 該当する記述がなければ空文字）",
     )
-    reported_at: date = Field(
-        description="報告日（YYYY-MM-DD形式） / 既存の該当項目の登山道状況や詳細説明等の更新がなければ、既存の値を入力 / 既存の値もなければ、今日の日付を入力",
+    reported_at: date | None = Field(
+        default=None,
+        description="報告日（YYYY-MM-DD形式） / 該当項目がない、あるいはわからなければ、None型",
     )
     resolved_at: date | None = Field(
         default=None,

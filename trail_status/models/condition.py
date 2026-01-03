@@ -31,7 +31,7 @@ class TrailCondition(models.Model):
     mountain_name_raw = models.CharField("山名（原文）", default="", max_length=50, blank=True)
     title = models.CharField("タイトル（原文）", max_length=200)
     description = models.TextField("詳細説明（原文）", blank=True)
-    reported_at = models.DateField("報告日", default=timezone.now)
+    reported_at = models.DateField("報告日", default=None, null=True, blank=True)
     resolved_at = models.DateField(
         "解消日",
         default=None,
@@ -61,20 +61,20 @@ class TrailCondition(models.Model):
 
     # AI関連情報 (追跡・デバッグ用)
     ai_model = models.CharField("使用AIモデル", max_length=50, blank=True, help_text="例: deepseek-reasoner")
-    prompt_file = models.CharField("プロンプトファイル", max_length=100, blank=True, help_text="例: 001_okutama_vc.yaml")
-    ai_config = models.JSONField("AI設定", null=True, blank=True, help_text="temperature, thinking_budgetなどの設定")
-    
-    # メタデータ
-    disabled = models.BooleanField(
-        "情報の無効化（管理用）", default=False, help_text="[使用例] 誤情報だった場合ほか"
+    prompt_file = models.CharField(
+        "プロンプトファイル", max_length=100, blank=True, help_text="例: 001_okutama_vc.yaml"
     )
+    ai_config = models.JSONField("AI設定", null=True, blank=True, help_text="temperature, thinking_budgetなどの設定")
+
+    # メタデータ
+    disabled = models.BooleanField("情報の無効化（管理用）", default=False, help_text="[使用例] 誤情報だった場合ほか")
     created_at = models.DateTimeField("登録日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)
 
     class Meta:
         verbose_name = "登山道状態"
         verbose_name_plural = "登山道状態"
-        ordering = ["-reported_at"]
+        ordering = ["-updated_at"]
         indexes = [
             models.Index(fields=["disabled", "resolved_at", "-reported_at"]),
             models.Index(fields=["area", "status", "disabled", "-reported_at"]),
