@@ -52,5 +52,5 @@ class TestLlmClient:
         data, stats = await client.generate()
 
         assert data == {"conditions": []}
-        assert stats.input_tokens == 100
-        assert stats.pure_output_tokens == 50
+        assert stats.token_stats.input_tokens == 100
+        assert stats.token_stats.pure_output_tokens == 50

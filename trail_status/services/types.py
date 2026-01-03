@@ -1,8 +1,9 @@
 from typing import Any
 
-from .llm_stats import TokenStats
+from .llm_stats import LlmStats
+from .schema import TrailConditionSchemaList
 
-SourceDataSingle = dict[str, Any]
+ModelDataSingle = dict[str, Any]
 
-UpdatedDataSingle = dict[str, bool | int | list[dict] | TokenStats]
-UpdatedDataList = list[tuple[SourceDataSingle, UpdatedDataSingle]]
+UpdatedDataSingle = dict[str, bool | int | TrailConditionSchemaList | LlmStats]
+UpdatedDataList = list[tuple[ModelDataSingle, UpdatedDataSingle]]

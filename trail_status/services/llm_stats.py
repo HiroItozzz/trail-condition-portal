@@ -66,78 +66,61 @@ class TokenStats:
 
 
 class LlmStats:
-    """LLM実行全体のメトリクス管理クラス (委譲パターン)"""
-    
+    """LLM実行後のメトリクス管理クラス (TokenStatsから委譲)"""
+
     def __init__(self, token_stats: TokenStats):
         self.token_stats = token_stats
-        
+
         # 実行メトリクス
         self.execution_time: float = None
         self.retry_count: int = 0
         self.queue_time: float = None
         self.response_time: float = None
-        
+
         # 品質メトリクス
         self.validation_success: bool = True
         self.extraction_count: int = 0
         self.error_count: int = 0
-        
+
         # 将来の拡張用 (コメントアウト)
         # self.cache_hit: bool = False
         # self.confidence_score: float = None
         # self.model_version: str = None
-    
-    # TokenStatsへの便利なアクセス (委譲)
+
+    # TokenStatsへの便利なアクセス (必要最小限)
     @property
     def total_fee(self) -> float:
         """総コスト"""
         return self.token_stats.total_fee
-    
-    @property
-    def model(self) -> str:
-        """モデル名"""
-        return self.token_stats.model_name
-    
-    @property
-    def input_tokens(self) -> int:
-        """入力トークン数"""
-        return self.token_stats.input_tokens
-    
-    @property
-    def thoughts_tokens(self) -> int:
-        """思考トークン数"""
-        return self.token_stats.thoughts_tokens
-    
-    @property
-    def output_tokens(self) -> int:
-        """出力トークン数"""
-        return self.token_stats.pure_output_tokens
-    
+
     def to_dict(self) -> dict:
         """辞書形式で全メトリクスを取得"""
         result = self.token_stats.to_dict()
-        
-        # LlmStats固有のメトリクス追加
-        if self.execution_time is not None:
-            result["execution_time"] = self.execution_time
-        if self.retry_count > 0:
-            result["retry_count"] = self.retry_count
-        if self.queue_time is not None:
-            result["queue_time"] = self.queue_time
-        if self.response_time is not None:
-            result["response_time"] = self.response_time
-            
-        # 品質メトリクス
+
+        # LlmStats固有のメトリクス追加（None値や0値の除外）
+        metrics = {
+            "execution_time": self.execution_time,
+            "retry_count": self.retry_count,
+            "queue_time": self.queue_time,
+            "response_time": self.response_time,
+            "validation_success": self.validation_success,
+            "extraction_count": self.extraction_count,
+            "error_count": self.error_count,
+        }
+
+        # None値と意味のない0値を除外
+        for key, value in metrics.items():
+            if value is not None and (not isinstance(value, int) or value != 0 or key == "retry_count"):
+                if key != "validation_success" or value is not True:  # デフォルトのTrue以外を保持
+                    result[key] = value
+
+        # validation_successは常に保持
         result["validation_success"] = self.validation_success
-        if self.extraction_count > 0:
-            result["extraction_count"] = self.extraction_count
-        if self.error_count > 0:
-            result["error_count"] = self.error_count
-            
+
         return result
-    
+
     def __repr__(self):
-        return f"LlmStats(model={self.model}, total_fee=${self.total_fee:.4f}, execution_time={self.execution_time}s)"
+        return f"LlmStats(model={self.token_stats.model_name}, total_fee=${self.total_fee:.4f}, execution_time={self.execution_time}s)"
 
 
 class BaseLlmFee(ABC):
@@ -161,14 +144,15 @@ class LlmFee(BaseLlmFee):
     """2025/12/09現在"""
 
     _fees = {
-        "gemini-2.5-flash": {"input": 0.03, "output": 2.5},  # $per 1M tokens
+        "gemini-2.5-flash": {"input": 0.3, "output": 2.5},  # $per 1M tokens
+        "gemini-3-flash-preview": {"input": 0.5, "output": 3.0},
         "gemini-2.5-pro": {
             "under_0.2M": {"input": 1.25, "output": 10.00},
             "over_0.2M": {"input": 2.5, "output": 15.0},
         },
         "deepseek": {"input(cache_hit)": 0.028, "input(cache_miss)": 0.28, "output": 0.42},
     }
-    _model_list = ["gemini-2.5-flash", "gemini-2.5-pro", "deepseek-chat", "deepseek-reasoner"]
+    _model_list = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-3-flash-preview", "deepseek-chat", "deepseek-reasoner"]
 
     @property
     def fees(self):
@@ -178,22 +162,28 @@ class LlmFee(BaseLlmFee):
     def model_list(self):
         return self._model_list
 
-    def calculate(self, tokens, token_type: str) -> float:
-        model_name = self.model
+    def calculate(self, tokens: int | None, token_type: str) -> float:
         token_type = "output" if token_type == "thoughts" else token_type
+        tokens = 0 if not tokens else tokens
         if self.model not in self.model_list:
             logger.warning("料金表に登録されていないモデルです")
-            logger.warning("'gemini-2.5-proの料金で試算します")
-            model_name = "gemini-2.5-pro"
-        if model_name.startswith("deepseek"):
+            logger.warning("gemini-2.5-proの料金で試算します")
+            self.model = "gemini-2.5-pro"
+
+        if self.model.startswith("deepseek"):
             base_fee = self.fees["deepseek"]
-            token_type = "output" if token_type == "thoughts" else token_type
+
             if token_type == "output":
                 dollar_per_1M_tokens = base_fee["output"]
             else:
                 dollar_per_1M_tokens = base_fee["input(cache_miss)"]
-        elif model_name == "gemini-2.5-flash":
+
+        elif self.model == "gemini-2.5-flash":
             dollar_per_1M_tokens = self.fees[self.model][token_type]
+
+        elif self.model == "gemini-3-flash-preview":
+            dollar_per_1M_tokens = self.fees[self.model][token_type]
+
         else:
             base_fee = self.fees["gemini-2.5-pro"]
             if tokens <= 200000:

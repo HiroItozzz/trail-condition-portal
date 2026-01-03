@@ -9,7 +9,7 @@ from pathlib import Path
 import yaml
 from django.conf import settings
 from openai import AsyncOpenAI
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, Field, ValidationError, computed_field
 
 from .llm_stats import TokenStats
 from .schema import TrailConditionSchemaList
@@ -31,9 +31,11 @@ def get_prompts_dir() -> Path:
 class LlmConfig(BaseModel):
     site_prompt: str = Field(default="", description="サイト固有プロンプト")
     use_template: bool = Field(default=True, description="template.yamlを使用するか")
-    model: str = Field(pattern=r"^(gemini|deepseek)-.+", default="deepseek-chat", description="使用するLLMモデル")
+    model: str = Field(pattern=r"^(gemini|deepseek)-.+", default="deepseek-reasoner", description="使用するLLMモデル")
     data: str = Field(description="解析するテキスト")
-    temperature: float = Field(default=0.3, ge=0, le=2.0, description="生成ごとの揺らぎの幅")
+    temperature: float = Field(
+        default=0.0, ge=0, le=2.0, description="生成ごとの揺らぎの幅（※ deepseek-reasonerでは無視される）"
+    )
     thinking_budget: int = Field(default=5000, ge=-1, le=15000, description="Geminiの思考予算（トークン数）")
 
     @computed_field
@@ -63,6 +65,73 @@ class LlmConfig(BaseModel):
             return key
         else:
             raise ValueError(f"サポートされていないモデル: {self.model}")
+
+    # promptファイルに各種設定個別設定追加予定{"model": deepseek-reasoner, "temperature":0.0}
+    @staticmethod
+    def load_config(filename: str) -> dict:
+        """
+        プロンプトファイルから設定を読み込み
+
+        Args:
+            filename: プロンプトファイル名（例：001_okutama_vc.yaml）
+
+        Returns:
+            dict: 設定情報（config部分）
+
+        Raises:
+            FileNotFoundError: ファイルが存在しない場合
+        """
+        prompts_dir = get_prompts_dir()
+        prompt_path = prompts_dir / filename
+
+        if not prompt_path.exists():
+            raise FileNotFoundError(f"プロンプトファイルが見つかりません: {prompt_path}")
+
+        config = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
+        return config.get("config", {})
+
+    @classmethod
+    def from_file(cls, prompt_filename: str, data: str, **cli_overrides):
+        """
+        プロンプトファイルから設定を読み込んでインスタンス作成
+
+        Args:
+            prompt_filename: プロンプトファイル名
+            data: 解析するテキスト
+            **cli_overrides: CLI引数による上書き設定
+
+        Returns:
+            LlmConfig: 設定がマージされたインスタンス
+        """
+        file_config = cls.load_config(prompt_filename)
+        site_prompt = cls.load_prompt(prompt_filename)
+
+        # CLI > promptファイル > デフォルト の優先度
+        # Noneの場合はPydanticデフォルト値を使用するため、引数から除外
+        kwargs = {
+            "site_prompt": site_prompt,
+            "use_template": file_config.get("use_template", True),
+            "data": data,
+        }
+
+        # None以外の値のみ設定（Noneの場合はPydanticデフォルトを使用）
+        model_value = cli_overrides.get("model") or file_config.get("model")
+        if model_value:
+            kwargs["model"] = model_value
+
+        # temperature: 0.0対応（is not None チェック）
+        temp_value = cli_overrides.get("temperature")
+        if temp_value is None:
+            temp_value = file_config.get("temperature")
+        if temp_value is not None:
+            kwargs["temperature"] = temp_value
+
+        # thinking_budget: 0対応（通常0は無効値なので or 使用）
+        budget_value = cli_overrides.get("thinking_budget") or file_config.get("thinking_budget")
+        if budget_value:
+            kwargs["thinking_budget"] = budget_value
+
+        return cls(**kwargs)
 
     @staticmethod
     def load_prompt(filename: str) -> str:
@@ -111,12 +180,23 @@ class ConversationalAi(ABC):
     async def generate(self) -> tuple[dict, TokenStats]:
         pass
 
+    # サーバーエラーとバリデーションエラー時のみリトライ
     async def handle_server_error(self, i, max_retries):
         if i < max_retries - 1:
-            logger.warning(f"deepseekの計算資源が逼迫しているようです。{5 * (i + 1)}秒後にリトライします。")
+            logger.warning(f"{self.model}の計算資源が逼迫しているようです。{5 * (i + 1)}秒後にリトライします。")
+            await asyncio.sleep(3 ** (i + 1))
+        else:
+            logger.warning(f"{self.model}は現在過負荷のようです。少し時間をおいて再実行する必要があります。")
+            logger.warning("実行を中止します。")
+            raise
+
+    async def validation_error(self, i, max_retries, response_text):
+        if i < max_retries - 1:
+            logger.warning(f"{self.model}が構造化出力に失敗。{5 * (i + 1)}秒後にリトライします。")
             await asyncio.sleep(5 * (i + 1))
         else:
-            logger.warning("deepseekは現在過負荷のようです。少し時間をおいて再実行する必要があります。")
+            logger.warning(f"{self.model}が{max_retries}回構造化出力に失敗。LLMの設定を見直してください。")
+            self.save_invalid_data(response_text)
             logger.warning("実行を中止します。")
             raise
 
@@ -132,7 +212,7 @@ class ConversationalAi(ABC):
         logger.info(f"詳細: {e}")
         raise
 
-    def check_response(self, response_text):
+    def validate_response(self, response_text):
         # デバッグ用：サンプル出力を保存
         sample_path = get_sample_dir() / f"{self.model}_sample.json"
         sample_path.write_text(response_text, encoding="utf-8")
@@ -140,19 +220,22 @@ class ConversationalAi(ABC):
         try:
             validated_data = TrailConditionSchemaList.model_validate_json(response_text)
             logger.warning(f"{self.model}が構造化出力に成功")
-        except Exception:
-            logger.error(f"{self.model}が構造化出力に失敗。")
-
-            # エラー時の出力保存
-            output_dir = settings.BASE_DIR / "outputs"
-            output_dir.mkdir(exist_ok=True)
-            error_file = output_dir / "__summary.txt"
-            error_file.write_text(response_text, encoding="utf-8")
-
-            logger.error(f"{error_file}へ出力を保存しました。")
-            raise
-
+        except ValidationError as e:
+            raise e
         return validated_data
+
+    def save_invalid_data(self, response_text):
+        # エラー時の出力保存
+        from datetime import datetime
+
+        output_dir = settings.BASE_DIR / "outputs"
+        output_dir.mkdir(exist_ok=True)
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        error_file = output_dir / f"validation_error_{self.model}_{timestamp}.txt"
+        error_file.write_text(response_text, encoding="utf-8")
+
+        logger.error(f"{error_file}へ出力を保存しました。")
 
 
 class DeepseekClient(ConversationalAi):
@@ -177,7 +260,11 @@ class DeepseekClient(ConversationalAi):
                     response_format={"type": "json_object"},
                     stream=False,
                 )
+                generated_text = response.choices[0].message.content
+                validated_data = super().validate_response(generated_text)
                 break
+            except ValidationError:
+                await super().validation_error(i, max_retries, generated_text)
             except Exception as e:
                 # https://api-docs.deepseek.com/quick_start/error_codes
                 if any(code in str(e) for code in ["500", "502", "503"]):
@@ -200,11 +287,8 @@ class DeepseekClient(ConversationalAi):
                 else:
                     super().handle_unexpected_error(e)
 
-        generated_text = response.choices[0].message.content
-        validated_data = super().check_response(generated_text)
-
-        # 実際に出力されたテキストに基づく出力トークンを計算
-        thoughts_tokens = getattr(response.usage.completion_tokens_details, "reasoning_tokens", 0)
+        # 純粋なoutput_tokensを計算
+        thoughts_tokens = getattr(response.usage.completion_tokens_details, "reasoning_tokens", 0) or 0
         output_tokens = response.usage.completion_tokens - thoughts_tokens
 
         stats = TokenStats(
@@ -237,7 +321,6 @@ class GeminiClient(ConversationalAi):
 
         max_retries = 3
         for i in range(max_retries):
-            # generate_contentメソッドは内部的にHTTPレスポンスコード200以外の場合は例外を発生させる
             try:
                 response = await client.aio.models.generate_content(  # リクエスト
                     model=self.model,
@@ -249,8 +332,10 @@ class GeminiClient(ConversationalAi):
                         thinking_config=types.ThinkingConfig(thinking_budget=self.thinking_budget),
                     ),
                 )
-                print("Geminiによる要約を受け取りました。")
+                validated_data = super().validate_response(response.text)
                 break
+            except ValidationError:
+                await super().validation_error(i, max_retries, response.text)
             except ServerError:
                 await super().handle_server_error(i, max_retries)
             except ClientError as e:
@@ -258,11 +343,9 @@ class GeminiClient(ConversationalAi):
             except Exception as e:
                 super().handle_unexpected_error(e)
 
-        validated_data = super().check_response(response.text)
-
         stats = TokenStats(
             response.usage_metadata.prompt_token_count,
-            response.usage_metadata.thoughts_token_count,
+            getattr(response.usage_metadata, "thoughts_token_count", 0) or 0,  # Noneが返ってきた場合のフォールバック
             response.usage_metadata.candidates_token_count,
             len(self.prompt),
             len(response.text),

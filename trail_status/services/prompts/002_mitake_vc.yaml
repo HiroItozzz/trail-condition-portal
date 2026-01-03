@@ -15,3 +15,15 @@ prompt: |
   - area: "OKUTAMA" を指定
   - mountain_name_raw: 御岳山、大岳山、日の出山等は正確に抽出
   - comment: クマ対策、装備情報を充実
+
+# AI設定
+config:
+  model: deepseek-chat
+  # 動物目撃情報の正確な分類のため低温度
+  temperature: 0.0
+  
+  # 御岳は情報量が中程度なので標準設定
+  thinking_budget: 
+  
+  # テンプレートを使用
+  use_template: true

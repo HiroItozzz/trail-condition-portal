@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models.condition import TrailCondition
 from .models.llm_usage import LlmUsage
 from .models.mountain import MountainAlias, MountainGroup
+from .models.prompt_backup import PromptBackup
 from .models.source import DataSource
 
 
@@ -45,10 +46,14 @@ class TrailConditionAdmin(admin.ModelAdmin):
         "comment",
         "source",
         "url1",
+        "ai_model",
+        "prompt_file",
         "area",
         "status",
         "reported_at",
         "resolved_at",
+        "updated_at",
+        "created_at",
         "disabled",
     ]
     list_filter = ["disabled", ("resolved_at", admin.EmptyFieldListFilter), "status", "area", "source"]
@@ -73,6 +78,7 @@ class TrailConditionAdmin(admin.ModelAdmin):
             },
         ),
         ("正規化済み情報", {"fields": ("status", "mountain_group")}),
+        ("AI情報", {"fields": ("ai_model", "prompt_file", "ai_config"), "classes": ("collapse",)}),
         ("管理", {"fields": ("disabled",)}),
         ("メタデータ", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
     )
@@ -91,6 +97,7 @@ class LlmUsageAdmin(admin.ModelAdmin):
         "cost_usd",
         "conditions_extracted",
         "total_tokens",
+        "cost_usd",
         "execution_time_seconds",
         "success",
     ]
@@ -122,3 +129,32 @@ class LlmUsageAdmin(admin.ModelAdmin):
     @admin.display(description="1件あたりコスト")
     def cost_per_item(self, obj):
         return f"${obj.cost_per_condition:.4f}" if obj.conditions_extracted > 0 else "-"
+
+
+@admin.register(PromptBackup)
+class PromptBackupAdmin(admin.ModelAdmin):
+    list_display = [
+        "backup_date",
+        "file_name",
+        "backup_type",
+        "file_size",
+        "content_preview_short",
+    ]
+    list_filter = [
+        "backup_type",
+        ("backup_date", admin.DateFieldListFilter),
+        "file_name",
+    ]
+    search_fields = ["file_name", "content"]
+    readonly_fields = ["backup_date", "file_hash", "content_preview"]
+    date_hierarchy = "backup_date"
+
+    fieldsets = (
+        ("基本情報", {"fields": ("file_name", "backup_type", "backup_date")}),
+        ("ファイル情報", {"fields": ("file_size", "file_hash")}),
+        ("プロンプト内容", {"fields": ("content_preview", "content"), "classes": ("collapse",)}),
+    )
+
+    @admin.display(description="プロンプト内容")
+    def content_preview_short(self, obj):
+        return obj.content_preview

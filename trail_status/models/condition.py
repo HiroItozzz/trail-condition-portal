@@ -59,6 +59,11 @@ class TrailCondition(models.Model):
         verbose_name="山グループ",
     )
 
+    # AI関連情報 (追跡・デバッグ用)
+    ai_model = models.CharField("使用AIモデル", max_length=50, blank=True, help_text="例: deepseek-reasoner")
+    prompt_file = models.CharField("プロンプトファイル", max_length=100, blank=True, help_text="例: 001_okutama_vc.yaml")
+    ai_config = models.JSONField("AI設定", null=True, blank=True, help_text="temperature, thinking_budgetなどの設定")
+    
     # メタデータ
     disabled = models.BooleanField(
         "情報の無効化（管理用）", default=False, help_text="[使用例] 誤情報だった場合ほか"

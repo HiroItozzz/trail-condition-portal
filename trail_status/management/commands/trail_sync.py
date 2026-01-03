@@ -11,7 +11,7 @@ from trail_status.services.llm_stats import LlmStats
 from trail_status.services.pipeline import TrailConditionPipeline
 from trail_status.services.schema import TrailConditionSchemaInternal, TrailConditionSchemaList
 from trail_status.services.synchronizer import sync_trail_conditions
-from trail_status.services.types import UpdatedDataList
+from trail_status.services.types import UpdatedDataList, UpdatedDataSingle
 
 
 class Command(BaseCommand):
@@ -23,14 +23,13 @@ class Command(BaseCommand):
             "--model",
             type=str,
             choices=["deepseek-reasoner", "deepseek-chat", "gemini-3-flash-preview", "gemini-2.5-flash"],
-            default="deepseek-reasoner",
-            help="使用するAIモデル (default: deepseek-reasoner)",
+            help="使用するAIモデル（指定しなければプロンプトファイル設定またはデフォルトを使用）",
         )
         parser.add_argument("--dry-run", action="store_true", help="実際にDBに保存せず、処理結果のみ表示")
 
     def handle(self, *args, **options):
         source_id = options.get("source")
-        model = options["model"]
+        ai_model = options.get("model")
         dry_run = options["dry_run"]
 
         if dry_run:
@@ -56,7 +55,7 @@ class Command(BaseCommand):
 
         # パイプライン処理を実行（純粋にasync処理のみ）
         pipeline = TrailConditionPipeline()
-        results = asyncio.run(pipeline.process_source_data(source_data_list, model))
+        results = asyncio.run(pipeline.process_source_data(source_data_list, ai_model))
 
         # DB保存（同期処理）
         if not dry_run:
@@ -80,9 +79,13 @@ class Command(BaseCommand):
                 ]
 
                 # DB同期とLLM使用履歴記録
+                llm_stats = result["stats"]
+                config = result["config"]
+                prompt_filename = source.prompt_filename
+                
                 with transaction.atomic():
-                    sync_trail_conditions(source, internal_data_list)
-                    self._save_llm_usage(source, result["stats"], len(internal_data_list))
+                    sync_trail_conditions(source, internal_data_list, config, prompt_filename)
+                    self._save_llm_usage(source, llm_stats, len(internal_data_list))
 
                 self.stdout.write(
                     self.style.SUCCESS(
@@ -129,11 +132,12 @@ class Command(BaseCommand):
 
         return summary
     
-    def _get_conditions_count(self, result: dict) -> int:
-        """結果から条件数を安全に取得"""
-        trail_conditions = result.get("extracted_trail_conditions")
-        if trail_conditions and hasattr(trail_conditions, 'trail_condition_records'):
-            return len(trail_conditions.trail_condition_records)
+    def _get_conditions_count(self, result: UpdatedDataSingle) -> int:
+        """結果からレコード数を安全に取得"""
+        if result.get("success"):
+            trail_conditions = result.get("extracted_trail_conditions")
+            if isinstance(trail_conditions, TrailConditionSchemaList):
+                return len(trail_conditions.trail_condition_records)
         return 0
 
     def print_summary(self, summary: dict[str, Any]) -> None:
