@@ -92,7 +92,6 @@ class LlmConfig(BaseModel):
 
         return config["prompt"]
 
-    
     @staticmethod
     def _load_template() -> str:
         """template.yamlを読み込み"""
@@ -140,7 +139,6 @@ class ConversationalAi(ABC):
 
         try:
             validated_data = TrailConditionSchemaList.model_validate_json(response_text)
-            dict_validated = validated_data.model_dump()
             logger.warning(f"{self.model}が構造化出力に成功")
         except Exception:
             logger.error(f"{self.model}が構造化出力に失敗。")
@@ -154,16 +152,16 @@ class ConversationalAi(ABC):
             logger.error(f"{error_file}へ出力を保存しました。")
             raise
 
-        return dict_validated
+        return validated_data
 
 
 class DeepseekClient(ConversationalAi):
     @property
-    def full_prompt(self):
+    def prompt_for_deepseek(self):
         STATEMENT = f"【重要】次の行から示す要請はこのPydanticモデルに合うJSONで出力してください: {TrailConditionSchemaList.model_json_schema()}\n"
         return STATEMENT + self.prompt + self.data
 
-    async def generate(self) -> tuple[dict, TokenStats]:
+    async def generate(self) -> tuple[TrailConditionSchemaList, TokenStats]:
         logger.warning("Deepseekからの応答を待っています。")
         logger.debug(f"APIリクエスト中。APIキー: ...{self.api_key[-5:]}")
 
@@ -175,7 +173,7 @@ class DeepseekClient(ConversationalAi):
                 response = await client.chat.completions.create(
                     model=self.model,
                     temperature=self.temperature,
-                    messages=[{"role": "user", "content": self.full_prompt}],
+                    messages=[{"role": "user", "content": self.prompt_for_deepseek}],
                     response_format={"type": "json_object"},
                     stream=False,
                 )
@@ -203,7 +201,7 @@ class DeepseekClient(ConversationalAi):
                     super().handle_unexpected_error(e)
 
         generated_text = response.choices[0].message.content
-        data = super().check_response(generated_text)
+        validated_data = super().check_response(generated_text)
 
         # 実際に出力されたテキストに基づく出力トークンを計算
         thoughts_tokens = getattr(response.usage.completion_tokens_details, "reasoning_tokens", 0)
@@ -213,16 +211,20 @@ class DeepseekClient(ConversationalAi):
             response.usage.prompt_tokens,
             thoughts_tokens,
             output_tokens,
-            len(self.full_prompt),
+            len(self.prompt_for_deepseek),
             len(generated_text),
             self.model,
         )
 
-        return data, stats
+        return validated_data, stats
 
 
 class GeminiClient(ConversationalAi):
-    async def generate(self):
+    @property
+    def prompt_for_gemini(self):
+        return self.prompt + "\n" + self.data
+
+    async def generate(self) -> tuple[TrailConditionSchemaList, TokenStats]:
         from google import genai
         from google.genai import types
         from google.genai.errors import ClientError, ServerError
@@ -239,7 +241,7 @@ class GeminiClient(ConversationalAi):
             try:
                 response = await client.aio.models.generate_content(  # リクエスト
                     model=self.model,
-                    contents=self.prompt + "\n" + self.data,
+                    contents=self.prompt_for_gemini,
                     config=types.GenerateContentConfig(
                         temperature=self.temperature,
                         response_mime_type="application/json",  # 構造化出力
@@ -256,7 +258,7 @@ class GeminiClient(ConversationalAi):
             except Exception as e:
                 super().handle_unexpected_error(e)
 
-        data = super().check_response(response.text)
+        validated_data = super().check_response(response.text)
 
         stats = TokenStats(
             response.usage_metadata.prompt_token_count,
@@ -267,7 +269,7 @@ class GeminiClient(ConversationalAi):
             self.model,
         )
 
-        return data, stats
+        return validated_data, stats
 
 
 # テスト用コードは削除されました

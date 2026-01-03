@@ -27,7 +27,7 @@ class TestLlmClient:
     def test_prompt_generation(self):
         """プロンプト生成テスト"""
         client = DeepseekClient(self.config)
-        prompt = client.full_prompt
+        prompt = client.prompt_for_deepseek
 
         # JSON Schema指示が含まれているかチェック
         assert "Pydanticモデル" in prompt

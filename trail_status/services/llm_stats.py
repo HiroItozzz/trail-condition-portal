@@ -65,6 +65,81 @@ class TokenStats:
         }
 
 
+class LlmStats:
+    """LLM実行全体のメトリクス管理クラス (委譲パターン)"""
+    
+    def __init__(self, token_stats: TokenStats):
+        self.token_stats = token_stats
+        
+        # 実行メトリクス
+        self.execution_time: float = None
+        self.retry_count: int = 0
+        self.queue_time: float = None
+        self.response_time: float = None
+        
+        # 品質メトリクス
+        self.validation_success: bool = True
+        self.extraction_count: int = 0
+        self.error_count: int = 0
+        
+        # 将来の拡張用 (コメントアウト)
+        # self.cache_hit: bool = False
+        # self.confidence_score: float = None
+        # self.model_version: str = None
+    
+    # TokenStatsへの便利なアクセス (委譲)
+    @property
+    def total_fee(self) -> float:
+        """総コスト"""
+        return self.token_stats.total_fee
+    
+    @property
+    def model(self) -> str:
+        """モデル名"""
+        return self.token_stats.model_name
+    
+    @property
+    def input_tokens(self) -> int:
+        """入力トークン数"""
+        return self.token_stats.input_tokens
+    
+    @property
+    def thoughts_tokens(self) -> int:
+        """思考トークン数"""
+        return self.token_stats.thoughts_tokens
+    
+    @property
+    def output_tokens(self) -> int:
+        """出力トークン数"""
+        return self.token_stats.pure_output_tokens
+    
+    def to_dict(self) -> dict:
+        """辞書形式で全メトリクスを取得"""
+        result = self.token_stats.to_dict()
+        
+        # LlmStats固有のメトリクス追加
+        if self.execution_time is not None:
+            result["execution_time"] = self.execution_time
+        if self.retry_count > 0:
+            result["retry_count"] = self.retry_count
+        if self.queue_time is not None:
+            result["queue_time"] = self.queue_time
+        if self.response_time is not None:
+            result["response_time"] = self.response_time
+            
+        # 品質メトリクス
+        result["validation_success"] = self.validation_success
+        if self.extraction_count > 0:
+            result["extraction_count"] = self.extraction_count
+        if self.error_count > 0:
+            result["error_count"] = self.error_count
+            
+        return result
+    
+    def __repr__(self):
+        return f"LlmStats(model={self.model}, total_fee=${self.total_fee:.4f}, execution_time={self.execution_time}s)"
+
+
 class BaseLlmFee(ABC):
     def __init__(self, model: str):
         self.model = model

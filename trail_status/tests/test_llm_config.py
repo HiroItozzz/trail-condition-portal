@@ -13,12 +13,12 @@ class TestLlmConfig:
     def test_valid_config(self, mock_api_keys):
         """正常な設定でのインスタンス化テスト"""
         config = LlmConfig(
-            prompt="テストプロンプト",
+            site_prompt="テストプロンプト", 
             model="deepseek-chat",
             temperature=0.5,
             data="テストデータ"
         )
-        assert config.prompt == "テストプロンプト"
+        assert config.site_prompt == "テストプロンプト"
         assert config.model == "deepseek-chat"
         assert config.temperature == 0.5
         assert config.api_key == "test-deepseek-key"
@@ -27,7 +27,7 @@ class TestLlmConfig:
         """不正なモデル名でのバリデーションテスト"""
         with pytest.raises(ValueError):
             LlmConfig(
-                prompt="テストプロンプト",
+                site_prompt="テストプロンプト",
                 model="invalid-model",
                 data="テストデータ"
             )
@@ -36,8 +36,8 @@ class TestLlmConfig:
         """不正な温度値でのバリデーションテスト"""
         with pytest.raises(ValueError):
             LlmConfig(
-                prompt="テストプロンプト",
-                model="deepseek-chat",
+                site_prompt="テストプロンプト",
+                model="deepseek-chat", 
                 temperature=3.0,  # 範囲外
                 data="テストデータ"
             )
@@ -45,7 +45,7 @@ class TestLlmConfig:
     def test_api_key_auto_detection_deepseek(self, mock_api_keys):
         """DeepSeekモデルでのAPIキー自動取得テスト"""
         config = LlmConfig(
-            prompt="テストプロンプト",
+            site_prompt="テストプロンプト",
             model="deepseek-reasoner",
             data="テストデータ"
         )
@@ -54,7 +54,7 @@ class TestLlmConfig:
     def test_api_key_auto_detection_gemini(self, mock_api_keys):
         """GeminiモデルでのAPIキー自動取得テスト"""
         config = LlmConfig(
-            prompt="テストプロンプト", 
+            site_prompt="テストプロンプト",
             model="gemini-3-flash-preview",
             data="テストデータ"
         )
@@ -63,7 +63,7 @@ class TestLlmConfig:
     def test_api_key_missing_error(self, clean_env):
         """APIキー未設定時のエラーテスト"""
         config = LlmConfig(
-            prompt="テストプロンプト",
+            site_prompt="テストプロンプト", 
             model="deepseek-chat",
             data="テストデータ"
         )
