@@ -52,6 +52,8 @@ class TrailConditionAdmin(admin.ModelAdmin):
         "status",
         "reported_at",
         "resolved_at",
+        "updated_at",
+        "created_at",
         "disabled",
     ]
     list_filter = ["disabled", ("resolved_at", admin.EmptyFieldListFilter), "status", "area", "source"]
@@ -95,6 +97,7 @@ class LlmUsageAdmin(admin.ModelAdmin):
         "cost_usd",
         "conditions_extracted",
         "total_tokens",
+        "cost_usd",
         "execution_time_seconds",
         "success",
     ]
@@ -132,7 +135,7 @@ class LlmUsageAdmin(admin.ModelAdmin):
 class PromptBackupAdmin(admin.ModelAdmin):
     list_display = [
         "backup_date",
-        "file_name", 
+        "file_name",
         "backup_type",
         "file_size",
         "content_preview_short",
@@ -145,20 +148,13 @@ class PromptBackupAdmin(admin.ModelAdmin):
     search_fields = ["file_name", "content"]
     readonly_fields = ["backup_date", "file_hash", "content_preview"]
     date_hierarchy = "backup_date"
-    
+
     fieldsets = (
-        ("基本情報", {
-            "fields": ("file_name", "backup_type", "backup_date")
-        }),
-        ("ファイル情報", {
-            "fields": ("file_size", "file_hash")
-        }),
-        ("プロンプト内容", {
-            "fields": ("content_preview", "content"),
-            "classes": ("collapse",)
-        }),
+        ("基本情報", {"fields": ("file_name", "backup_type", "backup_date")}),
+        ("ファイル情報", {"fields": ("file_size", "file_hash")}),
+        ("プロンプト内容", {"fields": ("content_preview", "content"), "classes": ("collapse",)}),
     )
-    
+
     @admin.display(description="プロンプト内容")
     def content_preview_short(self, obj):
         return obj.content_preview

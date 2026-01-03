@@ -3,9 +3,9 @@ import unicodedata
 from trail_status.models.condition import TrailCondition
 from trail_status.models.source import DataSource
 
-from .llm_stats import LlmStats
-from .schema import TrailConditionSchemaInternal
 from .llm_client import LlmConfig
+from .schema import TrailConditionSchemaInternal
+
 
 def normalize_text(text: str) -> str:
     """全角半角・空白を揃えて比較の精度を上げる"""
@@ -15,7 +15,7 @@ def normalize_text(text: str) -> str:
 
 
 def sync_trail_conditions(
-    source: DataSource, ai_data_list: list[TrailConditionSchemaInternal], config:LlmConfig, prompt_file: str
+    source: DataSource, ai_data_list: list[TrailConditionSchemaInternal], config: LlmConfig, prompt_filename: str
 ) -> None:
     """
     AIの抽出データ(Pydantic)をDjango DBへ同期する。
@@ -66,12 +66,14 @@ def sync_trail_conditions(
                 existing_record.resolved_at = data.resolved_at
                 # AI関連情報を更新
                 existing_record.ai_model = config.model
-                existing_record.prompt_file = prompt_file
+                existing_record.prompt_file = prompt_filename
                 ai_config = {
-                    k: v for k, v in {
+                    k: v
+                    for k, v in {
                         "temperature": config.temperature,
                         "thinking_budget": config.thinking_budget,
-                    }.items() if v is not None
+                    }.items()
+                    if v is not None
                 }
                 existing_record.ai_config = ai_config
                 # save() により auto_now=True の updated_at が更新される
@@ -81,18 +83,20 @@ def sync_trail_conditions(
             # mountain_group は signals.py が MountainAlias に基づいて自動解決する
             generated_data = data.model_dump(exclude={"mountain_name_raw", "trail_name"})
             ai_config = {
-                k: v for k, v in {
+                k: v
+                for k, v in {
                     "temperature": config.temperature,
                     "thinking_budget": config.thinking_budget,
-                }.items() if v is not None
+                }.items()
+                if v is not None
             }
-            
+
             TrailCondition.objects.create(
                 source=source,
                 mountain_name_raw=data.mountain_name_raw,
                 trail_name=data.trail_name,
                 ai_model=config.model,
-                prompt_file=prompt_file,
+                prompt_file=prompt_filename,
                 ai_config=ai_config,
                 **generated_data,
             )

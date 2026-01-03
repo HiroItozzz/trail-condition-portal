@@ -20,3 +20,15 @@ prompt: |
   - area: "OKUTAMA" を指定
   - mountain_name_raw: 上記山名リストから正確に抽出（空文字は最小限に）
   - comment: 奥多摩町営バス、JR青梅線等の交通情報を充実
+
+# AI設定
+config:
+  model: "gemini-3-flash-preview"
+  # 山名抽出の精度重視のため低温度設定
+  temperature: 0.0
+  
+  # 奥多摩はテーブル形式で情報が豊富なため予算多め
+  thinking_budget: 5000
+  
+  # テンプレートと併用で精度向上
+  use_template: true

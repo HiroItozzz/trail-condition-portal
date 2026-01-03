@@ -1,0 +1,37 @@
+# プロンプトファイルの例
+# ファイル名: {id:03d}_{prompt_key}.yaml （例: 001_okutama_vc.yaml）
+
+prompt: |
+  あなたは登山道状況の専門家です。
+  提供されたWebサイトのテキストから登山道の状況情報を抽出してください。
+  
+  抽出時の注意点：
+  - 山名は必ず原文のまま正確に抽出
+  - 日付情報は YYYY-MM-DD 形式
+  - 状況は具体的に記述
+  
+  特記事項：
+  - このサイト固有の特徴や注意点をここに記述
+  - 例：山小屋情報が重要、特定の表現パターンなど
+
+# AI設定（オプション）
+config:
+  # 使用するAIモデル（CLI引数で上書き可能）
+  model: "deepseek-reasoner"
+  
+  # 生成の揺らぎ幅（0.0-2.0）
+  # 事実抽出には低めの値を推奨
+  # Gemini専用
+  temperature: 0.0
+  
+  # Gemini思考予算（トークン数）
+  thinking_budget: 5000
+  
+  # テンプレートプロンプトを使用するか
+  use_template: true
+
+# 設定項目の説明：
+# - model: CLI引数なしの場合に使用するモデル
+# - temperature: 0.0=確定的, 0.3=わずかな揺らぎ, 1.0=創造的
+# - thinking_budget: Geminiの思考予算（-1=無制限）
+# - use_template: template.yamlの内容を前置するか

@@ -31,9 +31,11 @@ def get_prompts_dir() -> Path:
 class LlmConfig(BaseModel):
     site_prompt: str = Field(default="", description="サイト固有プロンプト")
     use_template: bool = Field(default=True, description="template.yamlを使用するか")
-    model: str = Field(pattern=r"^(gemini|deepseek)-.+", default="deepseek-chat", description="使用するLLMモデル")
+    model: str = Field(pattern=r"^(gemini|deepseek)-.+", default="deepseek-reasoner", description="使用するLLMモデル")
     data: str = Field(description="解析するテキスト")
-    temperature: float = Field(default=0.3, ge=0, le=2.0, description="生成ごとの揺らぎの幅")
+    temperature: float = Field(
+        default=0.0, ge=0, le=2.0, description="生成ごとの揺らぎの幅（※ deepseek-reasonerでは無視される）"
+    )
     thinking_budget: int = Field(default=5000, ge=-1, le=15000, description="Geminiの思考予算（トークン数）")
 
     @computed_field
@@ -63,6 +65,73 @@ class LlmConfig(BaseModel):
             return key
         else:
             raise ValueError(f"サポートされていないモデル: {self.model}")
+
+    # promptファイルに各種設定個別設定追加予定{"model": deepseek-reasoner, "temperature":0.0}
+    @staticmethod
+    def load_config(filename: str) -> dict:
+        """
+        プロンプトファイルから設定を読み込み
+
+        Args:
+            filename: プロンプトファイル名（例：001_okutama_vc.yaml）
+
+        Returns:
+            dict: 設定情報（config部分）
+
+        Raises:
+            FileNotFoundError: ファイルが存在しない場合
+        """
+        prompts_dir = get_prompts_dir()
+        prompt_path = prompts_dir / filename
+
+        if not prompt_path.exists():
+            raise FileNotFoundError(f"プロンプトファイルが見つかりません: {prompt_path}")
+
+        config = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
+        return config.get("config", {})
+
+    @classmethod
+    def from_file(cls, prompt_filename: str, data: str, **cli_overrides):
+        """
+        プロンプトファイルから設定を読み込んでインスタンス作成
+
+        Args:
+            prompt_filename: プロンプトファイル名
+            data: 解析するテキスト
+            **cli_overrides: CLI引数による上書き設定
+
+        Returns:
+            LlmConfig: 設定がマージされたインスタンス
+        """
+        file_config = cls.load_config(prompt_filename)
+        site_prompt = cls.load_prompt(prompt_filename)
+
+        # CLI > promptファイル > デフォルト の優先度
+        # Noneの場合はPydanticデフォルト値を使用するため、引数から除外
+        kwargs = {
+            "site_prompt": site_prompt,
+            "use_template": file_config.get("use_template", True),
+            "data": data,
+        }
+
+        # None以外の値のみ設定（Noneの場合はPydanticデフォルトを使用）
+        model_value = cli_overrides.get("model") or file_config.get("model")
+        if model_value:
+            kwargs["model"] = model_value
+
+        # temperature: 0.0対応（is not None チェック）
+        temp_value = cli_overrides.get("temperature")
+        if temp_value is None:
+            temp_value = file_config.get("temperature")
+        if temp_value is not None:
+            kwargs["temperature"] = temp_value
+
+        # thinking_budget: 0対応（通常0は無効値なので or 使用）
+        budget_value = cli_overrides.get("thinking_budget") or file_config.get("thinking_budget")
+        if budget_value:
+            kwargs["thinking_budget"] = budget_value
+
+        return cls(**kwargs)
 
     @staticmethod
     def load_prompt(filename: str) -> str:
@@ -219,7 +288,7 @@ class DeepseekClient(ConversationalAi):
                     super().handle_unexpected_error(e)
 
         # 純粋なoutput_tokensを計算
-        thoughts_tokens = getattr(response.usage.completion_tokens_details, "reasoning_tokens", 0)
+        thoughts_tokens = getattr(response.usage.completion_tokens_details, "reasoning_tokens", 0) or 0
         output_tokens = response.usage.completion_tokens - thoughts_tokens
 
         stats = TokenStats(
@@ -276,7 +345,7 @@ class GeminiClient(ConversationalAi):
 
         stats = TokenStats(
             response.usage_metadata.prompt_token_count,
-            response.usage_metadata.thoughts_token_count,
+            getattr(response.usage_metadata, "thoughts_token_count", 0) or 0,  # Noneが返ってきた場合のフォールバック
             response.usage_metadata.candidates_token_count,
             len(self.prompt),
             len(response.text),

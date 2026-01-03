@@ -59,7 +59,7 @@ class TrailConditionPipeline:
         return await fetcher.fetch_text(client, url)
 
     async def _analyze_with_ai(
-        self, source_data: ModelDataSingle, scraped_text: str, ai_model: str
+        self, source_data: ModelDataSingle, scraped_text: str, ai_model: str | None
     ) -> tuple[LlmConfig, TrailConditionSchemaList, LlmStats]:
         """AI解析処理"""
         import time
@@ -67,15 +67,14 @@ class TrailConditionPipeline:
         prompt_filename = self._get_prompt_filename_from_data(source_data)
 
         try:
-            site_prompt = LlmConfig.load_prompt(prompt_filename)
-            config = LlmConfig(site_prompt=site_prompt, data=scraped_text, model=ai_model)
+            config = LlmConfig.from_file(prompt_filename, data=scraped_text, model=ai_model)
         except FileNotFoundError:
             raise ValueError(f"プロンプトファイルが見つかりません: {prompt_filename}")
 
         # AIクライアントの選択
-        if ai_model.startswith("deepseek"):
+        if config.model.startswith("deepseek"):
             ai_client = DeepseekClient(config)
-        elif ai_model.startswith("gemini"):
+        elif config.model.startswith("gemini"):
             ai_client = GeminiClient(config)
         else:
             raise ValueError(f"サポートされていないモデル: {ai_model}")
