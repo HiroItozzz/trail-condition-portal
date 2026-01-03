@@ -5,7 +5,7 @@ import httpx
 
 from .fetcher import DataFetcher
 from .llm_client import DeepseekClient, GeminiClient, LlmConfig
-from .llm_stats import TokenStats
+from .llm_stats import LlmStats, TokenStats
 from .schema import TrailConditionSchemaList
 from .types import SourceDataSingle, UpdatedDataList, UpdatedDataSingle
 
@@ -42,14 +42,11 @@ class TrailConditionPipeline:
             # 2. AI解析
             ai_result, stats = await self._analyze_with_ai(source_data, scraped_text, model)
 
-            # 3. スキーマ変換（DBに依存しない）
-            extracted_trail_conditions = self._convert_to_conditions_list(ai_result)
-
             return {
                 "success": True,
                 "scraped_length": len(scraped_text),
-                "extracted_trail_conditions": extracted_trail_conditions,
-                "stats": stats,  # 既に辞書になっている
+                "extracted_trail_conditions": ai_result,  # TrailConditionSchemaListのまま
+                "stats": stats,  # LlmStatsオブジェクト
             }
 
         except Exception as e:
@@ -62,12 +59,12 @@ class TrailConditionPipeline:
 
     async def _analyze_with_ai(
         self, source_data: SourceDataSingle, scraped_text: str, model: str
-    ) -> tuple[list[dict], dict]:
+    ) -> tuple[TrailConditionSchemaList, LlmStats]:
         """AI解析処理"""
         import time
-        
+
         prompt_filename = self._get_prompt_filename_from_data(source_data)
-        
+
         try:
             site_prompt = LlmConfig.load_prompt(prompt_filename)
             config = LlmConfig(site_prompt=site_prompt, data=scraped_text, model=model)
@@ -84,14 +81,14 @@ class TrailConditionPipeline:
 
         # 実行時間測定
         start_time = time.time()
-        ai_result, stats = await ai_client.generate()
+        ai_result, token_stats = await ai_client.generate()
         execution_time = time.time() - start_time
-        
-        # stats を辞書に変換し実行時間を追加
-        stats_dict = stats.to_dict()
-        stats_dict["execution_time"] = execution_time
-        
-        return ai_result, stats_dict
+
+        # LlmStatsでラップして実行時間を追加
+        llm_stats = LlmStats(token_stats)
+        llm_stats.execution_time = execution_time
+
+        return ai_result, llm_stats
 
     # AIモジュールからの出力をpydanticクラスに変更後、削除予定
     def _convert_to_conditions_list(self, ai_result: list[dict]) -> list[dict]:
@@ -105,4 +102,3 @@ class TrailConditionPipeline:
         source_id = source_data["id"]
         prompt_key = source_data["prompt_key"]
         return f"{source_id:03d}_{prompt_key}.yaml"
-

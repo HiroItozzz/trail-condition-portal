@@ -1,7 +1,7 @@
 import unicodedata
 
 from trail_status.models.condition import TrailCondition
-
+from trail_status.models.source import DataSource
 from .schema import TrailConditionSchemaInternal
 
 
@@ -12,7 +12,7 @@ def normalize_text(text: str) -> str:
     return unicodedata.normalize("NFKC", text).strip().replace(" ", "").replace("　", "")
 
 
-def sync_trail_conditions(source, ai_data_list: list[TrailConditionSchemaInternal]):
+def sync_trail_conditions(source:DataSource, ai_data_list: list[TrailConditionSchemaInternal]) -> None:
     """
     AIの抽出データ(Pydantic)をDjango DBへ同期する。
     既存レコードとの同定。レコードがあれば更新、なければ作成を行う。
