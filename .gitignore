@@ -6,7 +6,6 @@
 help/
 *.log
 *.log.1
-*.json
 Claude Conversations/
 
 .pytest_cache
