@@ -6,11 +6,8 @@ import pytest
 import os
 from pathlib import Path
 
-# pytest-asyncio設定
-pytest_plugins = ["pytest_asyncio"]
-
-# Django設定
-pytest_plugins = ["pytest_django"]
+# pytest設定
+pytest_plugins = ["pytest_asyncio", "pytest_django"]
 
 
 @pytest.fixture
@@ -31,7 +28,8 @@ def clean_env(monkeypatch):
 def sample_llm_config():
     """共通のLLM設定"""
     return {
-        "prompt": "テスト用プロンプト",
+        "site_prompt": "テスト用プロンプト",
+        "use_template": False,  # テスト用にテンプレートを無効化
         "model": "deepseek-chat",
         "temperature": 0.3,
         "data": "テスト用データ"
@@ -54,7 +52,7 @@ def mock_openai_response():
     
     mock_response = MagicMock()
     mock_response.choices = [MagicMock()]
-    mock_response.choices[0].message.content = '{"conditions": []}'
+    mock_response.choices[0].message.content = '{"trail_condition_records": []}'
     mock_response.usage.prompt_tokens = 100
     mock_response.usage.completion_tokens = 50
     mock_response.usage.completion_tokens_details.reasoning_tokens = 0
@@ -66,13 +64,16 @@ def mock_openai_response():
 def mock_gemini_response():
     """Gemini APIレスポンスのモック"""
     from unittest.mock import MagicMock
-    
+
     mock_response = MagicMock()
-    mock_response.text = '{"conditions": []}'
+    mock_response.text = '{"trail_condition_records": []}'
+    mock_response.candidates = [MagicMock()]
+    mock_response.candidates[0].content.parts = [MagicMock(text="", thought=False)]
     mock_response.usage_metadata.prompt_token_count = 100
     mock_response.usage_metadata.thoughts_token_count = 20
     mock_response.usage_metadata.candidates_token_count = 50
-    
+    mock_response.usage_metadata.total_token_count = 170
+
     return mock_response
 
 
