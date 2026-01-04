@@ -36,6 +36,7 @@ class LlmConfig(BaseModel):
         default=0.0, ge=0, le=2.0, description="生成ごとの揺らぎの幅（※ deepseek-reasonerでは無視される）"
     )
     thinking_budget: int = Field(default=5000, ge=-1, le=15000, description="Geminiの思考予算（トークン数）")
+    prompt_filename: str | None = Field(defalut=None, description="LLMエラー処理での識別用ファイルネーム")
 
     @computed_field
     @property
@@ -111,6 +112,7 @@ class LlmConfig(BaseModel):
             "site_prompt": site_prompt,
             "use_template": file_config.get("use_template", True),
             "data": data,
+            "prompt_filename": prompt_filename,
         }
 
         # None以外の値のみ設定（Noneの場合はPydanticデフォルトを使用）
@@ -165,6 +167,18 @@ class LlmConfig(BaseModel):
         """template.yamlを読み込み"""
         return LlmConfig.load_prompt("template.yaml")
 
+    def __repr__(self) -> str:
+        """デバッグ用に重要な情報を表示"""
+        data_preview = self.data[:50] + "..." if len(self.data) > 50 else self.data
+
+        return (
+            f"LlmConfig("
+            f"model={self.model!r}, temp={self.temperature}, prompt_len={len(self.full_prompt)}, "
+            f"data_len={len(self.data)}, prompt_filename={self.prompt_filename!r}, "
+            f"data_preview={data_preview!r}"
+            f")"
+        )
+
 
 class ConversationalAi(ABC):
     def __init__(self, config: LlmConfig):
@@ -174,6 +188,8 @@ class ConversationalAi(ABC):
         self.data: str = config.data
         self.api_key: str = config.api_key
         self.thinking_budget: int = config.thinking_budget
+        self.prompt_filename: str | None = config.prompt_filename
+        self._config: LlmConfig | None = config
 
     @abstractmethod
     async def generate(self) -> tuple[dict, TokenStats]:
@@ -191,8 +207,16 @@ class ConversationalAi(ABC):
 
     async def validation_error(self, i, max_retries, response_text):
         if i < max_retries - 1:
-            logger.warning(f"{self.model}が構造化出力に失敗。{5 * (i + 1)}秒後にリトライします。")
-            await asyncio.sleep(5 * (i + 1))
+            logger.warning(f"{self.model}が構造化出力に失敗。")
+            if self.temperature == 0:
+                self.temperature += 0.1
+                logger.warning(f"Temperatureを0.1上げてリトライします。更新後のTemperature: {self.temperature}")
+                logger.warning(
+                    "Temperature=0は毎回同じ出力（＝構造化失敗）となります。設定を0.1以上にすることを検討してください"
+                )
+                logger.warning(f"設定ファイル名:{self.prompt_filename!r}")
+            logger.warning("3秒後にリトライします")
+            await asyncio.sleep(3)
         else:
             logger.error(f"{self.model}が{max_retries}回構造化出力に失敗。LLMの設定を見直してください。")
             self.save_invalid_data(response_text)
@@ -246,8 +270,9 @@ class DeepseekClient(ConversationalAi):
     async def generate(self) -> tuple[TrailConditionSchemaList, TokenStats]:
         from openai import AsyncOpenAI
 
-        logger.warning("Deepseekからの応答を待っています。")
-        logger.debug(f"APIリクエスト中。APIキー: ...{self.api_key[-5:]}")
+        logger.info(f"{self.model}の応答を待っています。")
+        logger.debug(f"LlmConfig詳細： \n{self._config}")
+        logger.debug(f"APIキー: ...{self.api_key[-5:]}")
 
         client = AsyncOpenAI(api_key=self.api_key, base_url="https://api.deepseek.com")
 
@@ -300,9 +325,9 @@ class DeepseekClient(ConversationalAi):
             len(generated_text),
             self.model,
         )
-        
-        logger.debug("トータルトークン（from TokenStats）：", stats.total_tokens)
-        logger.debug("トータルトークンカウント：", response.usage.total_tokens)
+
+        logger.debug(f"トータルトークン（from TokenStats）： {stats.total_tokens}")
+        logger.debug(f"トータルトークンカウント： {response.usage.total_tokens}")
 
         return validated_data, stats
 
@@ -317,8 +342,9 @@ class GeminiClient(ConversationalAi):
         from google.genai import types
         from google.genai.errors import ClientError, ServerError
 
-        logger.warning("Geminiからの応答を待っています。")
-        logger.debug(f"APIリクエスト中。APIキー: ...{self.api_key[-5:]}")
+        logger.info(f"{self.model}の応答を待っています。")
+        logger.debug(f"LlmConfig詳細： \n{self._config}")
+        logger.debug(f"APIキー: ...{self.api_key[-5:]}")
 
         # api_key引数なしでも、環境変数"GEMNI_API_KEY"の値を勝手に参照するが、可読性のため代入
         client = genai.Client()
@@ -366,8 +392,8 @@ class GeminiClient(ConversationalAi):
             self.model,
         )
 
-        logger.debug("トータルトークン（from TokenStats）：", stats.total_tokens)
-        logger.debug("トータルトークンカウント：", response.usage_metadata.total_token_count)
+        logger.debug(f"トータルトークン（from TokenStats）： {stats.total_tokens}")
+        logger.debug(f"トータルトークンカウント： {response.usage_metadata.total_token_count}")
 
         return validated_data, stats
 
