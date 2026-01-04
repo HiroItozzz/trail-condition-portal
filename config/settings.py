@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",  # セッションフレームワーク
     "django.contrib.messages",  # メッセージフレームワーク
     "django.contrib.staticfiles",  # 静的ファイルの管理フレームワーク
+    "corsheaders",  # CORS対応
     "rest_framework",  # Django REST Framework
     "trail_status",
     "api",
@@ -53,6 +54,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",  # CORS対応（CommonMiddlewareの前に配置）
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -200,3 +202,13 @@ REST_FRAMEWORK = {
     "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",
     "DATE_FORMAT": "%Y-%m-%d",
 }
+
+# CORS configuration
+# フロントエンド（Vite開発サーバー）からのアクセスを許可
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Vite開発サーバー
+    "http://127.0.0.1:5173",
+]
+
+# 開発環境でのみ全てのオリジンを許可する場合（本番環境では絶対にFalse）
+# CORS_ALLOW_ALL_ORIGINS = True
