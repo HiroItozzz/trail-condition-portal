@@ -70,7 +70,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -214,3 +214,9 @@ CORS_ALLOWED_ORIGINS = [
 
 # 開発環境でのみ全てのオリジンを許可する場合（本番環境では絶対にFalse）
 # CORS_ALLOW_ALL_ORIGINS = True
+
+
+STATIC_URL = "static/"
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]

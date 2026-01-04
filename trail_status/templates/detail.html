@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="detail-container">
+    <header class="detail-header">
+        <div class="header-top">
+            <span class="status-label {{ item.status }}">{{ item.get_status_display }}</span>
+            <span class="area-tag">{{ item.get_area_display|default:"未設定" }}</span>
+        </div>
+        <h1>{{ item.trail_name }}</h1>
+        <p class="mountain-sub">[{{ item.mountain_name_raw }}]</p>
+    </header>
+
+    <div class="detail-grid">
+        <section class="info-main">
+            <h2 class="detail-title">{{ item.title }}</h2>
+            <div class="detail-content">
+                {{ item.body|linebreaks }}
+            </div>
+        </section>
+
+        <aside class="info-sidebar">
+            <div class="meta-card">
+                <div class="meta-item">
+                    <label>報告日</label>
+                    <span>{{ item.reported_at|date:"Y/m/d" }}</span>
+                </div>
+                <div class="meta-item">
+                    <label>最終更新</label>
+                    <span>{{ item.updated_at|date:"Y/m/d H:i" }}</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <footer class="detail-actions">
+        <a href="{% url 'condition-list' %}" class="back-link">← 一覧へ戻る</a>
+    </footer>
+</div>
+{% endblock %}

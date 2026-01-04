@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>登山道ポータル</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+  </head>
+  <body style="display: flex">
+    <aside class="sidebar" style="width: 300px">
+      <div class="sidebar-header">
+        <a href="{% url 'condition-list' %}"><h1>🏔️ 登山道ポータル</h1></a>
+      </div>
+
+      <form
+        method="GET"
+        action="{% url 'condition-list' %}"
+        class="filter-form"
+      >
+        <button type="submit">検索</button>
+      </form>
+    </aside>
+
+    <main class="main-content" style="flex: 1; padding: 20px">
+      {% block content %} {% endblock %}
+    </main>
+  </body>
+</html>

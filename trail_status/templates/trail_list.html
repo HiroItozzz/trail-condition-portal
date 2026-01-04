@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>登山道 危険箇所一覧</h2>
+<table id="trail-table" class="display">
+    <thead>
+        <tr>
+            <th>箇所名</th>
+            <th>状況</th>
+            <th>詳細内容</th>
+            <th>更新日</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for trail in trails %}
+        <tr>
+            <td><strong>{{ trail.name }}</strong></td>
+            <td>{{ trail.status }}</td>
+            <td>{{ trail.description }}</td>
+            <td>{{ trail.updated_at|date:"Y/m/d" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

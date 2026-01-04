@@ -1,0 +1,225 @@
+/* リスト全体のコンテナ */
+.report-list {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+}
+
+/* 各行のスタイル */
+.list-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  font-size: 0.95rem;
+}
+
+/* ヘッダー行は濃い色で締める */
+.list-item.header {
+  background-color: #f8f9fa;
+  font-weight: bold;
+  border-bottom: 2px solid #2c3e50;
+  color: #555;
+  font-size: 0.85rem;
+}
+
+/* 列ごとの幅調整 */
+.col-status {
+  width: 100px;
+}
+.col-area {
+  width: 120px;
+  color: #666;
+}
+.col-name {
+  flex: 1;
+  padding-right: 20px;
+}
+.col-date {
+  width: 100px;
+  font-size: 0.85rem;
+  color: #777;
+}
+v
+/* 項目内の詳細 */
+.mountain-prefix {
+  color: #888;
+  font-size: 0.85rem;
+  margin-right: 5px;
+}
+.summary-text {
+  margin: 4px 0 0 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* 状態ラベル（文字色のみ、または控えめな背景） */
+.status-label {
+  font-weight: bold;
+  font-size: 0.85rem;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+}
+.status-label.PASSABLE {
+  color: #27ae60;
+  border-color: #27ae60;
+}
+.status-label.CAUTION {
+  color: #d35400;
+  border-color: #d35400;
+}
+.status-label.CLOSURE {
+  color: #c0392b;
+  border-color: #c0392b;
+}
+
+/* 閲覧ボタン */
+.view-btn {
+  text-decoration: none;
+  color: #2c3e50;
+  border: 1px solid #2c3e50;
+  padding: 2px 8px;
+  font-size: 0.8rem;
+  transition: 0.2s;
+}
+.view-btn:hover {
+  background: #2c3e50;
+  color: white;
+}
+.list-item.header a {
+  color: inherit;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.list-item.header a:hover {
+  color: #000;
+  text-decoration: underline;
+}
+
+/* ソート中の列を強調する場合 */
+.list-item.header .active-sort {
+  color: #2c3e50;
+  text-decoration: underline;
+}
+/* 1行おきに背景に薄い色をつける（ストライプ） */
+.report-list .list-item:nth-child(even) {
+  background-color: #fafafa;
+}
+
+/* マウスホバーで強調 */
+.report-list .list-item:not(.header):hover {
+  background-color: #f1f4f9;
+}
+
+/* ソート用リンクの装飾を消す */
+.list-item.header a {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  width: 100%;
+}
+.detail-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.detail-header {
+  border-bottom: 2px solid #333;
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+}
+
+.header-top {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.area-tag {
+  background: #f0f0f0;
+  padding: 2px 8px;
+  font-size: 0.85rem;
+  border-radius: 4px;
+}
+
+.mountain-sub {
+  color: #666;
+  font-size: 1.1rem;
+  margin-top: 8px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 40px;
+}
+
+.detail-title {
+  font-size: 1.4rem;
+  margin-bottom: 24px;
+  color: #2c3e50;
+  line-height: 1.4;
+}
+
+.detail-content {
+  line-height: 1.8;
+  font-size: 1.05rem;
+  color: #333;
+}
+
+.meta-card {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.meta-item {
+  margin-bottom: 16px;
+}
+
+.meta-item:last-child {
+  margin-bottom: 0;
+}
+
+.meta-item label {
+  display: block;
+  font-size: 0.8rem;
+  color: #777;
+  margin-bottom: 4px;
+}
+
+.meta-item span {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.detail-actions {
+  margin-top: 50px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.back-link {
+  text-decoration: none;
+  color: #555;
+  font-weight: bold;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .info-sidebar {
+    order: -1;
+  }
+}
