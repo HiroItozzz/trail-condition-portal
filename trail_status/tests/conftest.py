@@ -29,6 +29,7 @@ def sample_llm_config():
     """共通のLLM設定"""
     return {
         "site_prompt": "テスト用プロンプト",
+        "use_template": False,  # テスト用にテンプレートを無効化
         "model": "deepseek-chat",
         "temperature": 0.3,
         "data": "テスト用データ"

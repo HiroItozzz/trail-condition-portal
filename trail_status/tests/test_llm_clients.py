@@ -40,9 +40,9 @@ async def test_deepseek_generate_success(config, monkeypatch, mock_openai_respon
     mock_client = MagicMock()
     mock_client.chat.completions.create = AsyncMock(return_value=mock_openai_response)
 
-    # AsyncOpenAI をモック
+    # openai.AsyncOpenAI をモック（メソッド内でインポートされるため）
     mock_openai_class = MagicMock(return_value=mock_client)
-    monkeypatch.setattr("trail_status.services.llm_client.AsyncOpenAI", mock_openai_class)
+    monkeypatch.setattr("openai.AsyncOpenAI", mock_openai_class)
 
     client = DeepseekClient(config)
 
