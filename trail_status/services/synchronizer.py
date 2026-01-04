@@ -1,3 +1,4 @@
+import logging
 import unicodedata
 
 from trail_status.models.condition import TrailCondition
@@ -5,6 +6,8 @@ from trail_status.models.source import DataSource
 
 from .llm_client import LlmConfig
 from .schema import TrailConditionSchemaInternal
+
+logger = logging.getLogger(__name__)
 
 
 def normalize_text(text: str) -> str:
@@ -78,6 +81,7 @@ def sync_trail_conditions(
                 existing_record.ai_config = ai_config
                 # save() により auto_now=True の updated_at が更新される
                 existing_record.save()
+                logger.info(f"レコード更新: {normalized_m_name}/{normalized_t_name} (ID: {existing_record.id})")
         else:
             # 3. 新規レコードの作成
             # mountain_group は signals.py が MountainAlias に基づいて自動解決する
@@ -91,7 +95,7 @@ def sync_trail_conditions(
                 if v is not None
             }
 
-            TrailCondition.objects.create(
+            new_record = TrailCondition.objects.create(
                 source=source,
                 mountain_name_raw=data.mountain_name_raw,
                 trail_name=data.trail_name,
@@ -100,3 +104,4 @@ def sync_trail_conditions(
                 ai_config=ai_config,
                 **generated_data,
             )
+            logger.info(f"新規レコード作成: {normalized_m_name}/{normalized_t_name} (ID: {new_record.id})")

@@ -23,6 +23,7 @@ class DataFetcher:
         """
         単一のURLからテキストを取得。リトライとロギング付き。
         """
+        logger.debug(f"テキスト取得開始: {url}")
 
         try:
             response = await client.get(url, headers=self.headers)
@@ -38,6 +39,7 @@ class DataFetcher:
                 logger.warning(f"Trafilaturaがコンテンツの抽出に失敗しました。生のテキストを出力します。URL: {url}")
                 content = trafilatura.html2txt(response.text)
 
+            logger.debug(f"テキスト取得成功: {url} (抽出文字数: {len(content or '')})")
             return content or ""
 
         except httpx.HTTPStatusError as e:
@@ -70,17 +72,24 @@ class DataFetcher:
     def has_content_changed(self, html: str, previous_hash: Optional[str]) -> tuple[bool, str]:
         """
         コンテンツが変更されているかをハッシュで判定
-        
+
         Args:
             html: 現在のHTML
             previous_hash: 前回のハッシュ値（None の場合は初回）
-            
+
         Returns:
             tuple[bool, str]: (変更フラグ, 新しいハッシュ値)
         """
         current_hash = self.calculate_content_hash(html)
-        
+
         # 初回スクレイピングまたはハッシュが異なる場合は変更あり
         has_changed = previous_hash is None or current_hash != previous_hash
-        
+
+        if previous_hash is None:
+            logger.debug(f"初回スクレイピング - ハッシュ: {current_hash[:8]}...")
+        elif has_changed:
+            logger.debug(f"コンテンツ変更検知 - 旧: {previous_hash[:8]}... 新: {current_hash[:8]}...")
+        else:
+            logger.debug(f"コンテンツ変更なし - ハッシュ: {current_hash[:8]}...")
+
         return has_changed, current_hash

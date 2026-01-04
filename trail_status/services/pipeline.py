@@ -20,6 +20,8 @@ class TrailConditionPipeline:
 
     async def process_source_data(self, source_data_list: list[ModelDataSingle], ai_model: str) -> UpdatedDataList:
         """ソースデータリストを並行処理（Django ORM一切なし）"""
+        logger.info(f"パイプライン処理開始 - 対象: {len(source_data_list)}件, モデル: {ai_model or 'デフォルト'}")
+
         async with httpx.AsyncClient() as client:
             tasks = []
             for source_data in source_data_list:
@@ -29,6 +31,7 @@ class TrailConditionPipeline:
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
+        logger.info(f"パイプライン処理完了 - 処理件数: {len(results)}")
         return list(zip(source_data_list, results))
 
     # コア処理
@@ -36,10 +39,13 @@ class TrailConditionPipeline:
         self, client: httpx.AsyncClient, source_data: ModelDataSingle, ai_model: str
     ) -> UpdatedDataSingle:
         """単一ソースデータの処理パイプライン（純粋async）"""
+        logger.debug(f"処理開始: {source_data['name']} (ID: {source_data['id']})")
+
         try:
             # 1. スクレイピング
             scraped_html = await self._fetch_raw_content(client, source_data["url1"])
             if not scraped_html.strip():
+                logger.warning(f"スクレイピング結果が空: {source_data['name']}")
                 return {"error": "スクレイピング結果が空でした"}
 
             # 2. ハッシュベース変更検知
@@ -58,10 +64,13 @@ class TrailConditionPipeline:
             # 3. trafilaturaでテキスト抽出
             scraped_text = await self._extract_text_content(client, source_data["url1"])
             if not scraped_text.strip():
+                logger.warning(f"テキスト抽出結果が空: {source_data['name']}")
                 return {"error": "テキスト抽出結果が空でした"}
 
             # 4. AI解析（コンテンツ変更時のみ）
+            logger.info(f"AI解析開始: {source_data['name']} - モデル: {ai_model or 'デフォルト'}")
             config, ai_result, stats = await self._analyze_with_ai(source_data, scraped_text, ai_model)
+            logger.info(f"AI解析完了: {source_data['name']} - コスト: ${stats.total_fee:.4f}, 実行時間: {stats.execution_time:.2f}秒")
 
             return {
                 "success": True,
@@ -74,6 +83,7 @@ class TrailConditionPipeline:
             }
 
         except Exception as e:
+            logger.error(f"処理エラー: {source_data['name']} - {str(e)}")
             return {"error": str(e)}
 
     async def _fetch_raw_content(self, client: httpx.AsyncClient, url: str) -> str:
@@ -103,6 +113,7 @@ class TrailConditionPipeline:
         try:
             config = LlmConfig.from_file(prompt_filename, data=scraped_text, model=ai_model)
         except FileNotFoundError:
+            logger.error(f"プロンプトファイルが見つかりません: {prompt_filename}")
             raise ValueError(f"プロンプトファイルが見つかりません: {prompt_filename}")
 
         # AIクライアントの選択

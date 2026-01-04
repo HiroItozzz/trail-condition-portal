@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from decimal import Decimal
 from typing import Any
 
@@ -12,6 +13,8 @@ from trail_status.services.pipeline import TrailConditionPipeline
 from trail_status.services.schema import TrailConditionSchemaInternal, TrailConditionSchemaList
 from trail_status.services.synchronizer import sync_trail_conditions
 from trail_status.services.types import UpdatedDataList, UpdatedDataSingle
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -32,6 +35,8 @@ class Command(BaseCommand):
         ai_model = options.get("model")
         dry_run = options["dry_run"]
 
+        logger.info(f"trail_sync コマンド開始 - source_id: {source_id}, model: {ai_model}, dry_run: {dry_run}")
+
         if dry_run:
             self.stdout.write(self.style.WARNING("DRY-RUNモード: DBには保存されません"))
 
@@ -50,6 +55,7 @@ class Command(BaseCommand):
                 ]
                 self.stdout.write(f"情報源: {source.name}")
             except DataSource.DoesNotExist:
+                logger.error(f"指定された情報源が見つかりません: {source_id}")
                 self.stdout.write(self.style.ERROR(f"指定された情報源が見つかりません: {source_id}"))
                 return
         else:
@@ -116,6 +122,7 @@ class Command(BaseCommand):
                     sync_trail_conditions(source, internal_data_list, config, prompt_filename)
                     self._save_llm_usage(source, llm_stats, len(internal_data_list))
 
+                logger.info(f"DB保存完了: {source_data['name']} - {len(internal_data_list)}件 (コスト: ${result['stats'].total_fee:.4f})")
                 self.stdout.write(
                     self.style.SUCCESS(
                         f"DB保存完了: {source_data['name']} - {len(internal_data_list)}件 (コスト: ${result['stats'].total_fee:.4f})"
