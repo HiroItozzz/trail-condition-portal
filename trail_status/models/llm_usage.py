@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.db import models
+from django.utils import timezone
 
 from .source import DataSource
 
@@ -13,9 +14,9 @@ class LlmUsage(models.Model):
     model = models.CharField("LLMモデル", max_length=50)
 
     # トークン情報
-    prompt_tokens = models.IntegerField("入力トークン数",default=0)
+    prompt_tokens = models.IntegerField("入力トークン数", default=0)
     thinking_tokens = models.IntegerField("思考トークン数", default=0)
-    output_tokens = models.IntegerField("出力トークン数",default=0)
+    output_tokens = models.IntegerField("出力トークン数", default=0)
 
     # コスト情報
     cost_usd = models.DecimalField("コスト(USD)", max_digits=10, decimal_places=6, default=Decimal("0.000000"))
@@ -50,4 +51,5 @@ class LlmUsage(models.Model):
         return self.prompt_tokens + self.thinking_tokens + self.output_tokens
 
     def __str__(self):
-        return f"{self.source.name} - {self.model} ({self.executed_at.strftime('%Y-%m-%d %H:%M')})"
+        lt = timezone.localtime(self.executed_at)
+        return f"{self.source.name} - {self.model} ({lt.strftime('%y-%m-%d %H:%M')})"

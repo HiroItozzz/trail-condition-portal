@@ -28,7 +28,7 @@ config:
   temperature: 0.0
   
   # 奥多摩はテーブル形式で情報が豊富なため予算多め
-  thinking_budget: 5000
+  thinking_budget: 15000
   
   # テンプレートと併用で精度向上
   use_template: true

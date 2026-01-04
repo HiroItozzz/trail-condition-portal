@@ -31,7 +31,7 @@ SECRET_KEY = "django-insecure-b^^&7&(v)4=pcrntfyx+933&avmr4+)s7uulnjdo#78nixmhcs
 DEBUG = True
 
 # 許可するホスト
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [".localhost", "127.0.0.1", "[::1]"]
 
 
 # Application definition
@@ -44,7 +44,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",  # セッションフレームワーク
     "django.contrib.messages",  # メッセージフレームワーク
     "django.contrib.staticfiles",  # 静的ファイルの管理フレームワーク
+    "rest_framework",  # Django REST Framework
     "trail_status",
+    "api",
 ]
 
 # ミドルウェア
@@ -173,4 +175,28 @@ LOGGING = {
             "propagate": False,
         },
     },
+}
+
+# Django REST Framework configuration
+REST_FRAMEWORK = {
+    # ページネーション設定
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,  # 1ページあたり20件
+    # デフォルトの認証（今は不要だが将来のため）
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",  # ← Browsable API用
+        "rest_framework.authentication.BasicAuthentication",  # ← APIクライアント用
+    ],
+    # デフォルトの権限（誰でも読み取り可能）
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",
+    ],
+    # レンダラー（JSON + ブラウザブルAPI）
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",  # 開発用UI
+    ],
+    # 日時フォーマット
+    "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",
+    "DATE_FORMAT": "%Y-%m-%d",
 }

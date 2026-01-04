@@ -132,7 +132,7 @@ class LlmUsageAdmin(admin.ModelAdmin):
 
     @admin.display(description="実行日時", ordering="executed_at")
     def execution_date(self, obj):
-        return obj.executed_at.strftime("%m/%d %H:%M")
+        return obj.executed_at.strftime("%Y-%m-%d %H:%M")
 
     @admin.display(description="1件あたりコスト")
     def cost_per_item(self, obj):

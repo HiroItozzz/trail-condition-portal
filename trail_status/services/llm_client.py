@@ -1,8 +1,6 @@
 import asyncio
-import json
 import logging
 import os
-import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -167,7 +165,7 @@ class LlmConfig(BaseModel):
         """template.yamlを読み込み"""
         return LlmConfig.load_prompt("template.yaml")
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         """デバッグ用に重要な情報を表示"""
         data_preview = self.data[:50] + "..." if len(self.data) > 50 else self.data
 
@@ -326,9 +324,7 @@ class DeepseekClient(ConversationalAi):
             self.model,
         )
 
-        logger.debug(f"トータルトークン（from TokenStats）： {stats.total_tokens}")
-        logger.debug(f"トータルトークンカウント： {response.usage.total_tokens}")
-
+        logger.debug("DeepseekClientの処理終了")
         return validated_data, stats
 
 
@@ -392,8 +388,7 @@ class GeminiClient(ConversationalAi):
             self.model,
         )
 
-        logger.debug(f"トータルトークン（from TokenStats）： {stats.total_tokens}")
-        logger.debug(f"トータルトークンカウント： {response.usage_metadata.total_token_count}")
+        logger.debug("GeminiClientの処理終了")
 
         return validated_data, stats
 
