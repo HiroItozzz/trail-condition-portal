@@ -146,11 +146,11 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
-            "format": "{levelname} {asctime} {module} {message}",
+            "format": "{levelname} | {asctime} | {module} | {message}",
             "style": "{",
         },
         "console": {
-            "format": "{levelname} {name} {funcName} {message}",
+            "format": "{levelname} | {name} | {funcName} | {message}",
             "style": "{",
         },
     },

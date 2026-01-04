@@ -26,7 +26,7 @@ def get_prompts_dir() -> Path:
 
 
 class LlmConfig(BaseModel):
-    site_prompt: str = Field(default="", description="サイト固有プロンプト")
+    site_prompt: str | None = Field(default="", description="サイト固有プロンプト")
     use_template: bool = Field(default=True, description="template.yamlを使用するか")
     model: str = Field(pattern=r"^(gemini|deepseek)-.+", default="deepseek-reasoner", description="使用するLLMモデル")
     data: str = Field(description="解析するテキスト")

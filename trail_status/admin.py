@@ -12,7 +12,7 @@ class DataSourceAdmin(admin.ModelAdmin):
     list_display = ["name", "id", "prompt_key", "organization_type", "prefecture_code", "url1", "last_scraped_at"]
     list_filter = ["organization_type", ("last_scraped_at", admin.DateFieldListFilter)]
     search_fields = ["name"]
-    readonly_fields = ["content_hash", "last_scraped_at"]
+    readonly_fields = ["last_scraped_at"]
 
     fieldsets = (
         ("基本情報", {"fields": ("name", "organization_type", "prefecture_code", "prompt_key")}),
