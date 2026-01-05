@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* 余計な余白を徹底的に排除 */
+    table.dataTable.compact td {
+        padding: 2px 4px !important; /* 最小限の余白 */
+        white-space: normal !important;
+        word-break: break-all;
+        vertical-align: top;
+        font-size: 13px; /* 小さめの文字で情報量を増やす */
+        line-height: 1.3; /* 行間を詰め、高さを抑える */
+    }
+    /* 備考欄の装飾も簡素化してスペースを節約 */
+    .comment-box {
+        font-size: 12px;
+        color: #666;
+        border-top: 1px dotted #ccc;
+        margin-top: 2px;
+    }
+    /* 既存の表示を崩さず、文字の折り返しだけを許可する */
+    table.dataTable td {
+        white-space: normal !important;
+    }
+    .status-CLOSURE { color: #d32f2f; font-weight: bold; }   /* 通行止め: 赤 */
+    .status-HAZARD  { color: #f57c00ff; font-weight: bold; }   /* 危険・注意: オレンジ */
+    .status-SNOW    { color: #0097a7; font-weight: bold; }   /* 積雪: シアン */
+    .status-RESOLVED { color: #388e3c; }                    /* 解消済み: 緑 */
+    .status-OTHER   { color: #616161; }                    /* その他: グレー */
+    /* その他（ANIMAL, WEATHER等）はデフォルトの青 */
+    .status-default { color: #1976d2; }
+</style>
+<table id="trail-table" class="display compact cell-border"> <thead>
+        <tr>
+            <th>更新日</th>
+            <th>山域</th>
+            <th>状況種別</th>
+            <th>対象（山名・登山道）</th>
+            <th>タイトル・詳細</th>
+            <th>情報源</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in conditions %}
+        <tr>
+            <td style="white-space: nowrap;">{{ item.updated_at|date:"Y/m/d"|default:"-" }}</td>
+            <td>{{ item.get_area_display }}</td>
+<td>
+        <span class="status-{{ item.status }}">
+            {{ item.get_status_display }}
+        </span>
+</td>
+            <td>
+                <strong>{{ item.mountain_name_raw }}</strong><br>
+                {{ item.trail_name }}
+            </td>
+            <td>
+                <strong>{{ item.title }}</strong>
+                <div style="font-size: 0.85em; color: #333; margin-top: 4px;">{{ item.description }}</div>
+                {% if item.comment %}
+                <div style="font-size: 0.8em; color: #666; border-left: 2px solid #ccc; padding-left: 5px; margin-top: 4px;">
+                    備考: {{ item.comment }}
+                </div>
+                {% endif %}
+            </td>
+            <td>
+                <a href="{{ item.url1 }}" target="_blank" rel="nofollow" style="font-size: 1em;">
+                    {{ item.source.name|default:"情報元" }}
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
