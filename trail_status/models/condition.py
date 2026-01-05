@@ -3,6 +3,7 @@ from django.utils import timezone
 
 from .mountain import AreaName, MountainGroup
 from .source import DataSource
+from .utils import ChoiceManager
 
 
 class StatusType(models.TextChoices):
@@ -70,6 +71,8 @@ class TrailCondition(models.Model):
     disabled = models.BooleanField("情報の無効化（管理用）", default=False, help_text="[使用例] 誤情報だった場合ほか")
     created_at = models.DateTimeField("登録日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)
+
+    objects: ChoiceManager = ChoiceManager()
 
     class Meta:
         verbose_name = "登山道状態"

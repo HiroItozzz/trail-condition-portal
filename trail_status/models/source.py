@@ -1,5 +1,5 @@
 from django.db import models
-
+from .utils import ChoiceManager
 
 class OrganizationType(models.TextChoices):
     MUNICIPALITY = "MUNICIPALITY", "地方自治体"
@@ -31,23 +31,19 @@ class DataSource(models.Model):
         choices=[("WEB", "Webページ")],
         default="WEB",
     )
-    
+
     # ハッシュベース重複検出
     content_hash = models.CharField(
-        "コンテンツハッシュ", 
-        max_length=64, 
-        blank=True, 
-        help_text="スクレイピング内容のハッシュ値（変更検知用）"
+        "コンテンツハッシュ", max_length=64, blank=True, help_text="スクレイピング内容のハッシュ値（変更検知用）"
     )
     last_scraped_at = models.DateTimeField(
-        "最終スクレイピング日時", 
-        null=True, 
-        blank=True,
-        help_text="最後にコンテンツを取得した日時"
+        "最終スクレイピング日時", null=True, blank=True, help_text="最後にコンテンツを取得した日時"
     )
-    
+
     created_at = models.DateTimeField("登録日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)
+
+    objects: ChoiceManager = ChoiceManager()
 
     class Meta:
         verbose_name = "情報源"

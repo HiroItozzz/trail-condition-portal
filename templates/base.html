@@ -12,25 +12,35 @@
   </head>
   <body>
     <div id="sidebar">
+      <div>
+        <a href="{% url 'trail-list' %}">すべての情報を表示</a>
+      </div>
+      <h3>サイト別</h3>
+      <ul style="list-style: none; padding: 0;">
+        {% for id, name in source_choices %}
+          <li>
+            <a href="?source={{ id|stringformat:'s' }}"
+               {% if current_source == id %}style="font-weight:bold;"{% endif %}>{{ name }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+      <hr>
       <h3>山域別</h3>
       <ul style="list-style: none; padding: 0;">
-        <li>
-          <a href="{% url 'trail-list' %}">すべて表示</a>
-        </li>
-        {% for code, name in area_choices %}
+        {% for id, name in area_choices %}
           <li>
-            <a href="?area={{ code }}"
-               {% if current_area == code %}style="font-weight:bold;"{% endif %}>{{ name }}</a>
+            <a href="?area={{ id }}"
+               {% if current_area == id %}style="font-weight:bold;"{% endif %}>{{ name }}</a>
           </li>
         {% endfor %}
       </ul>
       <hr>
       <h3>状況別</h3>
       <ul style="list-style: none; padding: 0;">
-        {% for code, name in status_choices %}
+        {% for id, name in status_choices %}
           <li>
-            <a href="?status={{ code }}"
-               {% if current_status == code %}style="font-weight:bold;"{% endif %}>{{ name }}</a>
+            <a href="?status={{ id }}"
+               {% if current_status == id %}style="font-weight:bold;"{% endif %}>{{ name }}</a>
           </li>
         {% endfor %}
       </ul>
