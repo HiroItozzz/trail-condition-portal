@@ -1,28 +1,45 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <title>登山道ポータル</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
-  </head>
-  <body style="display: flex">
-    <aside class="sidebar" style="width: 300px">
-      <div class="sidebar-header">
-        <a href="{% url 'condition-list' %}"><h1>🏔️ 登山道ポータル</h1></a>
-      </div>
+<head>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <style>
+        body { display: flex; margin: 0; font-family: sans-serif; }
+        #sidebar { width: 250px; background: #f4f4f4; height: 100vh; padding: 20px; border-right: 1px solid #ddd; }
+        #content { flex: 1; padding: 20px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    </style>
+</head>
+<body>
+  <div id="sidebar">
+      <h3>山域別</h3>
+      <ul style="list-style: none; padding: 0;">
+          <li><a href="{% url 'trail-list' %}">すべて表示</a></li>
+          {% for code, name in area_choices %}
+          <li><a href="?area={{ code }}" {% if current_area == code %}style="font-weight:bold;"{% endif %}>{{ name }}</a></li>
+          {% endfor %}
+      </ul>
 
-      <form
-        method="GET"
-        action="{% url 'condition-list' %}"
-        class="filter-form"
-      >
-        <button type="submit">検索</button>
-      </form>
-    </aside>
+      <hr>
 
-    <main class="main-content" style="flex: 1; padding: 20px">
-      {% block content %} {% endblock %}
-    </main>
-  </body>
+      <h3>状況別</h3>
+      <ul style="list-style: none; padding: 0;">
+          {% for code, name in status_choices %}
+          <li><a href="?status={{ code }}" {% if current_status == code %}style="font-weight:bold;"{% endif %}>{{ name }}</a></li>
+          {% endfor %}
+      </ul>
+  </div>
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#trail-table').DataTable({
+                "language": { "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/ja.json" },
+                "pageLength": 50 // 密度高く表示
+            });
+        });
+    </script>
+</body>
 </html>

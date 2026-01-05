@@ -1,23 +1,40 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>登山道 危険箇所一覧</h2>
-<table id="trail-table" class="display">
-    <thead>
+<table id="trail-table" class="display compact cell-border"> <thead>
         <tr>
-            <th>箇所名</th>
-            <th>状況</th>
-            <th>詳細内容</th>
             <th>更新日</th>
+            <th>山域</th>
+            <th>状況種別</th>
+            <th>対象（山名・登山道）</th>
+            <th>タイトル・詳細</th>
+            <th>情報源</th>
         </tr>
     </thead>
     <tbody>
-        {% for trail in trails %}
+        {% for item in conditions %}
         <tr>
-            <td><strong>{{ trail.name }}</strong></td>
-            <td>{{ trail.status }}</td>
-            <td>{{ trail.description }}</td>
-            <td>{{ trail.updated_at|date:"Y/m/d" }}</td>
+            <td style="white-space: nowrap;">{{ item.updated_at|date:"Y/m/d"|default:"-" }}</td>
+            <td>{{ item.get_area_display }}</td>
+            <td>{{ item.get_status_display }}</td>
+            <td>
+                <strong>{{ item.mountain_name_raw }}</strong><br>
+                {{ item.trail_name }}
+            </td>
+            <td>
+                <strong>{{ item.title }}</strong>
+                <div style="font-size: 0.85em; color: #333; margin-top: 4px;">{{ item.description }}</div>
+                {% if item.comment %}
+                <div style="font-size: 0.8em; color: #666; border-left: 2px solid #ccc; padding-left: 5px; margin-top: 4px;">
+                    備考: {{ item.comment }}
+                </div>
+                {% endif %}
+            </td>
+            <td>
+                <a href="{{ item.url1 }}" target="_blank" rel="nofollow" style="font-size: 0.85em;">
+                    {{ item.source.name|default:"情報元" }}
+                </a>
+            </td>
         </tr>
         {% endfor %}
     </tbody>

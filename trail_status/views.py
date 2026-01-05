@@ -8,36 +8,29 @@ from .models.condition import AreaName, StatusType, TrailCondition
 logger = logging.getLogger(__name__)
 
 
-def condition_list(request):
-    queryset = TrailCondition.objects.filter(disabled=False)
+def trail_list(request):
+    conditions = TrailCondition.objects.filter(disabled=False)
 
-    # フィルタリング（既存通り）
-    search_query = request.GET.get("search")
-    if search_query:
-        queryset = queryset.filter(Q(trail_name__icontains=search_query) | Q(mountain_name_raw__icontains=search_query))
-
-    status_filter = request.GET.get("status")
-    if status_filter:
-        queryset = queryset.filter(status=status_filter)
-
+    # クエリパラメータによる絞り込み
     area_filter = request.GET.get("area")
+    status_filter = request.GET.get("status")
+
     if area_filter:
-        queryset = queryset.filter(area=area_filter)
+        conditions = conditions.filter(area=area_filter)
+    if status_filter:
+        conditions = conditions.filter(status=status_filter)
 
-    # デフォルトを更新日時に変更
-    sort_key = request.GET.get("sort", "-updated_at")
-    queryset = queryset.order_by(sort_key)
+    # 更新日時（updated_at）の降順で並べ替え
+    conditions = conditions.order_by("-updated_at")
 
-    return render(
-        request,
-        "index.html",
-        {
-            "conditions": queryset,
-            "status_choices": StatusType.choices,
-            "area_choices": AreaName.choices,
-            "current_sort": sort_key,  # 現在のソートキーをテンプレートに渡す
-        },
-    )
+    context = {
+        "conditions": conditions,
+        "area_choices": AreaName.choices,
+        "status_choices": StatusType.choices,
+        "current_area": area_filter,
+        "current_status": status_filter,
+    }
+    return render(request, "trail_list.html", context)
 
 
 # trail_status/views.py
