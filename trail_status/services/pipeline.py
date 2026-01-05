@@ -42,35 +42,38 @@ class TrailConditionPipeline:
         logger.debug(f"処理開始: {source_data['name']} (ID: {source_data['id']})")
 
         try:
-            # 1. スクレイピング
-            scraped_html = await self._fetch_raw_content(client, source_data["url1"])
+            fetcher = DataFetcher()
+
+            # 1. 生HTMLのスクレイピング: HTMLボディを格納
+            scraped_html = await fetcher.fetch_html(client, source_data["url1"])
             if not scraped_html.strip():
                 logger.warning(f"スクレイピング結果が空: {source_data['name']}")
                 return {"error": "スクレイピング結果が空でした"}
 
             # 2. ハッシュベース変更検知
-            fetcher = DataFetcher()
             content_changed, new_hash = fetcher.has_content_changed(scraped_html, source_data.get("content_hash"))
-            
+
             if not content_changed:
                 logger.info(f"コンテンツ変更なし（ソースID: {source_data['id']}）- LLM処理をスキップ")
                 return {
-                    "success": True, 
-                    "content_changed": False, 
+                    "success": True,
+                    "content_changed": False,
                     "new_hash": new_hash,
                     "scraped_length": len(scraped_html),
                 }
 
             # 3. trafilaturaでテキスト抽出
-            scraped_text = await self._extract_text_content(client, source_data["url1"])
-            if not scraped_text.strip():
+            parsed_text = await fetcher.fetch_parsed_text(scraped_html, source_data["url1"])
+            if not parsed_text.strip():
                 logger.warning(f"テキスト抽出結果が空: {source_data['name']}")
                 return {"error": "テキスト抽出結果が空でした"}
 
             # 4. AI解析（コンテンツ変更時のみ）
             logger.info(f"AI解析開始: {source_data['name']} - モデル: {ai_model or 'デフォルト'}")
-            config, ai_result, stats = await self._analyze_with_ai(source_data, scraped_text, ai_model)
-            logger.info(f"AI解析完了: {source_data['name']} - コスト: ${stats.total_fee:.4f}, 実行時間: {stats.execution_time:.2f}秒")
+            config, ai_result, stats = await self._analyze_with_ai(source_data, parsed_text, ai_model)
+            logger.info(
+                f"AI解析完了: {source_data['name']} - コスト: ${stats.total_fee:.4f}, 実行時間: {stats.execution_time:.2f}秒"
+            )
 
             return {
                 "success": True,
@@ -86,7 +89,7 @@ class TrailConditionPipeline:
             logger.error(f"処理エラー: {source_data['name']} - {str(e)}")
             return {"error": str(e)}
 
-    async def _fetch_raw_content(self, client: httpx.AsyncClient, url: str) -> str:
+    async def fetch_raw_content(self, client: httpx.AsyncClient, url: str) -> str:
         """生HTMLのスクレイピング（ハッシュ計算用）"""
         fetcher = DataFetcher()
         try:
@@ -96,11 +99,6 @@ class TrailConditionPipeline:
         except Exception as e:
             logger.error(f"HTMLスクレイピング失敗 - URL: {url}, エラー: {e}")
             raise
-
-    async def _extract_text_content(self, client: httpx.AsyncClient, url: str) -> str:
-        """テキスト抽出（AI解析用）- DataFetcherのリトライロジック活用"""
-        fetcher = DataFetcher()
-        return await fetcher.fetch_text(client, url)
 
     async def _analyze_with_ai(
         self, source_data: ModelDataSingle, scraped_text: str, ai_model: str | None

@@ -91,11 +91,15 @@ class Command(BaseCommand):
             if result.get("success"):
                 source = DataSource.objects.get(id=source_data["id"])
                 
+                # サイト巡回日時を更新
+                # ハッシュ取得andLLMスキップ時も "success"=True (@pipeline.process_single_source_data)
+                source.last_checked_at = timezone.now()
                 # コンテンツハッシュとスクレイピング時刻を更新
                 if "new_hash" in result:
                     source.content_hash = result["new_hash"]
                     source.last_scraped_at = timezone.now()
-                    source.save(update_fields=["content_hash", "last_scraped_at"])
+
+                source.save(update_fields=["content_hash", "last_scraped_at", "last_checked_at"])
 
                 # コンテンツ変更なしの場合はLLM関連処理をスキップ
                 if not result.get("content_changed", True):
@@ -109,8 +113,8 @@ class Command(BaseCommand):
                 # AIの結果をInternal schemaに変換
                 trail_conditions_list = result["extracted_trail_conditions"]  # TrailConditionSchemaList
                 internal_data_list = [
-                    TrailConditionSchemaInternal(**condition.model_dump(), url1=source_data["url1"])
-                    for condition in trail_conditions_list.trail_condition_records
+                    TrailConditionSchemaInternal(**trail_condition_record.model_dump(), url1=source_data["url1"])
+                    for trail_condition_record in trail_conditions_list.trail_condition_records
                 ]
 
                 # DB同期とLLM使用履歴記録
