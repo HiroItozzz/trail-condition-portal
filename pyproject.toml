@@ -29,6 +29,7 @@ docstring-code-line-length = 80
 
 [dependency-groups]
 dev = [
+    "django-stubs>=5.2.8",
     "djlint>=1.36.4",
     "mypy>=1.19.1",
     "pytest>=9.0.2",
