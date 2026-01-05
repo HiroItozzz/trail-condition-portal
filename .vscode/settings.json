@@ -1,4 +1,14 @@
 {
   "editor.formatOnSave": true,
+  "[python]": {
   "editor.defaultFormatter": "charliermarsh.ruff",
+  },
+
+  // 言語設定の継承を有効化
+  "[django-html]": {
+    "editor.defaultFormatter": "monosans.djlint",
+    "editor.formatOnSave": true  // フォーマットは有効のまま
+  },
+  "emmet.includeLanguages": {
+    "django-html": "html"},
 }

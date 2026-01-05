@@ -5,9 +5,7 @@
 *.pyc
 help/
 *.log
-*.log.1
 Claude Conversations/
-
 .pytest_cache
 
 *.egg-info/
@@ -17,3 +15,6 @@ temp/
 .ipynb_checkpoints/
 
 outputs/
+
+logs/*
+!logs/.gitkeep

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="list-container">
+    <div class="report-list">
+      <div class="list-item header">
+        <div class="col-status">状況</div>
+        <div class="col-area">
+          <a href="?sort={% if current_sort == 'area' %}-area{% else %}area{% endif %}&search={{ request.GET.search|default:'' }}&status={{ request.GET.status|default:'' }}">
+            エリア
+            {% if current_sort == 'area' %}▲{% endif %}
+            {% if current_sort == '-area' %}▼{% endif %}
+          </a>
+        </div>
+        <div class="col-name">名称 / 概要</div>
+        <div class="col-date">
+          <a href="?sort={% if current_sort == '-updated_at' %}updated_at{% else %}-updated_at{% endif %}&search={{ request.GET.search|default:'' }}&status={{ request.GET.status|default:'' }}">
+            更新日
+            {% if current_sort == '-updated_at' %}▼{% endif %}
+            {% if current_sort == 'updated_at' %}▲{% endif %}
+          </a>
+        </div>
+        <div class="col-action"></div>
+      </div>
+      {% for item in conditions %}
+        <div class="list-item">
+          <div class="col-status">
+            <span class="status-label {{ item.status }}">{{ item.get_status_display }}</span>
+          </div>
+          <div class="col-area">{{ item.get_area_display }}</div>
+          <div class="col-name">
+            <span class="mountain-prefix">[{{ item.mountain_name_raw }}]</span>
+            <strong>{{ item.trail_name }}</strong>
+            <p class="summary-text">{{ item.title|truncatechars:40 }}</p>
+          </div>
+          <div class="col-date">{{ item.updated_at|date:"Y/m/d" }}</div>
+          <div class="col-action">
+            <a href="{% url 'condition-detail' item.id %}" class="view-btn">閲覧</a>
+          </div>
+        </div>
+      {% empty %}
+        <div class="no-results">該当する報告はありません。</div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

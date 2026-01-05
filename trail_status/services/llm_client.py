@@ -26,7 +26,7 @@ def get_prompts_dir() -> Path:
 
 
 class LlmConfig(BaseModel):
-    site_prompt: str = Field(default="", description="サイト固有プロンプト")
+    site_prompt: str | None = Field(default="", description="サイト固有プロンプト")
     use_template: bool = Field(default=True, description="template.yamlを使用するか")
     model: str = Field(pattern=r"^(gemini|deepseek)-.+", default="deepseek-reasoner", description="使用するLLMモデル")
     data: str = Field(description="解析するテキスト")
@@ -34,9 +34,9 @@ class LlmConfig(BaseModel):
         default=0.0, ge=0, le=2.0, description="生成ごとの揺らぎの幅（※ deepseek-reasonerでは無視される）"
     )
     thinking_budget: int = Field(default=5000, ge=-1, le=15000, description="Geminiの思考予算（トークン数）")
-    prompt_filename: str | None = Field(defalut=None, description="LLMエラー処理での識別用ファイルネーム")
+    prompt_filename: str | None = Field(default=None, description="LLMエラー処理での識別用ファイルネーム")
 
-    @computed_field
+    @computed_field(repr=False)
     @property
     def full_prompt(self) -> str:
         """テンプレートとサイト固有プロンプトを結合"""
@@ -89,7 +89,7 @@ class LlmConfig(BaseModel):
         return config.get("config", {})
 
     @classmethod
-    def from_file(cls, prompt_filename: str, data: str, **cli_overrides):
+    def from_file(cls, prompt_filename: str, data: str, **cli_overrides) -> object:
         """
         プロンプトファイルから設定を読み込んでインスタンス作成
 

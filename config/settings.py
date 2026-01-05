@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 import dj_database_url
@@ -24,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # セキュリティキー（本番では環境変数から）
-SECRET_KEY = "django-insecure-b^^&7&(v)4=pcrntfyx+933&avmr4+)s7uulnjdo#78nixmhcs"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-b^^&7&(v)4=pcrntfyx+933&avmr4+)s7uulnjdo#78nixmhcs")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # デバッグモード（開発中はTrue）
@@ -69,7 +70,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -88,11 +89,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 # データベース設定
+# env("DATABASE_URL") があればそれを使用し、
+# 万が一設定されていなければエラーにする（あるいはフォールバックを指定する）
 DATABASES = {
     "default": dj_database_url.config(
-        default="postgresql://user:password@db:5432/trail_portal_dev",
-        # conn_max_age=600,
-        # conn_health_checks=True,
+        conn_max_age=600,
+        conn_health_checks=True,
     ),
 }
 
@@ -144,11 +146,11 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
-            "format": "{levelname} {asctime} {module} {message}",
+            "format": "{levelname} | {asctime} | {module} | {message}",
             "style": "{",
         },
         "console": {
-            "format": "{levelname} {name} {funcName} {message}",
+            "format": "{levelname} | {name} | {funcName} | {message}",
             "style": "{",
         },
     },
@@ -212,3 +214,9 @@ CORS_ALLOWED_ORIGINS = [
 
 # 開発環境でのみ全てのオリジンを許可する場合（本番環境では絶対にFalse）
 # CORS_ALLOW_ALL_ORIGINS = True
+
+
+STATIC_URL = "static/"
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]

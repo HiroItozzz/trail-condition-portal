@@ -1,6 +1,8 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from .utils import ChoiceManager
+
 
 class AreaName(models.TextChoices):
     OKUTAMA = "OKUTAMA", "奥多摩"
@@ -45,6 +47,8 @@ class MountainGroup(models.Model):
             MaxValueValidator(160),  # 日本最東端より東
         ],
     )
+
+    objects: ChoiceManager = ChoiceManager()
 
     class Meta:
         verbose_name = "山グループ"
