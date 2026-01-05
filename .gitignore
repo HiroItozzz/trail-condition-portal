@@ -7,6 +7,7 @@ help/
 *.log
 Claude Conversations/
 .pytest_cache
+*sample.json
 
 *.egg-info/
 dist/

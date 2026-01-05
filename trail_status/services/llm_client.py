@@ -26,7 +26,7 @@ def get_prompts_dir() -> Path:
 
 
 class LlmConfig(BaseModel):
-    site_prompt: str | None = Field(default="", description="サイト固有プロンプト")
+    site_prompt: str = Field(default="", description="サイト固有プロンプト")
     use_template: bool = Field(default=True, description="template.yamlを使用するか")
     model: str = Field(pattern=r"^(gemini|deepseek)-.+", default="deepseek-reasoner", description="使用するLLMモデル")
     data: str = Field(description="解析するテキスト")
@@ -85,8 +85,14 @@ class LlmConfig(BaseModel):
         if not prompt_path.exists():
             raise FileNotFoundError(f"プロンプトファイルが見つかりません: {prompt_path}")
 
-        config = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
-        return config.get("config", {})
+        all_config = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
+
+        if all_config is None:
+            logger.debug(f"サイト別プロンプトに記載がありません。ファイル名: {filename}")
+            config = {"prompt": ""}
+        else:
+            config = all_config.get("config")
+        return config
 
     @classmethod
     def from_file(cls, prompt_filename: str, data: str, **cli_overrides) -> object:
@@ -153,7 +159,7 @@ class LlmConfig(BaseModel):
         if not prompt_path.exists():
             raise FileNotFoundError(f"プロンプトファイルが見つかりません: {prompt_path}")
 
-        config = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
+        config = yaml.safe_load(prompt_path.read_text(encoding="utf-8")) or {"prompt": ""}
 
         if "prompt" not in config:
             raise ValueError(f"プロンプトが設定されていません: {prompt_path}")
