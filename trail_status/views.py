@@ -1,5 +1,6 @@
 import logging
 
+from django.db.models import Max
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 
@@ -12,12 +13,12 @@ def trail_list(request: HttpRequest) -> HttpResponse:
     conditions = TrailCondition.objects.filter(disabled=False)
 
     # クエリパラメータによる絞り込み
-    soucre_filter = request.GET.get("source")
+    source_filter = request.GET.get("source")
     area_filter = request.GET.get("area")
     status_filter = request.GET.get("status")
 
-    if soucre_filter:
-        conditions = conditions.filter(source=soucre_filter)
+    if source_filter:
+        conditions = conditions.filter(source=source_filter)
     if area_filter:
         conditions = conditions.filter(area=area_filter)
     if status_filter:
@@ -25,15 +26,24 @@ def trail_list(request: HttpRequest) -> HttpResponse:
 
     # 更新日時（updated_at）の降順で並べ替え
     conditions = conditions.order_by("-updated_at")
+    updated_sources = (
+        TrailCondition.objects.values("source__name", "source__url1")
+        .annotate(latest_date=Max("updated_at"))
+        .order_by("-latest_date")
+    )
+    # views.py
+    latest_checked_at = DataSource.objects.aggregate(Max("last_scraped_at"))["last_scraped_at__max"]
 
     context = {
         "conditions": conditions,
         "source_choices": DataSource.objects.get_choices(),
         "area_choices": AreaName.choices,
         "status_choices": StatusType.choices,
-        "current_source": soucre_filter,
+        "current_source": source_filter,
         "current_area": area_filter,
         "current_status": status_filter,
+        "updated_sources": updated_sources,
+        "latest_checked_at": latest_checked_at,
     }
     return render(request, "trail_list.html", context)
 
