@@ -108,12 +108,11 @@ class LlmConfig(BaseModel):
             LlmConfig: 設定がマージされたインスタンス
         """
         file_config = cls.load_config(prompt_filename)
-        site_prompt = cls.load_prompt(prompt_filename)
 
         # CLI > promptファイル > デフォルト の優先度
         # Noneの場合はPydanticデフォルト値を使用するため、引数から除外
         kwargs = {
-            "site_prompt": site_prompt,
+            "site_prompt": file_config.get("prompt", ""),
             "use_template": file_config.get("use_template", True),
             "data": data,
             "prompt_filename": prompt_filename,
