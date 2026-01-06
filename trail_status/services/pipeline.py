@@ -113,6 +113,9 @@ class TrailConditionPipeline:
         except FileNotFoundError:
             logger.error(f"プロンプトファイルが見つかりません: {prompt_filename}")
             raise ValueError(f"プロンプトファイルが見つかりません: {prompt_filename}")
+        except Exception as e:
+            logger.exception(f"プロンプトファイル読み込みエラー: {prompt_filename}")
+            raise e
 
         # AIクライアントの選択
         if config.model.startswith("deepseek"):
@@ -123,9 +126,13 @@ class TrailConditionPipeline:
             raise ValueError(f"サポートされていないモデル: {ai_model}")
 
         # 実行時間測定
-        start_time = time.time()
-        ai_result, token_stats = await ai_client.generate()
-        execution_time = time.time() - start_time
+        try:
+            start_time = time.time()
+            ai_result, token_stats = await ai_client.generate()
+            execution_time = time.time() - start_time
+        except Exception as e:
+            logger.exception(f"AI解析エラー: {ai_model}")
+            raise e
 
         # LlmStatsでラップして実行時間を追加
         llm_stats = LlmStats(token_stats)

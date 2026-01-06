@@ -178,11 +178,11 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
-            "format": "{levelname} | {asctime} | {module} | {funcName} | {lineno} | {taskName} | {message}",
+            "format": "{levelname} | {asctime} | {module} | {lineno} | {funcName} | {taskName} | {message}",
             "style": "{",
         },
         "console": {
-            "format": "{levelname} | {name} | {funcName} | {message}",
+            "format": "{levelname} | {name} | {lineno} | {message}",
             "style": "{",
         },
     },
