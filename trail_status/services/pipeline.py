@@ -2,14 +2,38 @@ import asyncio
 import logging
 
 import httpx
+from pydantic import BaseModel, Field
 
 from .fetcher import DataFetcher
 from .llm_client import DeepseekClient, GeminiClient, LlmConfig
 from .llm_stats import LlmStats
 from .schema import TrailConditionSchemaList
-from .types import ModelDataSingle, UpdatedDataList, UpdatedDataSingle
 
 logger = logging.getLogger(__name__)
+
+
+class ModelDataSingle(BaseModel):
+    id: int = Field(description="Djangoモデルから取り出した情報源ID")
+    name: str = Field(description="Djangoモデルから取り出した情報源名")
+    url1: str = Field(description="Djangoモデルから取り出した情報源URL")
+    prompt_key: str = Field(description="Djangoモデルから取り出した情報源プロンプトファイル名（stem）")
+    content_hash: str | None = Field(description="Djangoモデルから取り出した過去のHTMLボディのハッシュキー")
+
+
+class ResultSingle(BaseModel):
+    success: bool = Field(description="スクレイピングの成功判定")
+    message: str = Field(description="試行結果メッセージ")
+    new_hash: str | None = Field(default=None, description="ハッシュ値（リクエスト成功時）")
+    scraped_length: int = 0
+    content_changed: bool | None = None
+    extracted_trail_conditions: TrailConditionSchemaList | None = None
+    stats: LlmStats | None = None
+    config: LlmConfig | None = None
+
+    model_config = {"arbitrary_types_allowed": True}
+
+
+UpdatedDataList = list[tuple[ModelDataSingle, ResultSingle | BaseException]]
 
 
 class TrailConditionPipeline:
@@ -18,7 +42,7 @@ class TrailConditionPipeline:
     def __init__(self):
         pass
 
-    async def process_source_data(self, source_data_list: list[ModelDataSingle], ai_model: str) -> UpdatedDataList:
+    async def run_pipeline(self, source_data_list: list[ModelDataSingle], ai_model: str) -> UpdatedDataList:
         """ソースデータリストを並行処理（Django ORM一切なし）"""
         logger.info(f"パイプライン処理開始 - 対象: {len(source_data_list)}件, モデル: {ai_model or 'デフォルト'}")
 
@@ -37,57 +61,59 @@ class TrailConditionPipeline:
     # コア処理
     async def process_single_source_data(
         self, client: httpx.AsyncClient, source_data: ModelDataSingle, ai_model: str
-    ) -> UpdatedDataSingle:
+    ) -> ResultSingle:
         """単一ソースデータの処理パイプライン（純粋async）"""
-        logger.debug(f"処理開始: {source_data['name']} (ID: {source_data['id']})")
+        logger.debug(f"処理開始: {source_data.name} (ID: {source_data.id})")
 
         try:
             fetcher = DataFetcher()
 
             # 1. 生HTMLのスクレイピング: HTMLボディを格納
-            scraped_html = await fetcher.fetch_html(client, source_data["url1"])
+            scraped_html = await fetcher.fetch_html(client, source_data.url1)
             if not scraped_html.strip():
-                logger.warning(f"スクレイピング結果が空: {source_data['name']}")
-                return {"error": "スクレイピング結果が空でした"}
+                logger.warning(f"スクレイピング結果が空: {source_data.name}")
+                return ResultSingle(success=False, message="スクレイピング結果が空でした")
 
             # 2. ハッシュベース変更検知
-            content_changed, new_hash = fetcher.has_content_changed(scraped_html, source_data.get("content_hash"))
+            content_changed, new_hash = fetcher.has_content_changed(scraped_html, source_data.content_hash)
 
             if not content_changed:
-                logger.info(f"コンテンツ変更なし（ソースID: {source_data['id']}）- LLM処理をスキップ")
-                return {
-                    "success": True,
-                    "content_changed": False,
-                    "new_hash": new_hash,
-                    "scraped_length": len(scraped_html),
-                }
+                logger.info(f"コンテンツ変更なし（ソースID: {source_data.id}）- LLM処理をスキップ")
+                return ResultSingle(
+                    success=True,
+                    content_changed=False,
+                    new_hash=new_hash,
+                    scraped_length=len(scraped_html),
+                    message=f"コンテンツ変更なし（ソースID: {source_data.id}）- LLM処理をスキップ",
+                )
 
             # 3. trafilaturaでテキスト抽出
-            parsed_text = await fetcher.fetch_parsed_text(scraped_html, source_data["url1"])
+            parsed_text = await fetcher.fetch_parsed_text(scraped_html, source_data.url1)
             if not parsed_text.strip():
-                logger.warning(f"テキスト抽出結果が空: {source_data['name']}")
-                return {"error": "テキスト抽出結果が空でした"}
+                logger.warning(f"テキスト抽出結果が空: {source_data.name}")
+                return ResultSingle(success=False, message="テキスト抽出結果が空でした")
 
             # 4. AI解析（コンテンツ変更時のみ）
-            logger.info(f"AI解析開始: {source_data['name']} - モデル: {ai_model or 'デフォルト'}")
+            logger.info(f"AI解析開始: {source_data.name} - モデル: {ai_model or 'デフォルト'}")
             config, ai_result, stats = await self._analyze_with_ai(source_data, parsed_text, ai_model)
             logger.info(
-                f"AI解析完了: {source_data['name']} - コスト: ${stats.total_fee:.4f}, 実行時間: {stats.execution_time:.2f}秒"
+                f"AI解析完了: {source_data.name} - コスト: ${stats.total_fee:.4f}, 実行時間: {stats.execution_time:.2f}秒"
             )
 
-            return {
-                "success": True,
-                "content_changed": True,
-                "new_hash": new_hash,
-                "scraped_length": len(scraped_html),
-                "extracted_trail_conditions": ai_result,  # TrailConditionSchemaListのまま
-                "stats": stats,  # LlmStatsオブジェクト
-                "config": config,  # LlmConfigオブジェクト
-            }
+            return ResultSingle(
+                success=True,
+                content_changed=True,
+                new_hash=new_hash,
+                scraped_length=len(scraped_html),
+                extracted_trail_conditions=ai_result,  # TrailConditionSchemaListのまま
+                stats=stats,  # LlmStatsオブジェクト
+                config=config,  # LlmConfigオブジェクト
+                message="AI解析結果をDBに保存しました",
+            )
 
         except Exception as e:
-            logger.error(f"処理エラー: {source_data['name']} - {str(e)}")
-            return {"error": str(e)}
+            logger.error(f"処理エラー: {source_data.name} - {str(e)}")
+            return ResultSingle(success=False, message=f"処理エラー：{str(e)}")
 
     async def fetch_raw_content(self, client: httpx.AsyncClient, url: str) -> str:
         """生HTMLのスクレイピング（ハッシュ計算用）"""
@@ -97,8 +123,8 @@ class TrailConditionPipeline:
             response.raise_for_status()
             return response.text
         except Exception as e:
-            logger.error(f"HTMLスクレイピング失敗 - URL: {url}, エラー: {e}")
-            raise
+            logger.exception(f"HTMLスクレイピング失敗 - URL: {url}")
+            raise e
 
     async def _analyze_with_ai(
         self, source_data: ModelDataSingle, scraped_text: str, ai_model: str | None
@@ -143,6 +169,6 @@ class TrailConditionPipeline:
     def _get_prompt_filename_from_data(self, source_data: ModelDataSingle) -> str:
         """ソースデータからプロンプトファイル名を取得"""
         # 形式: {id:03d}_{prompt_key}.yaml
-        source_id = source_data["id"]
-        prompt_key = source_data["prompt_key"]
+        source_id = source_data.id
+        prompt_key = source_data.prompt_key
         return f"{source_id:03d}_{prompt_key}.yaml"

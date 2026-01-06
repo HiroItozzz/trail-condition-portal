@@ -39,7 +39,7 @@ class TrailConditionSchemaAi(BaseModel):
 
 class TrailConditionSchemaInternal(TrailConditionSchemaAi):
     url1: str
-    mountain_group: None = Field(default=None, description="山グループ / 後で手動入力")
+    mountain_group: str | None = Field(default=None, description="山グループ / 後で手動入力")
 
 
 class TrailConditionSchemaList(BaseModel):

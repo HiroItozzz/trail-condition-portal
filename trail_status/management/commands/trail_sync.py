@@ -1,18 +1,21 @@
 import asyncio
 import logging
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from trail_status.models.llm_usage import LlmUsage
 from trail_status.models.source import DataSource
+from trail_status.services.llm_client import LlmConfig
 from trail_status.services.llm_stats import LlmStats
-from trail_status.services.pipeline import TrailConditionPipeline
-from trail_status.services.schema import TrailConditionSchemaInternal, TrailConditionSchemaList
+from trail_status.services.pipeline import ModelDataSingle, ResultSingle, TrailConditionPipeline, UpdatedDataList
+from trail_status.services.schema import (
+    TrailConditionSchemaInternal,
+    TrailConditionSchemaList,
+)
 from trail_status.services.synchronizer import sync_trail_conditions
-from trail_status.services.types import UpdatedDataList, UpdatedDataSingle
 
 logger = logging.getLogger(__name__)
 
@@ -44,30 +47,30 @@ class Command(BaseCommand):
         if source_id:
             try:
                 source = DataSource.objects.get(id=source_id)
-                source_data_list = [
-                    {
-                        "id": source.id,
-                        "name": source.name,
-                        "url1": source.url1,
-                        "prompt_key": source.prompt_key,
-                        "content_hash": source.content_hash,
-                    }
-                ]
+                model_data_single = ModelDataSingle(
+                    id=source.id,
+                    name=source.name,
+                    url1=source.url1,
+                    prompt_key=source.prompt_key,
+                    content_hash=source.content_hash,
+                )
+                source_data_list = [model_data_single]
                 self.stdout.write(f"情報源: {source.name}")
             except DataSource.DoesNotExist:
                 logger.error(f"指定された情報源が見つかりません: {source_id}")
                 self.stdout.write(self.style.ERROR(f"指定された情報源が見つかりません: {source_id}"))
                 return
         else:
+            # CLI引数なしの場合すべての情報源を処理リストに追加
             source_data_list = [
-                {"id": s.id, "name": s.name, "url1": s.url1, "prompt_key": s.prompt_key, "content_hash": s.content_hash}
+                ModelDataSingle(id=s.id, name=s.name, url1=s.url1, prompt_key=s.prompt_key, content_hash=s.content_hash)
                 for s in DataSource.objects.all()
             ]
             self.stdout.write(f"全ての情報源を処理: {len(source_data_list)}件")
 
         # パイプライン処理を実行（純粋にasync処理のみ）
         pipeline = TrailConditionPipeline()
-        results = asyncio.run(pipeline.process_source_data(source_data_list, ai_model))
+        results = asyncio.run(pipeline.run_pipeline(source_data_list, ai_model))
 
         # DB保存（同期処理）
         if not dry_run:
@@ -82,36 +85,38 @@ class Command(BaseCommand):
         from django.utils import timezone
 
         for source_data, result in results:
-            if result.get("success"):
-                source = DataSource.objects.get(id=source_data["id"])
+            if getattr(result, "success", False):
+                source = DataSource.objects.get(id=source_data.id)
 
-                # サイト巡回日時を更新
-                # ハッシュ取得andLLMスキップ時も "success"=True (@pipeline.process_single_source_data)
-                source.last_checked_at = timezone.now()
                 # コンテンツハッシュとスクレイピング時刻を更新
-                if "new_hash" in result:
-                    source.content_hash = result["new_hash"]
+                if result.content_changed:
+                    source.content_hash = result.new_hash
                     source.last_scraped_at = timezone.now()
 
+                # サイト巡回日時を更新
+                # ハッシュ取得andLLMスキップ時も success=True
+                source.last_checked_at = timezone.now()
+
+                # コミット
                 source.save(update_fields=["content_hash", "last_scraped_at", "last_checked_at"])
 
                 # コンテンツ変更なしの場合はLLM関連処理をスキップ
-                if not result.get("content_changed", True):
-                    self.stdout.write(
-                        self.style.WARNING(f"コンテンツ変更なし: {source_data['name']} - LLM処理スキップ")
-                    )
+                if not result.content_changed:
+                    self.stdout.write(self.style.WARNING(f"コンテンツ変更なし: {source_data.name} - LLM処理スキップ"))
                     continue
 
                 # AIの結果をInternal schemaに変換
-                trail_conditions_list = result["extracted_trail_conditions"]  # TrailConditionSchemaList
+                trail_conditions_list: TrailConditionSchemaList = (
+                    result.extracted_trail_conditions
+                )  # TrailConditionSchemaList
                 internal_data_list = [
-                    TrailConditionSchemaInternal(**trail_condition_record.model_dump(), url1=source_data["url1"])
-                    for trail_condition_record in trail_conditions_list.trail_condition_records
+                    TrailConditionSchemaInternal(**_by_sources.model_dump(), url1=source_data.url1)
+                    for _by_sources in trail_conditions_list.trail_condition_records
                 ]
 
                 # DB同期とLLM使用履歴記録
-                llm_stats = result["stats"]
-                config = result["config"]
+                llm_stats: LlmStats = result.stats
+                config: LlmConfig = result.config
                 prompt_filename = source.prompt_filename
 
                 with transaction.atomic():
@@ -119,15 +124,15 @@ class Command(BaseCommand):
                     self._save_llm_usage(source, llm_stats, len(internal_data_list))
 
                 logger.info(
-                    f"DB保存完了: {source_data['name']} - {len(internal_data_list)}件 (コスト: ${result['stats'].total_fee:.4f})"
+                    f"DB保存完了: {source_data.name} - {len(internal_data_list)}件 (コスト: ${llm_stats.total_fee:.4f})"
                 )
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f"DB保存完了: {source_data['name']} - {len(internal_data_list)}件 (コスト: ${result['stats'].total_fee:.4f})"
+                        f"DB保存完了: {source_data.name} - {len(internal_data_list)}件 (コスト: ${llm_stats.total_fee:.4f})"
                     )
                 )
 
-    def _save_llm_usage(self, source: DataSource, llm_stats: LlmStats, generated_data_count: int) -> None:
+    def _save_llm_usage(self, source: DataSource, llm_stats: LlmStats, record_count: int) -> None:
         """LLM使用履歴をDBに保存"""
         stats = llm_stats.to_dict()
         LlmUsage.objects.create(
@@ -137,7 +142,7 @@ class Command(BaseCommand):
             thinking_tokens=stats["thoughts_tokens"],
             output_tokens=stats["output_tokens"],
             cost_usd=Decimal(str(stats["total_fee"])),
-            conditions_extracted=generated_data_count,
+            conditions_extracted=record_count,
             success=True,
             execution_time_seconds=stats.get("execution_time"),  # Noneでも可
         )
@@ -147,12 +152,12 @@ class Command(BaseCommand):
         summary = {"results": [], "success_count": 0, "error_count": 0, "skipped_count": 0, "total_conditions": 0}
 
         for source_data, result in results:
-            if result.get("success"):
+            if getattr(result, "success", False):
                 # コンテンツ変更なしの場合
-                if not result.get("content_changed", True):
+                if not result.content_changed:
                     summary["results"].append(
                         {
-                            "source_name": source_data["name"],
+                            "source_name": source_data.name,
                             "status": "skipped",
                             "reason": "コンテンツ変更なし",
                         }
@@ -163,29 +168,40 @@ class Command(BaseCommand):
                     conditions_count = self._get_conditions_count(result)
                     summary["results"].append(
                         {
-                            "source_name": source_data["name"],
+                            "source_name": source_data.name,
                             "status": "success",
                             "conditions_count": conditions_count,
                         }
                     )
                     summary["success_count"] += 1
                     summary["total_conditions"] += conditions_count
+            # スクレイピング失敗時
+            elif hasattr(result, "success"):
+                summary["results"].append(
+                    {
+                        "source_name": source_data.name,
+                        "status": "error",
+                        "message": result.message,
+                    }
+                )
+                summary["error_count"] += 1
+            # BaseExceptionクラスだった場合
             else:
                 summary["results"].append(
                     {
-                        "source_name": source_data["name"],
+                        "source_name": source_data.name,
                         "status": "error",
-                        "message": result.get("error", "Unknown error"),
+                        "message": f"予期せぬエラー発生: {result}",
                     }
                 )
                 summary["error_count"] += 1
 
         return summary
 
-    def _get_conditions_count(self, result: UpdatedDataSingle) -> int:
+    def _get_conditions_count(self, result: ResultSingle) -> int:
         """結果からレコード数を安全に取得"""
-        if result.get("success"):
-            trail_conditions = result.get("extracted_trail_conditions")
+        if result.success:
+            trail_conditions = result.extracted_trail_conditions
             if isinstance(trail_conditions, TrailConditionSchemaList):
                 return len(trail_conditions.trail_condition_records)
         return 0
