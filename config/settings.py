@@ -37,9 +37,15 @@ DEBUG = True
 # CSRF_TRUSTED_ORIGINS | フォーム送信時（Referer/Originヘッダー） | 「リクエストの**送信元（ブラウザのURL）**は信頼できるドメインか？」を確認。
 
 # 許可するホスト
-ALLOWED_HOSTS = [".localhost", "127.0.0.1", "[::1]"]
+ALLOWED_HOSTS = [
+    ".localhost",
+    "127.0.0.1",
+    "[::1]",
+    ".cloudworkstations.dev",
+    ".idx.google.com",
+]
 
-IS_IDX = os.environ.get("IDX_PROJECT_ID") is not None
+IS_IDX = os.environ.get("IS_IDX") in ["true", "True", "t"]
 if IS_IDX:
     # IDX (HTTPSプロキシ環境) 用の設定
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -48,6 +54,7 @@ if IS_IDX:
     CSRF_COOKIE_SAMESITE = "None"
     SESSION_COOKIE_SAMESITE = "None"
     CSRF_TRUSTED_ORIGINS = [
+        "https://9000-firebase-trail-condition-1767638653929.cluster-d5vecjrg5rhlkrz6nm4jty7avc.cloudworkstations.dev",
         "https://*.cloudworkstations.dev",
         "https://*.idx.google.com",
     ]
