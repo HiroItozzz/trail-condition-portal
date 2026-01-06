@@ -1,9 +1,10 @@
 import asyncio
 import logging
 import os
+from functools import lru_cache
+
 from abc import ABC, abstractmethod
 from pathlib import Path
-
 import yaml
 from django.conf import settings
 from pydantic import BaseModel, Field, ValidationError, computed_field
@@ -64,36 +65,6 @@ class LlmConfig(BaseModel):
         else:
             raise ValueError(f"サポートされていないモデル: {self.model}")
 
-    # promptファイルに各種設定個別設定追加予定{"model": deepseek-reasoner, "temperature":0.0}
-    @staticmethod
-    def load_config(filename: str) -> dict:
-        """
-        プロンプトファイルから設定を読み込み
-
-        Args:
-            filename: プロンプトファイル名（例：001_okutama_vc.yaml）
-
-        Returns:
-            dict: 設定情報（config部分）
-
-        Raises:
-            FileNotFoundError: ファイルが存在しない場合
-        """
-        prompts_dir = get_prompts_dir()
-        prompt_path = prompts_dir / filename
-
-        if not prompt_path.exists():
-            raise FileNotFoundError(f"プロンプトファイルが見つかりません: {prompt_path}")
-
-        all_config = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
-
-        if all_config is None:
-            logger.debug(f"サイト別プロンプトに記載がありません。ファイル名: {filename}")
-            config = {"prompt": ""}
-        else:
-            config = all_config.get("config")
-        return config
-
     @classmethod
     def from_file(cls, prompt_filename: str, data: str, **cli_overrides) -> object:
         """
@@ -107,40 +78,46 @@ class LlmConfig(BaseModel):
         Returns:
             LlmConfig: 設定がマージされたインスタンス
         """
-        file_config = cls.load_config(prompt_filename)
+        all_config = cls._load_site_config(prompt_filename)
+
+        # None値を持つキーを完全に洗浄
+        all_config = cls._to_safe_dict(all_config)
+        site_config = all_config.get("config", {})
+        site_config = cls._to_safe_dict(site_config)
 
         # CLI > promptファイル > デフォルト の優先度
         # Noneの場合はPydanticデフォルト値を使用するため、引数から除外
         kwargs = {
-            "site_prompt": file_config.get("prompt", ""),
-            "use_template": file_config.get("use_template", True),
+            "site_prompt": all_config.get("prompt", ""),
+            "use_template": site_config.get("use_template", True),
             "data": data,
             "prompt_filename": prompt_filename,
         }
 
         # None以外の値のみ設定（Noneの場合はPydanticデフォルトを使用）
-        model_value = cli_overrides.get("model") or file_config.get("model")
+        model_value = cli_overrides.get("model") or site_config.get("model")
         if model_value:
             kwargs["model"] = model_value
 
         # temperature: 0.0対応（is not None チェック）
         temp_value = cli_overrides.get("temperature")
         if temp_value is None:
-            temp_value = file_config.get("temperature")
-        if temp_value is not None:
+            temp_value = site_config.get("temperature")
+        else:
             kwargs["temperature"] = temp_value
 
         # thinking_budget: 0対応（通常0は無効値なので or 使用）
-        budget_value = cli_overrides.get("thinking_budget") or file_config.get("thinking_budget")
+        budget_value = cli_overrides.get("thinking_budget") or site_config.get("thinking_budget")
         if budget_value:
             kwargs["thinking_budget"] = budget_value
 
         return cls(**kwargs)
 
     @staticmethod
-    def load_prompt(filename: str) -> str:
+    @lru_cache
+    def _load_template(filename: str = "template.yaml") -> dict:
         """
-        プロンプトファイルを読み込み
+        template.yamlを読み込み
 
         Args:
             filename: プロンプトファイル名（例：001_okutama_vc.yaml）
@@ -152,23 +129,41 @@ class LlmConfig(BaseModel):
             FileNotFoundError: ファイルが存在しない場合
             ValueError: プロンプトが設定されていない場合
         """
+        template_dir = get_prompts_dir()
+        template_path = template_dir / filename
+
+        if not template_path.exists():
+            raise FileNotFoundError(f"テンプレートファイルが見つかりません: {template_path}")
+
+        prompt_dict = yaml.safe_load(template_path.read_text(encoding="utf-8"))
+
+        if "prompt" not in prompt_dict:
+            raise ValueError(f"テンプレートプロンプトが設定されていません: {template_path}")
+
+        return prompt_dict["prompt"]
+
+    @staticmethod
+    def _load_site_config(filename: str) -> dict:
         prompts_dir = get_prompts_dir()
         prompt_path = prompts_dir / filename
 
         if not prompt_path.exists():
-            raise FileNotFoundError(f"プロンプトファイルが見つかりません: {prompt_path}")
+            logger.warning(f"サイト別プロンプトファイルが見つかりません: {prompt_path}")
+            return {}
 
-        config = yaml.safe_load(prompt_path.read_text(encoding="utf-8")) or {"prompt": ""}
+        config_dict = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
 
-        if "prompt" not in config:
-            raise ValueError(f"プロンプトが設定されていません: {prompt_path}")
+        if config_dict is None:
+            logger.warning(f"サイト別プロンプトに記載がありません。ファイル名: {filename}")
+            return {}
 
-        return config["prompt"]
+        return config_dict
 
     @staticmethod
-    def _load_template() -> str:
-        """template.yamlを読み込み"""
-        return LlmConfig.load_prompt("template.yaml")
+    def _to_safe_dict(config_dict: dict) -> dict:
+        if config_dict:
+            config_dict = {k: v for k, v in config_dict.items() if v is not None}
+        return config_dict
 
     def __str__(self) -> str:
         """デバッグ用に重要な情報を表示"""
