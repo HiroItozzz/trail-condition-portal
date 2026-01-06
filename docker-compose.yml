@@ -7,7 +7,7 @@ services:
       sh -c "uv run manage.py migrate &&
              uv run manage.py runserver 0.0.0.0:8000"
     ports:
-      - "8000:8000"
+      - "${PORT:-8000}:8000"
     volumes:
       - .:/code
       - /code/.venv
@@ -20,6 +20,8 @@ services:
       - db
 
   frontend:
+    profiles:
+      - ignore
     image: node:24-slim
     container_name: trail_portal_frontend
     working_dir: /code
