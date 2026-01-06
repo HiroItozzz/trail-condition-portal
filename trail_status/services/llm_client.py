@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 import os
-from functools import lru_cache
-
 from abc import ABC, abstractmethod
+from functools import lru_cache
 from pathlib import Path
+
 import yaml
 from django.conf import settings
 from pydantic import BaseModel, Field, ValidationError, computed_field
@@ -66,7 +68,7 @@ class LlmConfig(BaseModel):
             raise ValueError(f"サポートされていないモデル: {self.model}")
 
     @classmethod
-    def from_file(cls, prompt_filename: str, data: str, **cli_overrides) -> object:
+    def from_file(cls, prompt_filename: str, data: str, **cli_overrides) -> LlmConfig:
         """
         プロンプトファイルから設定を読み込んでインスタンス作成
 
@@ -117,10 +119,10 @@ class LlmConfig(BaseModel):
     @lru_cache
     def _load_template(filename: str = "template.yaml") -> dict:
         """
-        template.yamlを読み込み
+        template.yamlを読み込み辞書で返却
 
         Args:
-            filename: プロンプトファイル名（例：001_okutama_vc.yaml）
+            filename: テンプレートプロンプトファイル名（template.yaml）
 
         Returns:
             str: プロンプト文字列
@@ -144,6 +146,14 @@ class LlmConfig(BaseModel):
 
     @staticmethod
     def _load_site_config(filename: str) -> dict:
+        """個別プロンプトファイルをファイル名から安全に読み込み辞書で返却
+
+        Args:
+            filename (str): YAMLファイル名（例：001_okutama_vc.yaml）
+
+        Returns:
+            dict: 取得したYAMLファイルの辞書 / 値がない場合: `{}`
+        """
         prompts_dir = get_prompts_dir()
         prompt_path = prompts_dir / filename
 
@@ -161,6 +171,14 @@ class LlmConfig(BaseModel):
 
     @staticmethod
     def _to_safe_dict(config_dict: dict) -> dict:
+        """Noneを値に持つ辞書のキーを完全排除
+
+        Args:
+            config_dict (dict): キーはあるが値未設定の辞書（getメソッドでエラー）
+
+        Returns:
+            dict: 安全にgetできる辞書
+        """
         if config_dict:
             config_dict = {k: v for k, v in config_dict.items() if v is not None}
         return config_dict
