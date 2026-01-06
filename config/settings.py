@@ -31,11 +31,43 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-b^^&7&(v)4=pcr
 # デバッグモード（開発中はTrue）
 DEBUG = True
 
+
+# 設定項目 | チェックのタイミング | 役割（Djangoが何を見ているか）
+# ALLOWED_HOSTS | 通信の入口（HTTPヘッダー） | 「リクエストの宛先は自分（localhost）になっているか？」を確認。
+# CSRF_TRUSTED_ORIGINS | フォーム送信時（Referer/Originヘッダー） | 「リクエストの**送信元（ブラウザのURL）**は信頼できるドメインか？」を確認。
+
 # 許可するホスト
-ALLOWED_HOSTS = [".localhost", "127.0.0.1", "[::1]"]
+ALLOWED_HOSTS = [
+    ".localhost",
+    "127.0.0.1",
+    "[::1]",
+    ".cloudworkstations.dev",
+    ".idx.google.com",
+]
 
-
-# Application definition
+IS_IDX = os.environ.get("IS_IDX") in ["true", "True", "t"]
+if IS_IDX:
+    # IDX (HTTPSプロキシ環境) 用の設定
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_SAMESITE = "None"
+    CSRF_TRUSTED_ORIGINS = [
+        "https://9000-firebase-trail-condition-1767638653929.cluster-d5vecjrg5rhlkrz6nm4jty7avc.cloudworkstations.dev",
+        "https://*.cloudworkstations.dev",
+        "https://*.idx.google.com",
+    ]
+else:
+    # ローカル (HTTP) 用の設定
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SAMESITE = "Lax"
+    CSRF_TRUSTED_ORIGINS = [
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ]
 
 # インストールするアプリ
 INSTALLED_APPS = [
@@ -146,11 +178,11 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
-            "format": "{levelname} | {asctime} | {module} | {message}",
+            "format": "{levelname} | {asctime} | {module} | {lineno} | {funcName} | {taskName} | {message}",
             "style": "{",
         },
         "console": {
-            "format": "{levelname} | {name} | {funcName} | {message}",
+            "format": "{levelname} | {name} | {lineno} | {message}",
             "style": "{",
         },
     },

@@ -46,11 +46,11 @@ class Command(BaseCommand):
                 source = DataSource.objects.get(id=source_id)
                 source_data_list = [
                     {
-                        "id": source.id, 
-                        "name": source.name, 
-                        "url1": source.url1, 
+                        "id": source.id,
+                        "name": source.name,
+                        "url1": source.url1,
                         "prompt_key": source.prompt_key,
-                        "content_hash": source.content_hash
+                        "content_hash": source.content_hash,
                     }
                 ]
                 self.stdout.write(f"情報源: {source.name}")
@@ -60,13 +60,7 @@ class Command(BaseCommand):
                 return
         else:
             source_data_list = [
-                {
-                    "id": s.id, 
-                    "name": s.name, 
-                    "url1": s.url1, 
-                    "prompt_key": s.prompt_key,
-                    "content_hash": s.content_hash
-                }
+                {"id": s.id, "name": s.name, "url1": s.url1, "prompt_key": s.prompt_key, "content_hash": s.content_hash}
                 for s in DataSource.objects.all()
             ]
             self.stdout.write(f"全ての情報源を処理: {len(source_data_list)}件")
@@ -90,39 +84,43 @@ class Command(BaseCommand):
         for source_data, result in results:
             if result.get("success"):
                 source = DataSource.objects.get(id=source_data["id"])
-                
+
+                # サイト巡回日時を更新
+                # ハッシュ取得andLLMスキップ時も "success"=True (@pipeline.process_single_source_data)
+                source.last_checked_at = timezone.now()
                 # コンテンツハッシュとスクレイピング時刻を更新
                 if "new_hash" in result:
                     source.content_hash = result["new_hash"]
                     source.last_scraped_at = timezone.now()
-                    source.save(update_fields=["content_hash", "last_scraped_at"])
+
+                source.save(update_fields=["content_hash", "last_scraped_at", "last_checked_at"])
 
                 # コンテンツ変更なしの場合はLLM関連処理をスキップ
                 if not result.get("content_changed", True):
                     self.stdout.write(
-                        self.style.WARNING(
-                            f"コンテンツ変更なし: {source_data['name']} - LLM処理スキップ"
-                        )
+                        self.style.WARNING(f"コンテンツ変更なし: {source_data['name']} - LLM処理スキップ")
                     )
                     continue
 
                 # AIの結果をInternal schemaに変換
                 trail_conditions_list = result["extracted_trail_conditions"]  # TrailConditionSchemaList
                 internal_data_list = [
-                    TrailConditionSchemaInternal(**condition.model_dump(), url1=source_data["url1"])
-                    for condition in trail_conditions_list.trail_condition_records
+                    TrailConditionSchemaInternal(**trail_condition_record.model_dump(), url1=source_data["url1"])
+                    for trail_condition_record in trail_conditions_list.trail_condition_records
                 ]
 
                 # DB同期とLLM使用履歴記録
                 llm_stats = result["stats"]
                 config = result["config"]
                 prompt_filename = source.prompt_filename
-                
+
                 with transaction.atomic():
                     sync_trail_conditions(source, internal_data_list, config, prompt_filename)
                     self._save_llm_usage(source, llm_stats, len(internal_data_list))
 
-                logger.info(f"DB保存完了: {source_data['name']} - {len(internal_data_list)}件 (コスト: ${result['stats'].total_fee:.4f})")
+                logger.info(
+                    f"DB保存完了: {source_data['name']} - {len(internal_data_list)}件 (コスト: ${result['stats'].total_fee:.4f})"
+                )
                 self.stdout.write(
                     self.style.SUCCESS(
                         f"DB保存完了: {source_data['name']} - {len(internal_data_list)}件 (コスト: ${result['stats'].total_fee:.4f})"
@@ -146,44 +144,44 @@ class Command(BaseCommand):
 
     def generate_summary(self, results: UpdatedDataList) -> dict[str, Any]:
         """処理結果のサマリーを生成"""
-        summary = {
-            "results": [], 
-            "success_count": 0, 
-            "error_count": 0, 
-            "skipped_count": 0,
-            "total_conditions": 0
-        }
+        summary = {"results": [], "success_count": 0, "error_count": 0, "skipped_count": 0, "total_conditions": 0}
 
         for source_data, result in results:
             if result.get("success"):
                 # コンテンツ変更なしの場合
                 if not result.get("content_changed", True):
-                    summary["results"].append({
-                        "source_name": source_data["name"],
-                        "status": "skipped",
-                        "reason": "コンテンツ変更なし",
-                    })
+                    summary["results"].append(
+                        {
+                            "source_name": source_data["name"],
+                            "status": "skipped",
+                            "reason": "コンテンツ変更なし",
+                        }
+                    )
                     summary["skipped_count"] += 1
                 else:
                     # 正常処理の場合
                     conditions_count = self._get_conditions_count(result)
-                    summary["results"].append({
-                        "source_name": source_data["name"],
-                        "status": "success", 
-                        "conditions_count": conditions_count,
-                    })
+                    summary["results"].append(
+                        {
+                            "source_name": source_data["name"],
+                            "status": "success",
+                            "conditions_count": conditions_count,
+                        }
+                    )
                     summary["success_count"] += 1
                     summary["total_conditions"] += conditions_count
             else:
-                summary["results"].append({
-                    "source_name": source_data["name"],
-                    "status": "error",
-                    "message": result.get("error", "Unknown error"),
-                })
+                summary["results"].append(
+                    {
+                        "source_name": source_data["name"],
+                        "status": "error",
+                        "message": result.get("error", "Unknown error"),
+                    }
+                )
                 summary["error_count"] += 1
 
         return summary
-    
+
     def _get_conditions_count(self, result: UpdatedDataSingle) -> int:
         """結果からレコード数を安全に取得"""
         if result.get("success"):
@@ -208,5 +206,7 @@ class Command(BaseCommand):
                     self.style.SUCCESS(f"✅ {result['source_name']}: {result['conditions_count']}件の状況情報")
                 )
 
-        self.stdout.write(f"\n成功: {summary['success_count']}件, スキップ: {summary['skipped_count']}件, エラー: {summary['error_count']}件")
+        self.stdout.write(
+            f"\n成功: {summary['success_count']}件, スキップ: {summary['skipped_count']}件, エラー: {summary['error_count']}件"
+        )
         self.stdout.write(f"取得された状況情報の総数: {summary['total_conditions']}件")

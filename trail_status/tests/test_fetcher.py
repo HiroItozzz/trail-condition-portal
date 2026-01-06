@@ -1,23 +1,15 @@
-"""
-DataFetcherのテスト
-"""
-
-from unittest.mock import AsyncMock, MagicMock
-
 import pytest
-import httpx
 
 from trail_status.services.fetcher import DataFetcher
 
 
 @pytest.mark.asyncio
-async def test_fetch_text_success():
+async def test_parse_html():
     """テキスト取得成功のテスト（モック使用）"""
     fetcher = DataFetcher()
 
     # HTTPレスポンスをモック
-    mock_response = MagicMock()
-    mock_response.text = """
+    mock_response_text = """
     <html>
         <body>
             <h1>登山道情報</h1>
@@ -25,11 +17,7 @@ async def test_fetch_text_success():
         </body>
     </html>
     """
-
-    mock_client = AsyncMock()
-    mock_client.get = AsyncMock(return_value=mock_response)
-
-    text = await fetcher.fetch_text(mock_client, "https://example.com/trail")
+    text = await fetcher.fetch_parsed_text(mock_response_text, "https://example.com/trail")
 
     assert len(text) > 0
     assert "登山道情報" in text or "通行止め" in text  # trafilaturaで抽出されたテキスト

@@ -1,8 +1,14 @@
 {
   "editor.formatOnSave": true,
   "[python]": {
-  "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
   },
+  "ruff.configurationPreference": "filesystemFirst",
 
   // 言語設定の継承を有効化
   "[django-html]": {

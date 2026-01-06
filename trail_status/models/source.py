@@ -1,5 +1,7 @@
 from django.db import models
+
 from .utils import ChoiceManager
+
 
 class OrganizationType(models.TextChoices):
     MUNICIPALITY = "MUNICIPALITY", "地方自治体"
@@ -38,6 +40,9 @@ class DataSource(models.Model):
     )
     last_scraped_at = models.DateTimeField(
         "最終スクレイピング日時", null=True, blank=True, help_text="最後にコンテンツを取得した日時"
+    )
+    last_checked_at = models.DateTimeField(
+        "最終巡回日時", null=True, blank=True, help_text="最後に各サイトの更新有無を確認した日時"
     )
 
     created_at = models.DateTimeField("登録日時", auto_now_add=True)

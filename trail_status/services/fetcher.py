@@ -11,7 +11,9 @@ logger = logging.getLogger(__name__)
 
 class DataFetcher:
     def __init__(self):
-        self.headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) ..."}
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+        }
 
     @retry(
         stop=stop_after_attempt(3),  # 3回リトライ
@@ -19,28 +21,12 @@ class DataFetcher:
         retry=retry_if_exception_type((httpx.HTTPError, httpx.ConnectError)),
         reraise=True,  # 3回失敗したら最後のエラーを投げる
     )
-    async def fetch_text(self, client: httpx.AsyncClient, url: str) -> str:
-        """
-        単一のURLからテキストを取得。リトライとロギング付き。
-        """
-        logger.debug(f"テキスト取得開始: {url}")
-
+    async def fetch_html(self, client: httpx.AsyncClient, url: str) -> str:
+        """生HTMLのスクレイピング"""
         try:
             response = await client.get(url, headers=self.headers)
             response.raise_for_status()
-
-            # HTMLから本文のみを抽出（メニューやフッターを自動で削る）
-            content = trafilatura.extract(
-                response.text,
-                include_tables=True,  # 登山情報の核心（表）を維持
-                include_links=True,  # 詳細PDFへのリンクなどを維持
-            )
-            if content is None:
-                logger.warning(f"Trafilaturaがコンテンツの抽出に失敗しました。生のテキストを出力します。URL: {url}")
-                content = trafilatura.html2txt(response.text)
-
-            logger.debug(f"テキスト取得成功: {url} (抽出文字数: {len(content or '')})")
-            return content or ""
+            return response.text
 
         except httpx.HTTPStatusError as e:
             logger.error(f"HTTP error occurred: {e.response.status_code} for {url}")
@@ -49,25 +35,46 @@ class DataFetcher:
             logger.exception(f"Unexpected error fetching {url}")
             raise
 
+    async def fetch_parsed_text(self, response_text: str, url_for_logger: str) -> str:
+        """
+        単一のURLからテキストを取得。リトライとロギング付き。
+        """
+        logger.debug(f"コンテンツ抽出開始: {url_for_logger}")
+
+        # HTMLボディから本文のみを抽出（メニューやフッターを自動で削る）
+        content = trafilatura.extract(
+            response_text,
+            include_tables=True,  # 登山情報の核心（表）を維持
+            include_links=True,  # 詳細PDFへのリンクなどを維持
+        )
+        if content is None:
+            logger.warning(
+                f"Trafilaturaがコンテンツの抽出に失敗しました。生のテキストを出力します。URL: {url_for_logger}"
+            )
+            content = trafilatura.html2txt(response_text)
+
+        logger.debug(f"コンテンツ抽出終了: {url_for_logger} (抽出文字数: {len(content or '')})")
+        return content or ""
+
     def calculate_content_hash(self, html: str) -> str:
         """
         HTMLからtrafilaturaで抽出した内容のハッシュ値を計算
-        
+
         Args:
             html: HTML文字列
-            
+
         Returns:
             str: SHA256ハッシュ値（64文字）
         """
         # trafilaturaで正規化されたテキストを抽出
         normalized_content = trafilatura.extract(html, include_comments=False, include_tables=True)
-        
+
         if not normalized_content:
             # 抽出できない場合は空文字列として扱う
             normalized_content = ""
-        
+
         # UTF-8エンコードしてハッシュ計算
-        return hashlib.sha256(normalized_content.encode('utf-8')).hexdigest()
+        return hashlib.sha256(normalized_content.encode("utf-8")).hexdigest()
 
     def has_content_changed(self, html: str, previous_hash: Optional[str]) -> tuple[bool, str]:
         """

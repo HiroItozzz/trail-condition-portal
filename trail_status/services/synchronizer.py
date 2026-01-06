@@ -85,6 +85,7 @@ def sync_trail_conditions(
         else:
             # 3. 新規レコードの作成
             # mountain_group は signals.py が MountainAlias に基づいて自動解決する
+            # 山名原文、登山道原文は正規化する前の値を格納
             generated_data = data.model_dump(exclude={"mountain_name_raw", "trail_name"})
             ai_config = {
                 k: v
