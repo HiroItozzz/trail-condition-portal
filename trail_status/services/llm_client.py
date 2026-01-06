@@ -39,7 +39,7 @@ class LlmConfig(BaseModel):
     thinking_budget: int = Field(default=5000, ge=-1, le=15000, description="Geminiの思考予算（トークン数）")
     prompt_filename: str | None = Field(default=None, description="LLMエラー処理での識別用ファイルネーム")
 
-    @computed_field(repr=False)
+    @computed_field
     @property
     def full_prompt(self) -> str:
         """テンプレートとサイト固有プロンプトを結合"""
@@ -50,7 +50,7 @@ class LlmConfig(BaseModel):
             parts.append(self.site_prompt)
         return "\n\n".join(parts) if parts else ""
 
-    @computed_field
+    @computed_field(repr=False)
     @property
     def api_key(self) -> str:
         """モデルに基づいてAPIキーを自動取得（遅延評価）"""
@@ -117,7 +117,7 @@ class LlmConfig(BaseModel):
 
     @staticmethod
     @lru_cache
-    def _load_template(filename: str = "template.yaml") -> dict:
+    def _load_template(filename: str = "template.yaml") -> str:
         """
         template.yamlを読み込み辞書で返却
 
@@ -214,7 +214,7 @@ class ConversationalAi(ABC):
     # サーバーエラーとバリデーションエラー時のみリトライ
     async def handle_server_error(self, i, max_retries):
         if i < max_retries - 1:
-            logger.warning(f"{self.model}の計算資源が逼迫しているようです。{5 * (i + 1)}秒後にリトライします。")
+            logger.warning(f"{self.model}の計算資源が逼迫しているようです。{3 ** (i + 1)}秒後にリトライします。")
             await asyncio.sleep(3 ** (i + 1))
         else:
             logger.error(f"{self.model}は現在過負荷のようです。少し時間をおいて再実行する必要があります。")
@@ -302,7 +302,7 @@ class DeepseekClient(ConversationalAi):
                     response_format={"type": "json_object"},
                     stream=False,
                 )
-                generated_text = response.choices[0].message.content
+                generated_text = response.choices[0].message.content or ""
                 validated_data = super().validate_response(generated_text)
                 break
             except ValidationError:
