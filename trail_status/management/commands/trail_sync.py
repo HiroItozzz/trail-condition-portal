@@ -70,7 +70,7 @@ class Command(BaseCommand):
 
         # パイプライン処理を実行（純粋にasync処理のみ）
         pipeline = TrailConditionPipeline()
-        results = asyncio.run(pipeline.run_pipeline(source_data_list, ai_model))
+        results: UpdatedDataList = asyncio.run(pipeline.run(source_data_list, ai_model))
 
         # DB保存（同期処理）
         if not dry_run:
@@ -85,17 +85,16 @@ class Command(BaseCommand):
         from django.utils import timezone
 
         for source_data, result in results:
-            if getattr(result, "success", False):
+            if isinstance(result, ResultSingle) and result.success:
                 source = DataSource.objects.get(id=source_data.id)
+                # サイト巡回日時を更新
+                # ハッシュ取得andLLMスキップ時も success=True
+                source.last_checked_at = timezone.now()
 
                 # コンテンツハッシュとスクレイピング時刻を更新
                 if result.content_changed:
                     source.content_hash = result.new_hash
                     source.last_scraped_at = timezone.now()
-
-                # サイト巡回日時を更新
-                # ハッシュ取得andLLMスキップ時も success=True
-                source.last_checked_at = timezone.now()
 
                 # コミット
                 source.save(update_fields=["content_hash", "last_scraped_at", "last_checked_at"])
@@ -116,11 +115,11 @@ class Command(BaseCommand):
 
                 # DB同期とLLM使用履歴記録
                 llm_stats: LlmStats = result.stats
-                config: LlmConfig = result.config
+                llm_config: LlmConfig = result.config
                 prompt_filename = source.prompt_filename
 
                 with transaction.atomic():
-                    sync_trail_conditions(source, internal_data_list, config, prompt_filename)
+                    sync_trail_conditions(source, internal_data_list, llm_config, prompt_filename)
                     self._save_llm_usage(source, llm_stats, len(internal_data_list))
 
                 logger.info(
@@ -149,10 +148,10 @@ class Command(BaseCommand):
 
     def generate_summary(self, results: UpdatedDataList) -> dict[str, Any]:
         """処理結果のサマリーを生成"""
-        summary = {"results": [], "success_count": 0, "error_count": 0, "skipped_count": 0, "total_conditions": 0}
+        summary: dict[str, Any] = {"results": [], "success_count": 0, "error_count": 0, "skipped_count": 0, "total_conditions": 0}
 
         for source_data, result in results:
-            if getattr(result, "success", False):
+            if isinstance(result, ResultSingle) and result.success:
                 # コンテンツ変更なしの場合
                 if not result.content_changed:
                     summary["results"].append(
@@ -176,7 +175,7 @@ class Command(BaseCommand):
                     summary["success_count"] += 1
                     summary["total_conditions"] += conditions_count
             # スクレイピング失敗時
-            elif hasattr(result, "success"):
+            elif isinstance(result, ResultSingle):
                 summary["results"].append(
                     {
                         "source_name": source_data.name,

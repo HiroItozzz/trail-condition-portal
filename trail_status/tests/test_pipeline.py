@@ -2,9 +2,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from trail_status.services.pipeline import TrailConditionPipeline, ModelDataSingle
-from trail_status.services.schema import TrailConditionSchemaList
 from trail_status.services.llm_client import LlmConfig
+from trail_status.services.pipeline import ModelDataSingle, TrailConditionPipeline
+from trail_status.services.schema import TrailConditionSchemaList
+
 
 @pytest.mark.asyncio
 async def test_process_source_data_full_flow(monkeypatch, mock_async_client, sample_token_stats):
@@ -34,7 +35,7 @@ async def test_process_source_data_full_flow(monkeypatch, mock_async_client, sam
         )
     ]
 
-    results = await pipeline.run_pipeline(source_data_list, "deepseek-chat")
+    results = await pipeline.run(source_data_list, "deepseek-chat")
 
     # --- 検証 ---
     assert len(results) == 1

@@ -42,7 +42,7 @@ class TrailConditionPipeline:
     def __init__(self):
         pass
 
-    async def run_pipeline(self, source_data_list: list[ModelDataSingle], ai_model: str) -> UpdatedDataList:
+    async def run(self, source_data_list: list[ModelDataSingle], ai_model: str) -> UpdatedDataList:
         """ソースデータリストを並行処理（Django ORM一切なし）"""
         logger.info(f"パイプライン処理開始 - 対象: {len(source_data_list)}件, モデル: {ai_model or 'デフォルト'}")
 
@@ -53,7 +53,7 @@ class TrailConditionPipeline:
                 task = self.process_single_source_data(client, source_data, ai_model)
                 tasks.append(task)
 
-            results = await asyncio.gather(*tasks, return_exceptions=True)
+            results: list[ResultSingle | BaseException] = await asyncio.gather(*tasks, return_exceptions=True)
 
         logger.info(f"パイプライン処理完了 - 処理件数: {len(results)}")
         return list(zip(source_data_list, results))

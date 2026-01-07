@@ -329,12 +329,22 @@ class DeepseekClient(ConversationalAi):
                 else:
                     super().handle_unexpected_error(e)
 
-        # 純粋なoutput_tokensを計算
-        thoughts_tokens = getattr(response.usage.completion_tokens_details, "reasoning_tokens", 0) or 0
-        output_tokens = response.usage.completion_tokens - thoughts_tokens
+        # 安全なNoneチェックを追加
+        if response.usage:
+            prompt_tokens = response.usage.prompt_tokens
+            completion_tokens = response.usage.completion_tokens
+            thoughts_tokens = getattr(response.usage.completion_tokens_details, "reasoning_tokens", 0) or 0
+            # 純粋なoutput_tokensを計算
+            output_tokens = completion_tokens - thoughts_tokens
+
+        else:
+            logger.warning("Deepseek API response did not include usage metadata.")
+            prompt_tokens = 0
+            thoughts_tokens = 0
+            output_tokens = 0
 
         stats = TokenStats(
-            response.usage.prompt_tokens,
+            prompt_tokens,
             thoughts_tokens,
             output_tokens,
             len(self.prompt_for_deepseek),
@@ -397,10 +407,21 @@ class GeminiClient(ConversationalAi):
                 logger.debug("## **Answer:**")
                 logger.debug(part.text)
 
+        # 安全なNoneチェックを追加
+        if response.usage_metadata:
+            prompt_tokens = response.usage_metadata.prompt_token_count
+            thoughts_tokens = getattr(response.usage_metadata, "thoughts_token_count", 0) or 0
+            output_tokens = response.usage_metadata.candidates_token_count
+        else:
+            logger.warning("Gemini API response did not include usage metadata.")
+            prompt_tokens = 0
+            thoughts_tokens = 0
+            output_tokens = 0
+
         stats = TokenStats(
-            response.usage_metadata.prompt_token_count,
-            getattr(response.usage_metadata, "thoughts_token_count", 0) or 0,  # Noneが返ってきた場合のフォールバック
-            response.usage_metadata.candidates_token_count,
+            prompt_tokens,
+            thoughts_tokens,
+            output_tokens,
             len(self.prompt),
             len(response.text),
             self.model,
