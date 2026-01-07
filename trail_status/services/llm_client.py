@@ -39,7 +39,7 @@ class LlmConfig(BaseModel):
     thinking_budget: int = Field(default=5000, ge=-1, le=15000, description="Geminiの思考予算（トークン数）")
     prompt_filename: str | None = Field(default=None, description="LLMエラー処理での識別用ファイルネーム")
 
-    @computed_field(repr=False)
+    @computed_field
     @property
     def full_prompt(self) -> str:
         """テンプレートとサイト固有プロンプトを結合"""
@@ -50,7 +50,7 @@ class LlmConfig(BaseModel):
             parts.append(self.site_prompt)
         return "\n\n".join(parts) if parts else ""
 
-    @computed_field
+    @computed_field(repr=False)
     @property
     def api_key(self) -> str:
         """モデルに基づいてAPIキーを自動取得（遅延評価）"""
@@ -117,7 +117,7 @@ class LlmConfig(BaseModel):
 
     @staticmethod
     @lru_cache
-    def _load_template(filename: str = "template.yaml") -> dict:
+    def _load_template(filename: str = "template.yaml") -> str:
         """
         template.yamlを読み込み辞書で返却
 
@@ -214,7 +214,7 @@ class ConversationalAi(ABC):
     # サーバーエラーとバリデーションエラー時のみリトライ
     async def handle_server_error(self, i, max_retries):
         if i < max_retries - 1:
-            logger.warning(f"{self.model}の計算資源が逼迫しているようです。{5 * (i + 1)}秒後にリトライします。")
+            logger.warning(f"{self.model}の計算資源が逼迫しているようです。{3 ** (i + 1)}秒後にリトライします。")
             await asyncio.sleep(3 ** (i + 1))
         else:
             logger.error(f"{self.model}は現在過負荷のようです。少し時間をおいて再実行する必要があります。")
@@ -302,7 +302,7 @@ class DeepseekClient(ConversationalAi):
                     response_format={"type": "json_object"},
                     stream=False,
                 )
-                generated_text = response.choices[0].message.content
+                generated_text = response.choices[0].message.content or ""
                 validated_data = super().validate_response(generated_text)
                 break
             except ValidationError:
@@ -329,12 +329,22 @@ class DeepseekClient(ConversationalAi):
                 else:
                     super().handle_unexpected_error(e)
 
-        # 純粋なoutput_tokensを計算
-        thoughts_tokens = getattr(response.usage.completion_tokens_details, "reasoning_tokens", 0) or 0
-        output_tokens = response.usage.completion_tokens - thoughts_tokens
+        # 安全なNoneチェックを追加
+        if response.usage:
+            prompt_tokens = response.usage.prompt_tokens
+            completion_tokens = response.usage.completion_tokens
+            thoughts_tokens = getattr(response.usage.completion_tokens_details, "reasoning_tokens", 0) or 0
+            # 純粋なoutput_tokensを計算
+            output_tokens = completion_tokens - thoughts_tokens
+
+        else:
+            logger.warning("Deepseek API response did not include usage metadata.")
+            prompt_tokens = 0
+            thoughts_tokens = 0
+            output_tokens = 0
 
         stats = TokenStats(
-            response.usage.prompt_tokens,
+            prompt_tokens,
             thoughts_tokens,
             output_tokens,
             len(self.prompt_for_deepseek),
@@ -397,10 +407,21 @@ class GeminiClient(ConversationalAi):
                 logger.debug("## **Answer:**")
                 logger.debug(part.text)
 
+        # 安全なNoneチェックを追加
+        if response.usage_metadata:
+            prompt_tokens = response.usage_metadata.prompt_token_count
+            thoughts_tokens = getattr(response.usage_metadata, "thoughts_token_count", 0) or 0
+            output_tokens = response.usage_metadata.candidates_token_count
+        else:
+            logger.warning("Gemini API response did not include usage metadata.")
+            prompt_tokens = 0
+            thoughts_tokens = 0
+            output_tokens = 0
+
         stats = TokenStats(
-            response.usage_metadata.prompt_token_count,
-            getattr(response.usage_metadata, "thoughts_token_count", 0) or 0,  # Noneが返ってきた場合のフォールバック
-            response.usage_metadata.candidates_token_count,
+            prompt_tokens,
+            thoughts_tokens,
+            output_tokens,
             len(self.prompt),
             len(response.text),
             self.model,

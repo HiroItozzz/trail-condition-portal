@@ -19,10 +19,10 @@ def normalize_text(text: str) -> str:
 
 def sync_trail_conditions(
     source: DataSource, ai_data_list: list[TrailConditionSchemaInternal], config: LlmConfig, prompt_filename: str
-) -> None:
+) -> tuple[list[TrailCondition], list[TrailCondition]]:
     """
-    AIの抽出データ(Pydantic)をDjango DBへ同期する。
-    既存レコードとの同定。レコードがあれば更新、なければ作成を行う。
+    AIの抽出データ(Pydantic)を既存レコードと照合する。
+    所定の方法で同定し更新リストと新規作成リストをDjangoモデルで返却
 
     Args:
         source: データソース
@@ -30,6 +30,9 @@ def sync_trail_conditions(
         config: LlmConfig（AI設定情報）
         prompt_file: 使用したプロンプトファイル名
     """
+    to_update: list[TrailCondition] = []
+    to_create: list[TrailCondition] = []
+
     for data in ai_data_list:
         # 1. AIの出力を正規化（空白や全角半角の揺れを取る）
         # これにより、AIが「雲取山 」と出しても「雲取山」として扱う
@@ -70,39 +73,27 @@ def sync_trail_conditions(
                 # AI関連情報を更新
                 existing_record.ai_model = config.model
                 existing_record.prompt_file = prompt_filename
-                ai_config = {
-                    k: v
-                    for k, v in {
-                        "temperature": config.temperature,
-                        "thinking_budget": config.thinking_budget,
-                    }.items()
-                    if v is not None
-                }
-                existing_record.ai_config = ai_config
-                # save() により auto_now=True の updated_at が更新される
-                existing_record.save()
-                logger.info(f"レコード更新: {normalized_m_name}/{normalized_t_name} (ID: {existing_record.id})")
+                existing_record.ai_config = data.ai_config
+
+                to_update.append(existing_record)
+
+                logger.info(f"更新リストに追加: {normalized_m_name}/{normalized_t_name} (ID: {existing_record.id})")
         else:
             # 3. 新規レコードの作成
             # mountain_group は signals.py が MountainAlias に基づいて自動解決する
-            # 山名原文、登山道原文は正規化する前の値を格納
-            generated_data = data.model_dump(exclude={"mountain_name_raw", "trail_name"})
-            ai_config = {
-                k: v
-                for k, v in {
-                    "temperature": config.temperature,
-                    "thinking_budget": config.thinking_budget,
-                }.items()
-                if v is not None
-            }
-
-            new_record = TrailCondition.objects.create(
+            # 山名原文、登山道原文は正規化する以前と以後を選択する余地のためにexculde
+            generated_data_dict = data.model_dump(exclude={"mountain_name_raw", "trail_name"})
+            new_record = TrailCondition(
                 source=source,
                 mountain_name_raw=data.mountain_name_raw,
                 trail_name=data.trail_name,
                 ai_model=config.model,
                 prompt_file=prompt_filename,
-                ai_config=ai_config,
-                **generated_data,
+                **generated_data_dict,
             )
-            logger.info(f"新規レコード作成: {normalized_m_name}/{normalized_t_name} (ID: {new_record.id})")
+
+            to_create.append(new_record)
+
+            logger.info(f"新規作成リストに追加: {normalized_m_name}/{normalized_t_name} (ID: {new_record.id})")
+
+    return to_update, to_create

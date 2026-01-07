@@ -21,12 +21,12 @@ class TokenStats:
         self.output_letter_count = output_letter_count
         self.model_name = model
         # 遅延計算用のキャッシュ
-        self._input_fee = None
-        self._thoughts_fee = None
-        self._output_fee = None
+        self._input_fee: float | None = None
+        self._thoughts_fee: float | None = None
+        self._output_fee: float | None = None
 
     @property
-    def total_tokens(self):
+    def total_tokens(self) -> int:
         total = self.input_tokens + self.thoughts_tokens + self.pure_output_tokens
         return total
 
@@ -77,10 +77,10 @@ class LlmStats:
         self.token_stats = token_stats
 
         # 実行メトリクス
-        self.execution_time: float = None
+        self.execution_time: float | None = None
         self.retry_count: int = 0
-        self.queue_time: float = None
-        self.response_time: float = None
+        self.queue_time: float | None = None
+        self.response_time: float | None = None
 
         # 品質メトリクス
         self.validation_success: bool = True
@@ -133,11 +133,11 @@ class BaseLlmFee(ABC):
         self.model = model
 
     @abstractmethod
-    def fees(self):
+    def fees(self) -> dict:
         pass
 
     @abstractmethod
-    def model_list(self):
+    def model_list(self) -> list:
         pass
 
     @abstractmethod
@@ -160,11 +160,11 @@ class LlmFee(BaseLlmFee):
     _model_list = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-3-flash-preview", "deepseek-chat", "deepseek-reasoner"]
 
     @property
-    def fees(self):
+    def fees(self) -> dict:
         return self._fees
 
     @property
-    def model_list(self):
+    def model_list(self) -> list:
         return self._model_list
 
     def calculate(self, tokens: int | None, token_type: str) -> float:

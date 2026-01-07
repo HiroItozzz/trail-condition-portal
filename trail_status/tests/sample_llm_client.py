@@ -19,7 +19,7 @@ SAMPLE_DIR = get_sample_dir() / "sample_okutama.txt"
 D_MODEL = "deepseek-reasoner"
 G_MODEL = "gemini-3-flash-preview"
 
-prompt = LlmConfig.load_prompt("001_okutama_vc.yaml")
+prompt = LlmConfig.from_file("001_okutama_vc.yaml").site_prompt
 data = SAMPLE_DIR.read_text(encoding="utf-8")
 
 if __name__ == "__main__":
