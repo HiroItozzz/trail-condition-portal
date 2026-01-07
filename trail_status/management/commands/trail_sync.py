@@ -1,11 +1,12 @@
 import asyncio
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
+from trail_status.models.condition import TrailCondition
 from trail_status.models.llm_usage import LlmUsage
 from trail_status.models.source import DataSource
 from trail_status.services.llm_client import LlmConfig
@@ -69,57 +70,66 @@ class Command(BaseCommand):
             self.stdout.write(f"全ての情報源を処理: {len(source_data_list)}件")
 
         # パイプライン処理を実行（純粋にasync処理のみ）
-        pipeline = TrailConditionPipeline()
-        results: UpdatedDataList = asyncio.run(pipeline.run(source_data_list, ai_model))
+        processor = TrailConditionPipeline()
+        all_source_results: UpdatedDataList = asyncio.run(processor(source_data_list, ai_model))
 
         # DB保存（同期処理）
         if not dry_run:
-            self.save_results_to_database(results)
+            self.save_results_to_database(all_source_results)
 
         # 結果サマリーを表示
-        summary = self.generate_summary(results)
+        summary = self.generate_summary(all_source_results)
         self.print_summary(summary)
 
     def save_results_to_database(self, results: UpdatedDataList) -> None:
         """処理結果をDBに保存"""
         from django.utils import timezone
 
-        for source_data, result in results:
-            if isinstance(result, ResultSingle) and result.success:
+        for source_data, result_by_source in results:
+            if isinstance(result_by_source, ResultSingle) and result_by_source.success:
                 source = DataSource.objects.get(id=source_data.id)
                 # サイト巡回日時を更新
                 # ハッシュ取得andLLMスキップ時も success=True
                 source.last_checked_at = timezone.now()
 
                 # コンテンツハッシュとスクレイピング時刻を更新
-                if result.content_changed:
-                    source.content_hash = result.new_hash
+                if result_by_source.content_changed:
+                    source.content_hash = result_by_source.new_hash
                     source.last_scraped_at = timezone.now()
 
                 # コミット
                 source.save(update_fields=["content_hash", "last_scraped_at", "last_checked_at"])
 
                 # コンテンツ変更なしの場合はLLM関連処理をスキップ
-                if not result.content_changed:
+                if not result_by_source.content_changed:
                     self.stdout.write(self.style.WARNING(f"コンテンツ変更なし: {source_data.name} - LLM処理スキップ"))
                     continue
 
                 # AIの結果をInternal schemaに変換
-                trail_conditions_list: TrailConditionSchemaList = (
-                    result.extracted_trail_conditions
-                )  # TrailConditionSchemaList
+                trail_conditions_list: TrailConditionSchemaList = result_by_source.extracted_trail_conditions
+
+                # TrailCondition用のLLM設定(JSONField)
+                ai_config = {
+                    k: v
+                    for k, v in {
+                        "temperature": result_by_source.config.temperature,
+                        "thinking_budget": result_by_source.config.thinking_budget,
+                    }.items()
+                    if v is not None
+                }
                 internal_data_list = [
-                    TrailConditionSchemaInternal(**_by_sources.model_dump(), url1=source_data.url1)
+                    TrailConditionSchemaInternal(**_by_sources.model_dump(), url1=source_data.url1, ai_config=ai_config)
                     for _by_sources in trail_conditions_list.trail_condition_records
                 ]
 
                 # DB同期とLLM使用履歴記録
-                llm_stats: LlmStats = result.stats
-                llm_config: LlmConfig = result.config
+                llm_stats: LlmStats = result_by_source.stats
+                llm_config: LlmConfig = result_by_source.config
                 prompt_filename = source.prompt_filename
 
+                to_update, to_create = sync_trail_conditions(source, internal_data_list, llm_config, prompt_filename)
                 with transaction.atomic():
-                    sync_trail_conditions(source, internal_data_list, llm_config, prompt_filename)
+                    self._save_trail_condition(to_update, to_create)
                     self._save_llm_usage(source, llm_stats, len(internal_data_list))
 
                 logger.info(
@@ -130,6 +140,40 @@ class Command(BaseCommand):
                         f"DB保存完了: {source_data.name} - {len(internal_data_list)}件 (コスト: ${llm_stats.total_fee:.4f})"
                     )
                 )
+
+    def _save_trail_condition(self, to_update: list[TrailCondition], to_create: list[TrailCondition]) -> None:
+        """TrailConditionをDBに保存"""
+        from django.utils import timezone
+
+        now = timezone.now()
+
+        if to_update:
+            # TrailConditionSchemaInternalのフィールド名を取得
+            # Djangoモデルの更新対象フィールドと一致している前提
+            fields_to_update = list(TrailConditionSchemaInternal.model_fields.keys())
+
+            # bulk_updateではauto_now=Trueが機能しないため手動でセット
+            for record in to_update:
+                record.updated_at = now
+
+            if "updated_at" not in fields_to_update:
+                fields_to_update.append("updated_at")
+
+            # 更新
+            TrailCondition.objects.bulk_update(to_update, fields_to_update)
+            self.stdout.write(self.style.SUCCESS(f"更新完了: {len(to_update)}件"))
+            logger.info(f"更新完了: {len(to_update)}件")
+
+        if to_create:
+            # bulk_createではauto_now_add=Trueが機能しないため手動でセット
+            for record in to_create:
+                record.created_at = now
+                record.updated_at = now
+
+            # 新規作成
+            TrailCondition.objects.bulk_create(to_create)
+            self.stdout.write(self.style.SUCCESS(f"新規作成完了: {len(to_create)}件"))
+            logger.info(f"新規作成完了: {len(to_create)}件")
 
     def _save_llm_usage(self, source: DataSource, llm_stats: LlmStats, record_count: int) -> None:
         """LLM使用履歴をDBに保存"""
@@ -148,7 +192,13 @@ class Command(BaseCommand):
 
     def generate_summary(self, results: UpdatedDataList) -> dict[str, Any]:
         """処理結果のサマリーを生成"""
-        summary: dict[str, Any] = {"results": [], "success_count": 0, "error_count": 0, "skipped_count": 0, "total_conditions": 0}
+        summary: dict[str, Any] = {
+            "results": [],
+            "success_count": 0,
+            "error_count": 0,
+            "skipped_count": 0,
+            "total_conditions": 0,
+        }
 
         for source_data, result in results:
             if isinstance(result, ResultSingle) and result.success:

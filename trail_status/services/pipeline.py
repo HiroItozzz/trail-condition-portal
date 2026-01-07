@@ -39,8 +39,8 @@ UpdatedDataList = list[tuple[ModelDataSingle, ResultSingle | BaseException]]
 class TrailConditionPipeline:
     """登山道状況の自動処理パイプライン（純粋async処理）"""
 
-    def __init__(self):
-        pass
+    async def __call__(self, source_data_list: list[ModelDataSingle], ai_model: str) -> UpdatedDataList:
+        return await self.run(source_data_list, ai_model)
 
     async def run(self, source_data_list: list[ModelDataSingle], ai_model: str) -> UpdatedDataList:
         """ソースデータリストを並行処理（Django ORM一切なし）"""

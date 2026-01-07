@@ -7,6 +7,11 @@ from ..models.mountain import AreaName
 
 
 class TrailConditionSchemaAi(BaseModel):
+    """
+    AIに構造化出力を指定するスキーマの各項目
+    ※重要：descriptionはAIが読むプロンプト部分
+    """
+
     trail_name: str = Field(description="登山道名・区間（原文そのまま）")
     mountain_name_raw: str = Field(
         default="",
@@ -37,10 +42,15 @@ class TrailConditionSchemaAi(BaseModel):
     comment: str = Field(default="", description="備考欄 / 状況詳細説明から漏れる情報があれば自由記述")
 
 
-class TrailConditionSchemaInternal(TrailConditionSchemaAi):
-    url1: str
-    mountain_group: str | None = Field(default=None, description="山グループ / 後で手動入力")
-
-
 class TrailConditionSchemaList(BaseModel):
+    """AIでの構造化出力を指定するスキーマ"""
+
     trail_condition_records: list[TrailConditionSchemaAi] = Field(description="登山道状況のリスト")
+
+
+class TrailConditionSchemaInternal(TrailConditionSchemaAi):
+    """DjangoのTrailConditionモデルに保存する内容と完全に一致するクラス"""
+
+    url1: str
+    ai_config: dict
+    mountain_group: str | None = Field(default=None, description="山グループ / 後で手動入力")
