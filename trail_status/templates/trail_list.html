@@ -1,68 +1,77 @@
 {% extends 'base.html' %}
 {% block content %}
-  <div class="mb-3 p-3 bg-gray-100 border border-gray-300 rounded-lg">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 pb-2 border-b border-gray-300">
-      <div>
-        <strong class="text-gray-500 text-xs uppercase">最新の内容更新日：</strong>
-        <span class="text-gray-900 font-bold">{{ updated_sources.0.latest_date|date:"Y/m/d" }}</span>
+  <div class="mb-3 p-3 bg-[#f8f8f8] border border-[#ddd] rounded">
+    <div class="flex flex-col md:flex-row justify-start items-start md:items-center gap-7 pb-2 border-b border-[#ddd]">
+      <div class="text-[13px]">
+        <strong style="color: #666;">最新の内容更新日：</strong>
+        <span style="font-weight: bold;">{{ updated_sources.0.latest_date|date:"Y/m/d" }}</span>
       </div>
-      <div class="flex flex-wrap gap-4">
+      <div class="flex flex-wrap gap-3">
         {% for item in updated_sources %}
-          <div class="text-xs">
+          <div class="text-[14px]">
             <a href="{{ item.source__url1 }}"
                target="_blank"
                rel="noopener"
-               class="text-blue-600 hover:underline">{{ item.source__name }}</a>
-            <span class="text-gray-400 ml-1">({{ item.latest_date|date:"m/d" }})</span>
+               style="color: #2563eb;
+                      background-color: #f0f4f8;
+                      padding: 2px 6px;
+                      border-radius: 4px;
+                      font-weight: 600;
+                      text-decoration: underline">{{ item.source__name }}</a>
+            <span style="color: #888; margin-left: 2px;">({{ item.latest_date|date:"m/d" }})</span>
           </div>
         {% endfor %}
       </div>
     </div>
-    
-      <div class="text-gray-500 text-xs text-left">
-        <strong class="text-gray-400">各サイト最終チェック日：</strong>
-        <span class="text-gray-800">{{ latest_checked_at|date:"Y/m/d" }}</span>
-      </div>
+    <div class="text-[12px]" style="color: #666;">
+      <strong>各サイト最終チェック日：</strong>
+      <span style="color: #333;">{{ latest_checked_at|date:"Y/m/d" }}</span>
+    </div>
   </div>
   <table id="trail-table"
-         class="display compact cell-border w-full text-[13px] leading-tight border-collapse">
-    <thead class="bg-gray-50">
+         class="display compact cell-border w-full text-[13px] leading-tight">
+    <thead>
       <tr>
-        <th class="p-1 border text-left">サイト更新日</th>
-        <th class="p-1 border text-left">山域</th>
-        <th class="p-1 border text-left">状況種別</th>
-        <th class="p-1 border text-left">対象</th>
-        <th class="p-1 border text-left">タイトル・詳細</th>
-        <th class="p-1 border text-left">情報源</th>
+        <th>状況種別</th>
+        <th>山域</th>
+        <th>対象</th>
+        <th>タイトル・詳細</th>
+        <th>情報源</th>
+        <th>サイト更新日</th>
       </tr>
     </thead>
     <tbody>
       {% for item in conditions %}
-        <tr class="align-top border-b hover:bg-gray-50">
-          <td class="p-1 whitespace-nowrap border">{{ item.updated_at|date:"Y/m/d"|default:"-" }}</td>
-          <td class="p-1 border">{{ item.get_area_display }}</td>
-          <td class="p-1 font-bold border">
-            <span class=" {% if item.status == 'CLOSURE' %}text-red-600 {% elif item.status == 'HAZARD' %}text-orange-500 {% elif item.status == 'SNOW' %}text-cyan-600 {% elif item.status == 'RESOLVED' %}text-green-600 {% elif item.status == 'OTHER' %}text-gray-500 {% else %}text-blue-600{% endif %}">
+        <tr class="hover:bg-[#f5f5f5]">
+          <td class="font-bold whitespace-nowrap">
+            <span class=" {% if item.status == 'CLOSURE' %}text-red-600 {% elif item.status == 'HAZARD' %}text-orange-500 {% elif item.status == 'SNOW' %}text-cyan-600 {% elif item.status == 'RESOLVED' %}text-green-600 {% else %}text-blue-600{% endif %}">
               {{ item.get_status_display }}
             </span>
           </td>
-          <td class="p-1 border">
-            <div class="font-bold">{{ item.mountain_name_raw }}</div>
-            <div class="text-gray-600">{{ item.trail_name }}</div>
+          <td>{{ item.get_area_display }}</td>
+          <td>
+            <div style="font-weight: bold; color: #000;">{{ item.mountain_name_raw }}</div>
+            <div style="color: #666; font-size: 11px;">{{ item.trail_name }}</div>
           </td>
-          <td class="p-1 border">
-            <div class="font-bold break-all">{{ item.title }}</div>
-            <div class="text-[12px] text-gray-700 mt-1 break-all">{{ item.description }}</div>
+          <td>
+            <div style="font-weight: bold; color: #000;">{{ item.title }}</div>
             {% if item.comment %}
-              <div class="text-[11px] text-gray-500 border-l-2 border-gray-300 pl-1.5 mt-1">備考: {{ item.comment }}</div>
+              <div class="mt-1 pl-1"
+                   style="color: #777;
+                          font-size: 11px;
+                          border-left: 2px solid #ddd">備考: {{ item.comment }}</div>
             {% endif %}
           </td>
-          <td class="p-1 border">
+          <td class="whitespace-nowrap">
             <a href="{{ item.url1 }}"
                target="_blank"
-               rel="nofollow"
-               class="text-blue-600 hover:text-blue-800 underline">{{ item.source.name|default:"情報元" }}</a>
+               style="color: #333;
+                      text-decoration: none;
+                      border-bottom: 1px solid #ccc">
+              {{ item.source.name|default:"情報元" }} <small style="font-size: 10px;">↗</small>
+            </a>
           </td>
+          <td class="whitespace-nowrap">{{ item.updated_at|date:"Y/m/d"|default:"-" }}</td>
         </tr>
       {% endfor %}
     </tbody>

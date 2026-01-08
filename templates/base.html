@@ -3,75 +3,131 @@
   <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    
     {% load static %}
     <link rel="stylesheet" href="{% static 'dist/main.css' %}">
     <style>
+      /* 全体の基本設定 */
       body { 
         display: flex; 
         margin: 0; 
         font-family: sans-serif; 
-        font-size: 14px; 
         color: #333; 
+        background-color: #fff;
       }
+
+      /* 洗練させたサイドバー：枠線や背景のトーンを微調整 */
       #sidebar { 
         width: 250px; 
-        background: #f4f4f4; 
+        background-color: #f8f9fa; 
         height: 100vh; 
-        padding: 20px; 
-        border-right: 1px solid #ddd; 
-        box-sizing: border-box;
+        padding: 24px 20px; 
+        border-right: 1px solid #e5e7eb; 
+        flex-shrink: 0;
+        overflow-y: auto;
       }
-      #content { flex: 1; padding: 20px; overflow-y: auto; }
 
-      /* サイドバーのリンク（14px基準） */
+      /* サイドバー内の文字要素 */
+      h3 { 
+        font-size: 12px; 
+        font-weight: 700; 
+        color: #9ca3af; 
+        text-transform: uppercase; 
+        letter-spacing: 0.1em; 
+        margin: 24px 0 12px;
+      }
+      
       .sidebar-link {
         display: block;
-        padding: 6px 0;
+        padding: 4px 0;
         font-size: 14px;
-        color: #333;
+        color: #4b5563;
         text-decoration: none;
+        transition: color 0.2s;
       }
-      .sidebar-link.active { font-weight: bold; color: #0d6efd; }
-      h3 { font-size: 14px; margin: 20px 0 10px; color: #555; }
-      hr { border: 0; border-top: 1px solid #ddd; margin: 15px 0; }
 
-      /* テーブルの構造調整（色指定なし、太さのみ） */
-      table.dataTable.cell-border { border-collapse: collapse !important; }
-      table.dataTable.cell-border thead th {
-        border-bottom-width: 1px !important; /* ヘッダーの底辺だけ強調 */
+      .sidebar-link:hover {
+        color: #2563eb;
+        text-decoration: underline;
+      }
+
+      .sidebar-link.active {
+        font-weight: bold;
+        color: #2563eb;
+      }
+
+      hr {
+        border: 0;
+        border-top: 1px solid #f1f1f1;
+        margin: 16px 0;
+      }
+
+      #content { 
+        flex: 1; 
+        padding: 20px; 
+        overflow-y: auto; 
       }
     </style>
   </head>
   <body>
-    <div id="sidebar">
-      <a href="{% url 'trail-list' %}" class="sidebar-link {% if not current_source and not current_area and not current_status %}active{% endif %}">
-        すべての情報を表示
-      </a>
-      <h3>サイト別</h3>
-      {% for id, name in source_choices %}
-        <a href="?source={{ id|stringformat:'s' }}" class="sidebar-link {% if current_source == id %}active{% endif %}">{{ name }}</a>
-      {% endfor %}
-      <hr>
-      <h3>山域別</h3>
-      {% for id, name in area_choices %}
-        <a href="?area={{ id }}" class="sidebar-link {% if current_area == id %}active{% endif %}">{{ name }}</a>
-      {% endfor %}
-      <hr>
-      <h3>状況別</h3>
-      {% for id, name in status_choices %}
-        <a href="?status={{ id }}" class="sidebar-link {% if current_status == id %}active{% endif %}">{{ name }}</a>
-      {% endfor %}
-    </div>
-    <div id="content">
+    <aside id="sidebar">
+      <div class="mb-6">
+        <a href="{% url 'trail-list' %}" 
+           class="sidebar-link {% if not current_source and not current_area and not current_status %}active{% endif %}"
+           style="font-size: 14px;">
+           すべての情報を表示
+        </a>
+      </div>
+
+      <nav>
+        <h3>サイト別</h3>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          {% for id, name in source_choices %}
+            <li>
+              <a href="?source={{ id|stringformat:'s' }}"
+                 class="sidebar-link {% if current_source == id %}active{% endif %}">{{ name }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+
+        <hr>
+
+        <h3>山域別</h3>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          {% for id, name in area_choices %}
+            <li>
+              <a href="?area={{ id }}"
+                 class="sidebar-link {% if current_area == id %}active{% endif %}">{{ name }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+
+        <hr>
+
+        <h3>状況別</h3>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          {% for id, name in status_choices %}
+            <li>
+              <a href="?status={{ id }}"
+                 class="sidebar-link {% if current_status == id %}active{% endif %}">{{ name }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </nav>
+    </aside>
+
+    <main id="content">
       {% block content %}{% endblock %}
-    </div>
+    </main>
+
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
       $(document).ready(function() {
         $('#trail-table').DataTable({
           "language": { "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/ja.json" },
-          "pageLength": 25
+          "pageLength": 25,
+          "autoWidth": true
         });
       });
     </script>
