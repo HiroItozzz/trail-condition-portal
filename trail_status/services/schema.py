@@ -5,6 +5,8 @@ from pydantic import BaseModel, Field
 from ..models.condition import StatusType
 from ..models.mountain import AreaName
 
+area_help_text = " / ".join([f"{label}:{name}" for name, label in AreaName.choices])
+
 
 class TrailConditionSchemaAi(BaseModel):
     """
@@ -36,7 +38,7 @@ class TrailConditionSchemaAi(BaseModel):
     )
     area: AreaName = Field(
         max_length=20,
-        description="最も該当する山域を選択",
+        description=f"最も該当する山域を選択。日本語漢字対応表：{area_help_text}",
     )  # 例: 奥多摩
     reference_URL: str = Field(default="", max_length=500, description="補足URL / pdf等参照先URLがあれば記述")
     comment: str = Field(default="", description="備考欄 / 状況詳細説明から漏れる情報があれば自由記述")
