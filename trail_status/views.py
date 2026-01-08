@@ -1,8 +1,10 @@
 import logging
+from datetime import timedelta
 
 from django.db.models import Max
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
 
 from .models.condition import AreaName, DataSource, StatusType, TrailCondition
 
@@ -31,8 +33,9 @@ def trail_list(request: HttpRequest) -> HttpResponse:
         .annotate(latest_date=Max("updated_at"))
         .order_by("-latest_date")
     )
-    # views.py
     latest_checked_at = DataSource.objects.aggregate(Max("last_scraped_at"))["last_scraped_at__max"]
+
+    seven_days_ago = timezone.now().date() - timedelta(days=7)
 
     context = {
         "conditions": conditions,
@@ -44,6 +47,7 @@ def trail_list(request: HttpRequest) -> HttpResponse:
         "current_status": status_filter,
         "updated_sources": updated_sources,
         "latest_checked_at": latest_checked_at,
+        "seven_days_ago": seven_days_ago,
     }
     return render(request, "trail_list.html", context)
 

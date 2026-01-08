@@ -71,6 +71,12 @@
   </head>
   <body>
     <aside id="sidebar">
+      <div class="px-4 py-6 border-b border-gray-200 mb-4">
+        <h1 class="text-xl font-black tracking-tighter text-blue-900">
+          MOUNTAIN<br>
+          <span class="text-sm font-medium tracking-normal text-gray-500">登山道状況まとめ</span>
+        </h1>
+      </div>
       <div class="mb-6">
         <a href="{% url 'trail-list' %}" 
            class="sidebar-link {% if not current_source and not current_area and not current_status %}active{% endif %}"

@@ -2,25 +2,33 @@
 {% block content %}
   <div class="mb-3 p-3 bg-[#f8f8f8] border border-[#ddd] rounded">
     <div class="flex flex-col md:flex-row justify-start items-start md:items-center gap-7 pb-2 border-b border-[#ddd]">
-      <div class="text-[13px]">
+      <div class="text-[13px] mb-px">
         <strong style="color: #666;">最新の内容更新日：</strong>
         <span style="font-weight: bold;">{{ updated_sources.0.latest_date|date:"Y/m/d" }}</span>
       </div>
-      <div class="flex flex-wrap gap-3">
-        {% for item in updated_sources %}
-          <div class="text-[14px]">
-            <a href="{{ item.source__url1 }}"
-               target="_blank"
-               rel="noopener"
-               style="color: #2563eb;
-                      background-color: #f0f4f8;
-                      padding: 2px 6px;
-                      border-radius: 4px;
-                      font-weight: 600;
-                      text-decoration: underline">{{ item.source__name }}</a>
-            <span style="color: #888; margin-left: 2px;">({{ item.latest_date|date:"m/d" }})</span>
-          </div>
-        {% endfor %}
+      <div class="flex items-center gap-0.5">
+        <div class="text-[13px] mb-px" style="color: #666;">
+          <strong>1週間以内の更新：</strong>
+        </div>
+        <div class="flex flex-wrap items-center gap-1">
+          <!--一週間以内の情報源を表示-->
+          {% for item in updated_sources %}
+            {% if item.latest_date.date >= seven_days_ago %}
+              <div class="text-[14px]">
+                <a href="{{ item.source__url1 }}"
+                   target="_blank"
+                   rel="noopener"
+                   style="color: #2563eb;
+                          background-color: #f0f4f8;
+                          padding: 2px 6px;
+                          border-radius: 4px;
+                          font-weight: 600;
+                          text-decoration: underline">{{ item.source__name }}</a>
+                <span style="color: #888; margin-left: 2px;">({{ item.latest_date|date:"m/d" }})</span>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
       </div>
     </div>
     <div class="text-[12px]" style="color: #666;">
@@ -32,26 +40,27 @@
          class="display compact cell-border w-full text-[13px] leading-tight">
     <thead>
       <tr>
-        <th>状況種別</th>
+        <th>サイト更新日</th>
         <th>山域</th>
         <th>対象</th>
-        <th>タイトル・詳細</th>
+        <th>状況種別</th>
+        <th>原文タイトル・詳細</th>
         <th>情報源</th>
-        <th>サイト更新日</th>
       </tr>
     </thead>
     <tbody>
       {% for item in conditions %}
         <tr class="hover:bg-[#f5f5f5]">
-          <td class="font-bold whitespace-nowrap">
-            <span class=" {% if item.status == 'CLOSURE' %}text-red-600 {% elif item.status == 'HAZARD' %}text-orange-500 {% elif item.status == 'SNOW' %}text-cyan-600 {% elif item.status == 'RESOLVED' %}text-green-600 {% else %}text-blue-600{% endif %}">
-              {{ item.get_status_display }}
-            </span>
-          </td>
+          <td class="whitespace-nowrap">{{ item.updated_at|date:"Y/m/d"|default:"-" }}</td>
           <td>{{ item.get_area_display }}</td>
           <td>
             <div style="font-weight: bold; color: #000;">{{ item.mountain_name_raw }}</div>
             <div style="color: #666; font-size: 11px;">{{ item.trail_name }}</div>
+          </td>
+          <td class="font-bold whitespace-nowrap" style="vertical-align: middle;">
+            <span class=" {% if item.status == 'CLOSURE' %}text-red-600 {% elif item.status == 'HAZARD' %}text-orange-500 {% elif item.status == 'SNOW' %}text-cyan-600 {% elif item.status == 'RESOLVED' %}text-green-600 {% else %}text-blue-600{% endif %}">
+              {{ item.get_status_display }}
+            </span>
           </td>
           <td>
             <div style="font-weight: bold; color: #000;">{{ item.title }}</div>
@@ -62,16 +71,14 @@
                           border-left: 2px solid #ddd">備考: {{ item.comment }}</div>
             {% endif %}
           </td>
-          <td class="whitespace-nowrap">
+          <td class="whitespace-nowrap text-[#18439a]">
             <a href="{{ item.url1 }}"
                target="_blank"
-               style="color: #333;
-                      text-decoration: none;
-                      border-bottom: 1px solid #ccc">
+               style="text-decoration: none;
+                      border-bottom: 1px solid #18439a88">
               {{ item.source.name|default:"情報元" }} <small style="font-size: 10px;">↗</small>
             </a>
           </td>
-          <td class="whitespace-nowrap">{{ item.updated_at|date:"Y/m/d"|default:"-" }}</td>
         </tr>
       {% endfor %}
     </tbody>
