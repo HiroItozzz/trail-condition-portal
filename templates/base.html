@@ -1,6 +1,3 @@
-{% load static %}
-<link rel="stylesheet" href="{% static 'dist/main.css' %}">
-
 <!DOCTYPE html>
 <html lang="ja">
   <head>
@@ -12,6 +9,8 @@
         #content { flex: 1; padding: 20px; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
     </style>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'dist/main.css' %}">
   </head>
   <body>
     <div id="sidebar">
