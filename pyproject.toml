@@ -60,4 +60,9 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.djlint]
-ignore="H021"
+ignore = "H021"
+profile = "django"
+reformat = true
+use_gitignore = true
+format_js = true
+format_css = true
