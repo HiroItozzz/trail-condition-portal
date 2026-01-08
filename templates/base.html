@@ -29,6 +29,8 @@
       /* 全体の基本設定 */
       body { 
         display: flex; 
+        flex-direction: column;
+        min-height: 100vh;
         margin: 0; 
         font-family: sans-serif; 
         color: #333; 
@@ -37,6 +39,11 @@
         background-position: bottom right;
         background-size: 70% auto;
         background-repeat: no-repeat;
+      }
+      
+      .main-content {
+        display: flex;
+        flex: 1;
       }
 
       /* 洗練させたサイドバー：枠線や背景のトーンを微調整 */
@@ -173,7 +180,8 @@
   <body>
     <button class="hamburger" id="hamburger">☰</button>
     <div class="overlay" id="overlay"></div>
-    <aside id="sidebar">
+    <div class="main-content">
+      <aside id="sidebar">
       <div class="px-4 py-6 border-b border-gray-200 mb-4">
         <h1 class="text-xl font-black tracking-tighter text-blue-900">
           MOUNTAIN<br>
@@ -229,9 +237,20 @@
       </nav>
     </aside>
 
-    <main id="content">
-      {% block content %}{% endblock %}
-    </main>
+      <main id="content">
+        {% block content %}{% endblock %}
+        
+        <footer class="bg-gray-50 border-t border-gray-200 mt-8">
+          <div class="max-w-6xl mx-auto py-4 px-4">
+            <div class="text-xs text-gray-600" style="text-align: center;">
+              <span>&copy; 2026 登山道状況まとめ - MOUNTAIN</span>
+              <a href="/privacy/" class="hover:text-blue-600 transition-colors">プライバシーポリシー</a>
+              <span class="text-gray-500">安全な登山をお楽しみください 🏔️</span>
+            </div>
+          </div>
+        </footer>
+      </main>
+    </div>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -251,7 +270,7 @@
           "pageLength": pageLength,
           "lengthMenu": [[10, 15, 20, 50], [10, 15, 20, 50]],
           "autoWidth": false,
-          "scrollX": true,
+          "scrollX": false,
           "responsive": {
             "details": {
               "type": "column",

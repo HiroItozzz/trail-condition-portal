@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-  <div class="mb-3 p-3 bg-[#f8f8f8] border border-[#ddd] rounded">
+  <div class="mb-3 bg-[#f8f8f8] border border-[#ddd] rounded" style="padding: 4px 12px;">
     <div class="flex flex-col md:flex-row justify-start items-start md:items-center gap-7 pb-2 border-b border-[#ddd]">
       <div class="text-[13px] mb-px">
         <strong style="color: #666;">最新の内容更新日：</strong>
@@ -36,7 +36,13 @@
       <span style="color: #333;">{{ latest_checked_at|date:"Y/m/d" }}</span>
     </div>
   </div>
-  <div class="text-xs text-gray-500 mb-2">
+  <style>
+    .mobile-hint { display: none; }
+    @media (max-width: 767px) {
+      .mobile-hint { display: block !important; }
+    }
+  </style>
+  <div class="text-xs text-gray-500 mb-2 mobile-hint">
     👆 各行をタップで詳細情報・情報源リンクを表示
   </div>
   <table id="trail-table"
