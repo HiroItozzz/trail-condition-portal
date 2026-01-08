@@ -1,51 +1,66 @@
 <!DOCTYPE html>
 <html lang="ja">
   <head>
-    <link rel="stylesheet"
-          href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    <style>
-        body { display: flex; margin: 0; font-family: sans-serif; }
-        #sidebar { width: 250px; background: #f4f4f4; height: 100vh; padding: 20px; border-right: 1px solid #ddd; }
-        #content { flex: 1; padding: 20px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    </style>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     {% load static %}
     <link rel="stylesheet" href="{% static 'dist/main.css' %}">
+    <style>
+      body { 
+        display: flex; 
+        margin: 0; 
+        font-family: sans-serif; 
+        font-size: 14px; 
+        color: #333; 
+      }
+      #sidebar { 
+        width: 250px; 
+        background: #f4f4f4; 
+        height: 100vh; 
+        padding: 20px; 
+        border-right: 1px solid #ddd; 
+        box-sizing: border-box;
+      }
+      #content { flex: 1; padding: 20px; overflow-y: auto; }
+
+      /* サイドバーのリンク（14px基準） */
+      .sidebar-link {
+        display: block;
+        padding: 6px 0;
+        font-size: 14px;
+        color: #333;
+        text-decoration: none;
+      }
+      .sidebar-link.active { font-weight: bold; color: #0d6efd; }
+      h3 { font-size: 14px; margin: 20px 0 10px; color: #555; }
+      hr { border: 0; border-top: 1px solid #ddd; margin: 15px 0; }
+
+      /* テーブルの構造調整（色指定なし、太さのみ） */
+      table.dataTable.cell-border { border-collapse: collapse !important; }
+      table.dataTable.cell-border thead th {
+        border-bottom-width: 1px !important; /* ヘッダーの底辺だけ強調 */
+      }
+    </style>
   </head>
   <body>
     <div id="sidebar">
-      <div>
-        <a href="{% url 'trail-list' %}">すべての情報を表示</a>
-      </div>
+      <a href="{% url 'trail-list' %}" class="sidebar-link {% if not current_source and not current_area and not current_status %}active{% endif %}">
+        すべての情報を表示
+      </a>
       <h3>サイト別</h3>
-      <ul style="list-style: none; padding: 0;">
-        {% for id, name in source_choices %}
-          <li>
-            <a href="?source={{ id|stringformat:'s' }}"
-               {% if current_source == id %}style="font-weight:bold;"{% endif %}>{{ name }}</a>
-          </li>
-        {% endfor %}
-      </ul>
+      {% for id, name in source_choices %}
+        <a href="?source={{ id|stringformat:'s' }}" class="sidebar-link {% if current_source == id %}active{% endif %}">{{ name }}</a>
+      {% endfor %}
       <hr>
       <h3>山域別</h3>
-      <ul style="list-style: none; padding: 0;">
-        {% for id, name in area_choices %}
-          <li>
-            <a href="?area={{ id }}"
-               {% if current_area == id %}style="font-weight:bold;"{% endif %}>{{ name }}</a>
-          </li>
-        {% endfor %}
-      </ul>
+      {% for id, name in area_choices %}
+        <a href="?area={{ id }}" class="sidebar-link {% if current_area == id %}active{% endif %}">{{ name }}</a>
+      {% endfor %}
       <hr>
       <h3>状況別</h3>
-      <ul style="list-style: none; padding: 0;">
-        {% for id, name in status_choices %}
-          <li>
-            <a href="?status={{ id }}"
-               {% if current_status == id %}style="font-weight:bold;"{% endif %}>{{ name }}</a>
-          </li>
-        {% endfor %}
-      </ul>
+      {% for id, name in status_choices %}
+        <a href="?status={{ id }}" class="sidebar-link {% if current_status == id %}active{% endif %}">{{ name }}</a>
+      {% endfor %}
     </div>
     <div id="content">
       {% block content %}{% endblock %}
@@ -53,12 +68,12 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
-  $(document).ready(function() {
-            $('#trail-table').DataTable({
-                "language": { "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/ja.json" },
-                "pageLength": 25 // 密度高く表示
-            });
+      $(document).ready(function() {
+        $('#trail-table').DataTable({
+          "language": { "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/ja.json" },
+          "pageLength": 25
         });
+      });
     </script>
   </body>
 </html>
