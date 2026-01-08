@@ -24,16 +24,15 @@ services:
 #      - ignore
     image: node:24-slim
     working_dir: /code
-    command: sh -c "npm install && npm run dev -- --host"
+    command: sh -c "npm install && npx vite build --watch"
     ports:
       - "5173:5173"
     volumes:
       - ./frontend:/code
       - /code/node_modules
       - ./static/dist:/code/dist
-
-      - ./templates:/base_templates:ro
-      - ./trail_status/templates:/trail_status_templates:ro
+      - ./templates:/code/base_templates:ro
+      - ./trail_status/templates:/code/trail_status_templates:ro
     env_file:
       - .env
     depends_on:
