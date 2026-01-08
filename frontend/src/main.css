@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ここに今までの手書きCSSを書いてもいいですが、
+   基本は空にして、HTML側のクラス名で調整するのがTailwind流です */
