@@ -1,2 +1,3 @@
 @import "tailwindcss";
-@source "/code/**/*.html";
+@source "base_templates/**/*.html";
+@source "trail_status_templates/**/*.html";
