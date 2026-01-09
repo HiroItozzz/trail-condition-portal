@@ -59,21 +59,37 @@
               flex: 1;
           }
 
-          /* 洗練させたサイドバー：パターン2 - グラデーション + 透明 */
+          /* 洗練させたサイドバー：パターン3 - 背景画像を透かす（確実版） */
           #sidebar {
               width: 250px;
-              background: linear-gradient(
-                  to right,
-                  rgba(248, 249, 250, 0.95) 0%,
-                  rgba(248, 249, 250, 0.85) 100%
-              );
-              backdrop-filter: blur(8px);
-              -webkit-backdrop-filter: blur(8px);
               height: 100vh;
               padding: 24px 20px;
               border-right: none;
               flex-shrink: 0;
               overflow-y: auto;
+              position: relative;
+              background-image: url('{% static "mountain_2.webp" %}');
+              background-size: cover;
+              background-position: center;
+              background-attachment: fixed;
+          }
+
+          #sidebar::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: rgba(248, 249, 250, 0.85);
+              backdrop-filter: blur(10px);
+              -webkit-backdrop-filter: blur(10px);
+              z-index: 0;
+          }
+
+          #sidebar > * {
+              position: relative;
+              z-index: 1;
           }
 
           /* サイドバー内の文字要素 */
@@ -146,16 +162,17 @@
                   left: -250px;
                   width: 250px;
                   height: 100vh;
-                  background: linear-gradient(
-                      to right,
-                      rgba(248, 249, 250, 0.95) 0%,
-                      rgba(248, 249, 250, 0.85) 100%
-                  );
-                  backdrop-filter: blur(8px);
-                  -webkit-backdrop-filter: blur(8px);
                   transition: left 0.3s ease;
                   z-index: 999;
                   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+                  background-image: url('{% static "mountain_2.webp" %}');
+                  background-size: cover;
+                  background-position: center;
+                  background-attachment: fixed;
+              }
+
+              #sidebar::before {
+                  background: rgba(248, 249, 250, 0.9);
               }
 
               #sidebar.open {
