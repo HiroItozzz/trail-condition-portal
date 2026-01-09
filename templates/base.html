@@ -59,13 +59,15 @@
               flex: 1;
           }
 
-          /* 洗練させたサイドバー：枠線や背景のトーンを微調整 */
+          /* 洗練させたサイドバー：パターン1 - 半透明 + ぼかし効果 */
           #sidebar {
               width: 250px;
-              background-color: #f8f9fa;
+              background-color: rgba(248, 249, 250, 0.85);
+              backdrop-filter: blur(10px);
+              -webkit-backdrop-filter: blur(10px);
               height: 100vh;
               padding: 24px 20px;
-              border-right: 1px solid #e5e7eb;
+              border-right: 1px solid rgba(229, 231, 235, 0.5);
               flex-shrink: 0;
               overflow-y: auto;
           }
@@ -140,7 +142,9 @@
                   left: -250px;
                   width: 250px;
                   height: 100vh;
-                  background-color: #f8f9fa;
+                  background-color: rgba(248, 249, 250, 0.85);
+                  backdrop-filter: blur(10px);
+                  -webkit-backdrop-filter: blur(10px);
                   transition: left 0.3s ease;
                   z-index: 999;
                   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
