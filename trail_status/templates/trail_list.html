@@ -1,13 +1,14 @@
 {% extends 'base.html' %}
 {% block content %}
-  <div class="mb-3 bg-[#f8f8f8] border border-[#ddd] rounded" style="padding: 4px 12px;">
+  <div class="mb-3 bg-[#f8f8f8] border border-[#ddd] rounded"
+       style="padding: 4px 12px">
     <div class="flex flex-col md:flex-row justify-start items-start md:items-center gap-7 pb-2 border-b border-[#ddd]">
-      <div class="text-[13px] mb-px">
+      <div class="text-[13px] whitespace-nowrap">
         <strong style="color: #666;">最新の内容更新日：</strong>
         <span style="font-weight: bold;">{{ updated_sources.0.latest_date|date:"Y/m/d" }}</span>
       </div>
       <div class="flex items-center gap-0.5">
-        <div class="text-[13px] mb-px whitespace-nowrap" style="color: #666;">
+        <div class="text-[13px] whitespace-nowrap" style="color: #666;">
           <strong>1週間以内の更新：</strong>
         </div>
         <div class="flex flex-wrap items-center gap-1">
@@ -37,14 +38,17 @@
     </div>
   </div>
   <style>
-    .mobile-hint { display: none; }
-    @media (max-width: 767px) {
-      .mobile-hint { display: block !important; }
-    }
+      .mobile-hint {
+          display: none;
+      }
+
+      @media (max-width: 767px) {
+          .mobile-hint {
+              display: block !important;
+          }
+      }
   </style>
-  <div class="text-xs text-gray-500 mb-2 mobile-hint">
-    👆 各行をタップで詳細情報・情報源リンクを表示
-  </div>
+  <div class="text-xs text-gray-500 mb-2 mobile-hint">👆 各行をタップで詳細情報・情報源リンクを表示</div>
   <table id="trail-table"
          class="display compact cell-border w-full text-[13px] leading-tight nowrap"
          style="width:100%">
@@ -65,7 +69,12 @@
           <td>{{ item.get_area_display }}</td>
           <td>
             <div style="font-weight: bold; color: #000;">{{ item.mountain_name_raw }}</div>
-            <div style="color: #666; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">{{ item.trail_name }}</div>
+            <div style="color: #666;
+                        font-size: 11px;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        max-width: 120px">{{ item.trail_name }}</div>
           </td>
           <td class="whitespace-nowrap" style="vertical-align: middle;">
             <span class="px-2 py-1 text-xs rounded font-medium {% if item.status == 'CLOSURE' %}bg-red-100 text-red-700 {% elif item.status == 'HAZARD' %}bg-orange-100 text-orange-700 {% elif item.status == 'SNOW' %}bg-cyan-100 text-cyan-700 {% elif item.status == 'CLEAR' %}bg-green-100 text-green-700 {% elif item.status == 'RESOLVED' %}bg-green-100 text-green-700 {% else %}bg-blue-100 text-blue-700{% endif %}">
