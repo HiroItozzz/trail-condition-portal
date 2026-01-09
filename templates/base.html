@@ -59,7 +59,7 @@
               flex: 1;
           }
 
-          /* 洗練させたサイドバー：パターン2 - グラデーション + 透明（採用版） */
+          /* 洗練させたサイドバー：透明度50% + ぼかし15px（採用版） */
           #sidebar {
               width: 250px;
               height: 100vh;
@@ -81,13 +81,9 @@
               left: 0;
               right: 0;
               bottom: 0;
-              background: linear-gradient(
-                  to right,
-                  rgba(248, 249, 250, 0.95) 0%,
-                  rgba(248, 249, 250, 0.85) 100%
-              );
-              backdrop-filter: blur(8px);
-              -webkit-backdrop-filter: blur(8px);
+              background: rgba(255, 255, 255, 0.5);
+              backdrop-filter: blur(15px);
+              -webkit-backdrop-filter: blur(15px);
               z-index: 0;
           }
 
@@ -175,11 +171,7 @@
               }
 
               #sidebar::before {
-                  background: linear-gradient(
-                      to right,
-                      rgba(248, 249, 250, 0.96) 0%,
-                      rgba(248, 249, 250, 0.90) 100%
-                  );
+                  background: rgba(255, 255, 255, 0.6);
               }
 
               #sidebar.open {
