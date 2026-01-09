@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" fill="none">
+  <!-- 最遠景：丹沢主稜線 -->
+  <path d="M0 300 L50 240 L120 200 L180 180 L240 160 L300 140 L360 120 L420 110 L480 115 L540 130 L600 150 L660 170 L720 190 L800 220 L800 300 Z" 
+        fill="#000000" opacity="0.03"/>
+  
+  <!-- 中景：権現山から蛭ヶ岳への稜線 -->
+  <path d="M0 300 L80 260 L140 240 L200 220 L260 200 L320 185 L380 175 L440 170 L500 180 L560 200 L620 220 L680 240 L750 260 L800 280 L800 300 Z" 
+        fill="#000000" opacity="0.04"/>
+  
+  <!-- 近景：手前の尾根 -->
+  <path d="M0 300 L100 280 L160 270 L220 260 L280 250 L340 245 L400 240 L460 245 L520 255 L580 265 L640 275 L700 285 L800 295 L800 300 Z" 
+        fill="#000000" opacity="0.05"/>
+  
+  <!-- 大気の霞み効果 -->
+  <defs>
+    <linearGradient id="mist" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8f9fa;stop-opacity:0.6"/>
+      <stop offset="40%" style="stop-color:#f8f9fa;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#f8f9fa;stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="120" fill="url(#mist)"/>
+</svg>
