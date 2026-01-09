@@ -12,6 +12,7 @@ class AreaName(models.TextChoices):
     OKUMUSASHI = "OKUMUSASHI", "奥武蔵"
     OKUCHICHIBU = "OKUCHICHIBU", "奥秩父"
     DAIBOSATSU = "DAIBOSATSU", "大菩薩連嶺"
+    SAGAMIKO = "SAGAMIKO", "相模湖"
 
 
 class MountainGroup(models.Model):

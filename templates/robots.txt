@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Crawl-delay: 1
+
+Disallow: /admin/
+Disallow: /api/internal/
+Disallow: /static/
+Disallow: /.well-known/

@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# サイトマップ（将来追加予定）
+# Sitemap: https://your-domain.com/sitemap.xml
+
+# クロール頻度の提案
+Crawl-delay: 1
+
+# 管理画面等の除外
+Disallow: /admin/
+Disallow: /api/internal/
+
+# 一般的な除外パターン
+Disallow: /static/
+Disallow: /.well-known/

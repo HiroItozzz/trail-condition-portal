@@ -1,62 +1,373 @@
 <!DOCTYPE html>
 <html lang="ja">
   <head>
-    <link rel="stylesheet"
-          href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    <style>
-        body { display: flex; margin: 0; font-family: sans-serif; }
-        #sidebar { width: 250px; background: #f4f4f4; height: 100vh; padding: 20px; border-right: 1px solid #ddd; }
-        #content { flex: 1; padding: 20px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    </style>
-  </head>
-  <body>
-    <div id="sidebar">
-      <div>
-        <a href="{% url 'trail-list' %}">すべての情報を表示</a>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+      {% block title %}登山道状況まとめ - MOUNTAIN{% endblock %}
+    </title>
+    <meta name="description"
+          content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
+    <!-- OGタグ (SNSシェア用) -->
+    <meta property="og:title"
+          content="{% block og_title %}登山道状況まとめ - MOUNTAIN{% endblock %}">
+    <meta property="og:description"
+          content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
+    <meta property="og:type" content="website">
+    <meta property="og:url"
+          content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
+    <meta property="og:site_name" content="MOUNTAIN - 登山道状況まとめ">
+    <meta property="og:locale" content="ja_JP">
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title"
+          content="{% block twitter_title %}登山道状況まとめ - MOUNTAIN{% endblock %}">
+    <meta name="twitter:description"
+          content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
+    <link rel="icon"
+          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏔️</text></svg>">
+      <link rel="stylesheet"
+            href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+      <link rel="stylesheet"
+            href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+      {% load static %}
+      <link rel="stylesheet" href="{% static 'dist/main.css' %}">
+      <style>
+          /* 全体の基本設定 */
+          body {
+              display: flex;
+              flex-direction: column;
+              min-height: 100vh;
+              margin: 0;
+              font-family: sans-serif;
+              color: #333;
+              background-color: #f8f9fa;
+              background-image: linear-gradient(to bottom,
+                  rgba(248, 249, 250, 0) 0%,
+                  rgba(248, 249, 250, 0) 50%,
+                  rgba(248, 249, 250, 0.75) 80%,
+                  rgba(248, 249, 250, 0.95) 100%),
+              url('{% static "mountain_2.webp" %}');
+              background-size: cover;
+              background-position: center top;
+              background-repeat: no-repeat;
+              background-attachment: fixed;
+          }
+
+          .main-content {
+              display: flex;
+              flex: 1;
+          }
+
+          /* 洗練させたサイドバー：透明度50% + ぼかし15px（採用版） */
+          #sidebar {
+              width: 250px;
+              height: 100vh;
+              padding: 24px 20px;
+              border-right: none;
+              flex-shrink: 0;
+              overflow-y: auto;
+              position: relative;
+              background-image: url('{% static "mountain_2.webp" %}');
+              background-size: cover;
+              background-position: left center;
+              box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+          }
+
+          #sidebar::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: rgba(255, 255, 255, 0.5);
+              backdrop-filter: blur(15px);
+              -webkit-backdrop-filter: blur(15px);
+              z-index: 0;
+          }
+
+          #sidebar > * {
+              position: relative;
+              z-index: 1;
+          }
+
+          /* サイドバー内の文字要素 */
+          h3 {
+              font-size: 12px;
+              font-weight: 700;
+              color: #9ca3af;
+              text-transform: uppercase;
+              letter-spacing: 0.1em;
+              margin: 24px 0 12px;
+          }
+
+          .sidebar-link {
+              display: block;
+              padding: 4px 0;
+              font-size: 14px;
+              color: #4b5563;
+              text-decoration: none;
+              transition: color 0.2s;
+          }
+
+          .sidebar-link:hover {
+              color: #2563eb;
+              text-decoration: underline;
+          }
+
+          .sidebar-link.active {
+              font-weight: bold;
+              color: #2563eb;
+          }
+
+          hr {
+              border: 0;
+              border-top: 1px solid #f1f1f1;
+              margin: 16px 0;
+          }
+
+          #content {
+              flex: 1;
+              padding: 20px;
+              overflow-y: auto;
+          }
+
+          /* ハンバーガーボタン */
+          .hamburger {
+              display: none;
+              background: none;
+              border: none;
+              font-size: 24px;
+              cursor: pointer;
+              padding: 8px;
+              position: fixed;
+              top: 16px;
+              left: 16px;
+              z-index: 1000;
+              background-color: white;
+              border-radius: 4px;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+
+          /* レスポンシブデザイン */
+          @media (max-width: 768px) {
+              .hamburger {
+                  display: block;
+              }
+
+              #sidebar {
+                  position: fixed;
+                  top: 0;
+                  left: -250px;
+                  width: 250px;
+                  height: 100vh;
+                  transition: left 0.3s ease;
+                  z-index: 999;
+                  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+                  background-image: url('{% static "mountain_2.webp" %}');
+                  background-size: cover;
+                  background-position: left center;
+              }
+
+              #sidebar::before {
+                  background: rgba(255, 255, 255, 0.6);
+              }
+
+              #sidebar.open {
+                  left: 0;
+              }
+
+              #content {
+                  margin-left: 0;
+                  padding: 60px 16px 16px 16px;
+              }
+
+              /* オーバーレイ */
+              .overlay {
+                  display: none;
+                  position: fixed;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  background-color: rgba(0, 0, 0, 0.5);
+                  z-index: 998;
+              }
+
+              .overlay.show {
+                  display: block;
+              }
+
+              /* モバイル時のテーブル余白調整 */
+              @media (max-width: 768px) {
+
+                  #trail-table td,
+                  #trail-table th {
+                      padding: 4px 2px !important;
+                      font-size: 12px;
+                  }
+              }
+
+              /* テーブル行のカーソル */
+              #trail-table tbody tr {
+                  cursor: pointer;
+                  transition: background-color 0.2s ease;
+              }
+
+              #trail-table tbody tr:hover {
+                  background-color: #f8f9fa;
+              }
+          }
+      </style>
+    </head>
+    <body>
+      <button class="hamburger" id="hamburger">☰</button>
+      <div class="overlay" id="overlay"></div>
+      <div class="main-content">
+        <aside id="sidebar">
+          <div class="px-4 py-6 border-b border-gray-200 mb-4">
+            <h1 class="text-xl font-black tracking-tighter text-blue-900">
+              MOUNTAIN
+              <br>
+              <span class="text-sm font-medium tracking-normal text-gray-500">登山道状況まとめ</span>
+            </h1>
+          </div>
+          <div class="mb-6">
+            <a href="{% url 'trail-list' %}"
+               class="sidebar-link {% if not current_source and not current_area and not current_status %}active{% endif %}"
+               style="font-size: 14px">すべての情報を表示</a>
+          </div>
+          <nav>
+            {% if source_choices %}
+              <h3>サイト別</h3>
+              <ul style="list-style: none; padding: 0; margin: 0;">
+                {% for id, name in source_choices %}
+                  <li>
+                    <a href="?source={{ id|stringformat:'s' }}"
+                       class="sidebar-link {% if current_source == id %}active{% endif %}">{{ name }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+              <hr>
+            {% endif %}
+            {% if area_choices %}
+              <h3>山域別</h3>
+              <ul style="list-style: none; padding: 0; margin: 0;">
+                {% for id, name in area_choices %}
+                  <li>
+                    <a href="?area={{ id }}"
+                       class="sidebar-link {% if current_area == id %}active{% endif %}">{{ name }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+              <hr>
+            {% endif %}
+            {% if status_choices %}
+              <h3>状況別</h3>
+              <ul style="list-style: none; padding: 0; margin: 0;">
+                {% for id, name in status_choices %}
+                  <li>
+                    <a href="?status={{ id }}"
+                       class="sidebar-link {% if current_status == id %}active{% endif %}">{{ name }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </nav>
+        </aside>
+        <main id="content">
+          {% block content %}{% endblock %}
+          <footer class="bg-gray-50 border-t border-gray-200 mt-8">
+            <div class="max-w-6xl mx-auto py-4 px-4">
+              <div class="text-xs text-gray-600" style="text-align: center;">
+                <span>&copy; 2026 登山道状況まとめ - MOUNTAIN</span>
+                <a href="/privacy/" class="hover:text-blue-600 transition-colors">プライバシーポリシー</a>
+                <span class="text-gray-500">安全な登山をお楽しみください 🏔️</span>
+              </div>
+            </div>
+          </footer>
+        </main>
       </div>
-      <h3>サイト別</h3>
-      <ul style="list-style: none; padding: 0;">
-        {% for id, name in source_choices %}
-          <li>
-            <a href="?source={{ id|stringformat:'s' }}"
-               {% if current_source == id %}style="font-weight:bold;"{% endif %}>{{ name }}</a>
-          </li>
-        {% endfor %}
-      </ul>
-      <hr>
-      <h3>山域別</h3>
-      <ul style="list-style: none; padding: 0;">
-        {% for id, name in area_choices %}
-          <li>
-            <a href="?area={{ id }}"
-               {% if current_area == id %}style="font-weight:bold;"{% endif %}>{{ name }}</a>
-          </li>
-        {% endfor %}
-      </ul>
-      <hr>
-      <h3>状況別</h3>
-      <ul style="list-style: none; padding: 0;">
-        {% for id, name in status_choices %}
-          <li>
-            <a href="?status={{ id }}"
-               {% if current_status == id %}style="font-weight:bold;"{% endif %}>{{ name }}</a>
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
-    <div id="content">
-      {% block content %}{% endblock %}
-    </div>
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script>
-  $(document).ready(function() {
-            $('#trail-table').DataTable({
-                "language": { "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/ja.json" },
-                "pageLength": 25 // 密度高く表示
-            });
-        });
-    </script>
-  </body>
-</html>
+      <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+      <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+      <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+      <script>
+          $(document).ready(function() {
+              console.log('jQuery版:', $.fn.jquery);
+              console.log('DataTables有無:', !!$.fn.DataTable);
+              console.log('Responsive有無:', !!$.fn.DataTable.Responsive);
+
+              // 画面サイズに応じた件数設定
+              const isMobile = window.innerWidth <= 768;
+              const pageLength = isMobile ? 10 : 15;
+
+              $('#trail-table').DataTable({
+                  "language": {
+                      "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/ja.json"
+                  },
+                  "pageLength": pageLength,
+                  "lengthMenu": [
+                      [10, 15, 20, 50],
+                      [10, 15, 20, 50]
+                  ],
+                  "autoWidth": false,
+                  "scrollX": false,
+                  "responsive": {
+                      "details": {
+                          "type": "column",
+                          "target": "tr"
+                      }
+                  },
+                  "columnDefs": [{
+                          "responsivePriority": 1,
+                          "targets": [0, 1, 2, 3]
+                      }, // 更新日、山域、対象、状況 (最重要4列)
+                      {
+                          "responsivePriority": 10000,
+                          "targets": [4, 5]
+                      }, // 詳細、情報源は+で
+                      {
+                          "width": "60px",
+                          "targets": 0,
+                          "className": "text-center"
+                      }, // 更新日
+                      {
+                          "width": "55px",
+                          "targets": 1,
+                          "className": "text-center"
+                      }, // 山域
+                      {
+                          "width": "85px",
+                          "targets": 3,
+                          "className": "text-center"
+                      } // 状況
+                  ]
+              });
+
+              // ハンバーガーメニュー
+              const hamburger = document.getElementById('hamburger');
+              const sidebar = document.getElementById('sidebar');
+              const overlay = document.getElementById('overlay');
+
+              function toggleSidebar() {
+                  sidebar.classList.toggle('open');
+                  overlay.classList.toggle('show');
+              }
+
+              hamburger.addEventListener('click', toggleSidebar);
+              overlay.addEventListener('click', toggleSidebar);
+
+              // サイドバー内リンククリック時も閉じる
+              sidebar.addEventListener('click', function(e) {
+                  if (e.target.matches('a')) {
+                      setTimeout(() => {
+                          sidebar.classList.remove('open');
+                          overlay.classList.remove('show');
+                      }, 100);
+                  }
+              });
+          });
+      </script>
+    </body>
+  </html>

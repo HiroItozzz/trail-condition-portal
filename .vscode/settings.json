@@ -10,11 +10,39 @@
   },
   "ruff.configurationPreference": "filesystemFirst",
 
-  // 言語設定の継承を有効化
   "[django-html]": {
     "editor.defaultFormatter": "monosans.djlint",
-    "editor.formatOnSave": true  // フォーマットは有効のまま
+    "editor.formatOnSave": true
   },
+  "files.associations": {
+    "*.html": "django-html"
+  },
+
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
   "emmet.includeLanguages": {
-    "django-html": "html"},
+    "django-html": "html"
+  },
+
+  "prettier.prettierPath": "frontend/node_modules/prettier",
+  "prettier.configPath": "frontend/.prettierrc",
+
+  "tailwindCSS.includeLanguages": {
+    "plaintext": "html",
+    "django-html": "html",
+    "python": "html",},
 }
