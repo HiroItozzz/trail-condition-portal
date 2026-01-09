@@ -59,15 +59,19 @@
               flex: 1;
           }
 
-          /* 洗練させたサイドバー：パターン1 - 半透明 + ぼかし効果 */
+          /* 洗練させたサイドバー：パターン2 - グラデーション + 透明 */
           #sidebar {
               width: 250px;
-              background-color: rgba(248, 249, 250, 0.85);
-              backdrop-filter: blur(10px);
-              -webkit-backdrop-filter: blur(10px);
+              background: linear-gradient(
+                  to right,
+                  rgba(248, 249, 250, 0.95) 0%,
+                  rgba(248, 249, 250, 0.85) 100%
+              );
+              backdrop-filter: blur(8px);
+              -webkit-backdrop-filter: blur(8px);
               height: 100vh;
               padding: 24px 20px;
-              border-right: 1px solid rgba(229, 231, 235, 0.5);
+              border-right: none;
               flex-shrink: 0;
               overflow-y: auto;
           }
@@ -142,9 +146,13 @@
                   left: -250px;
                   width: 250px;
                   height: 100vh;
-                  background-color: rgba(248, 249, 250, 0.85);
-                  backdrop-filter: blur(10px);
-                  -webkit-backdrop-filter: blur(10px);
+                  background: linear-gradient(
+                      to right,
+                      rgba(248, 249, 250, 0.95) 0%,
+                      rgba(248, 249, 250, 0.85) 100%
+                  );
+                  backdrop-filter: blur(8px);
+                  -webkit-backdrop-filter: blur(8px);
                   transition: left 0.3s ease;
                   z-index: 999;
                   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
