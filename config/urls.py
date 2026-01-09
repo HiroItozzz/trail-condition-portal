@@ -18,11 +18,20 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic.base import RedirectView
+from django.views.generic import TemplateView
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
-    # 暫定的リダイレクト
-    path("", RedirectView.as_view(url="/trail/"), name="index"),
+    # メインコンテンツをトップに
+    path("", include("trail_status.urls")),
     path("api/", include("api.urls")),
-    path("trail/", include("trail_status.urls")),
     path("admin/", admin.site.urls),
+    
+    # SEO関連
+    path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),
 ]
+
+# 開発サーバー用の静的ファイル配信
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])

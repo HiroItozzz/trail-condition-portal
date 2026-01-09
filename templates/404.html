@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}ページが見つかりません - 登山道状況まとめ{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[60vh] text-center">
+  <div class="mb-8">
+    <div class="text-8xl mb-4">🏔️</div>
+    <h1 class="text-4xl font-bold text-gray-800 mb-4">404</h1>
+    <h2 class="text-2xl font-medium text-gray-600 mb-6">お探しのページが見つかりません</h2>
+  </div>
+  
+  <div class="max-w-md text-gray-500 mb-8">
+    <p class="mb-4">申し訳ございません。お探しのページは移動または削除された可能性があります。</p>
+    <p>URLをご確認いただくか、以下のリンクをご利用ください。</p>
+  </div>
+  
+  <div class="space-y-4">
+    <a href="{% url 'trail-list' %}" 
+       class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+      🏠 トップページに戻る
+    </a>
+    
+    <div class="flex flex-col sm:flex-row gap-4 text-sm">
+      <a href="{% url 'trail-list' %}?status=CLOSURE" 
+         class="text-blue-600 hover:text-blue-800 underline">通行止め情報を確認</a>
+      <a href="{% url 'trail-list' %}?status=HAZARD" 
+         class="text-blue-600 hover:text-blue-800 underline">危険情報を確認</a>
+      <a href="{% url 'trail-list' %}?area=OKUTAMA" 
+         class="text-blue-600 hover:text-blue-800 underline">奥多摩情報を確認</a>
+    </div>
+  </div>
+  
+  <div class="mt-12 text-xs text-gray-400">
+    <p>問題が解決しない場合は、ブラウザの戻るボタンをお試しください。</p>
+  </div>
+</div>
+{% endblock %}

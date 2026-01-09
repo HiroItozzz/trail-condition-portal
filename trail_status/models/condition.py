@@ -7,13 +7,14 @@ from .utils import ChoiceManager
 
 
 class StatusType(models.TextChoices):
-    CLOSURE = "CLOSURE", "🚧 通行止め・閉鎖"
-    HAZARD = "HAZARD", "⚠️ 危険箇所・通行注意"
-    SNOW = "SNOW", "❄️ 積雪・アイスバーン"
+    CLOSURE = "CLOSURE", "🚧 通行止め"
+    HAZARD = "HAZARD", "⚠️ 通行注意"
+    CLEAR = "CLEAR", "✅ 通行可能"
     ANIMAL = "ANIMAL", "🐻 動物出没"
     WEATHER = "WEATHER", "🌧️ 気象警報"
     FACILITY = "FACILITY", "🏠 施設情報"  # 山小屋、トイレなど
     WATER = "WATER", "💧 水場状況"
+    SNOW = "SNOW", "❄️ 積雪"
     OTHER = "OTHER", "📝 その他"
 
 
