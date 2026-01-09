@@ -59,15 +59,37 @@
               flex: 1;
           }
 
-          /* 洗練させたサイドバー：枠線や背景のトーンを微調整 */
+          /* 洗練させたサイドバー：透明度50% + ぼかし15px（採用版） */
           #sidebar {
               width: 250px;
-              background-color: #f8f9fa;
               height: 100vh;
               padding: 24px 20px;
-              border-right: 1px solid #e5e7eb;
+              border-right: none;
               flex-shrink: 0;
               overflow-y: auto;
+              position: relative;
+              background-image: url('{% static "mountain_2.webp" %}');
+              background-size: cover;
+              background-position: left center;
+              box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+          }
+
+          #sidebar::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: rgba(255, 255, 255, 0.5);
+              backdrop-filter: blur(15px);
+              -webkit-backdrop-filter: blur(15px);
+              z-index: 0;
+          }
+
+          #sidebar > * {
+              position: relative;
+              z-index: 1;
           }
 
           /* サイドバー内の文字要素 */
@@ -140,10 +162,16 @@
                   left: -250px;
                   width: 250px;
                   height: 100vh;
-                  background-color: #f8f9fa;
                   transition: left 0.3s ease;
                   z-index: 999;
-                  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+                  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+                  background-image: url('{% static "mountain_2.webp" %}');
+                  background-size: cover;
+                  background-position: left center;
+              }
+
+              #sidebar::before {
+                  background: rgba(255, 255, 255, 0.6);
               }
 
               #sidebar.open {
