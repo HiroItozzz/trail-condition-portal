@@ -9,6 +9,7 @@ from pathlib import Path
 
 import yaml
 from django.conf import settings
+from langsmith import traceable
 from pydantic import BaseModel, Field, ValidationError, computed_field
 
 from .llm_stats import TokenStats
@@ -66,6 +67,13 @@ class LlmConfig(BaseModel):
             return key
         else:
             raise ValueError(f"サポートされていないモデル: {self.model}")
+
+    @property
+    def provider(self):
+        if self.model.startswith("deepseek"):
+            return "openai"
+        elif self.model.startswith("gemini"):
+            return "google_genai"
 
     @classmethod
     def from_file(cls, prompt_filename: str, data: str, **cli_overrides) -> LlmConfig:
@@ -205,6 +213,7 @@ class ConversationalAi(ABC):
         self.api_key: str = config.api_key
         self.thinking_budget: int = config.thinking_budget
         self.prompt_filename: str | None = config.prompt_filename
+        self.provider: str | None = config.provider
         self._config: LlmConfig | None = config
 
     @abstractmethod
@@ -251,6 +260,7 @@ class ConversationalAi(ABC):
         logger.error(f"詳細: {e}")
         raise
 
+    @traceable
     def validate_response(self, response_text):
         # デバッグ用：サンプル出力を保存
         sample_path = get_sample_dir() / f"{self.model}_sample.json"
@@ -281,155 +291,197 @@ class DeepseekClient(ConversationalAi):
     @property
     def prompt_for_deepseek(self):
         STATEMENT = f"【重要】次の行から示す要請はこのPydanticモデルに合うJSONで出力してください: {TrailConditionSchemaList.model_json_schema()}\n"
-        return STATEMENT + self.prompt + self.data
+        return STATEMENT + self.prompt + "\n\n\n" + self.data
 
     async def generate(self) -> tuple[TrailConditionSchemaList, TokenStats]:
         from openai import AsyncOpenAI
 
-        logger.info(f"{self.model}の応答を待っています。")
-        logger.debug(f"LlmConfig詳細： \n{self._config}")
-        logger.debug(f"APIキー: ...{self.api_key[-5:]}")
-
-        client = AsyncOpenAI(api_key=self.api_key, base_url="https://api.deepseek.com")
-
-        max_retries = 3
-        for i in range(max_retries):
-            try:
-                response = await client.chat.completions.create(
-                    model=self.model,
-                    temperature=self.temperature,
-                    messages=[{"role": "user", "content": self.prompt_for_deepseek}],
-                    response_format={"type": "json_object"},
-                    stream=False,
-                )
-                generated_text = response.choices[0].message.content or ""
-                validated_data = super().validate_response(generated_text)
-                break
-            except ValidationError:
-                await super().validation_error(i, max_retries, generated_text)
-            except Exception as e:
-                # https://api-docs.deepseek.com/quick_start/error_codes
-                if any(code in str(e) for code in ["500", "502", "503"]):
-                    await super().handle_server_error(i, max_retries)
-                elif "429" in str(e):
-                    logger.error("APIレート制限。しばらく経ってから再実行してください。")
-                    raise
-                elif "401" in str(e):
-                    logger.error("エラー：APIキーが誤っているか、入力されていません。")
-                    logger.error(f"実行を中止します。詳細：{e}")
-                    raise
-                elif "402" in str(e):
-                    logger.error("残高が不足しているようです。アカウントを確認してください。")
-                    logger.error(f"実行を中止します。詳細：{e}")
-                    raise
-                elif "422" in str(e):
-                    logger.error("リクエストに無効なパラメータが含まれています。設定を見直してください。")
-                    logger.error(f"実行を中止します。詳細：{e}")
-                    raise
-                else:
-                    super().handle_unexpected_error(e)
-
-        # 安全なNoneチェックを追加
-        if response.usage:
-            prompt_tokens = response.usage.prompt_tokens
-            completion_tokens = response.usage.completion_tokens
-            thoughts_tokens = getattr(response.usage.completion_tokens_details, "reasoning_tokens", 0) or 0
-            # 純粋なoutput_tokensを計算
-            output_tokens = completion_tokens - thoughts_tokens
-
-        else:
-            logger.warning("Deepseek API response did not include usage metadata.")
-            prompt_tokens = 0
-            thoughts_tokens = 0
-            output_tokens = 0
-
-        stats = TokenStats(
-            prompt_tokens,
-            thoughts_tokens,
-            output_tokens,
-            len(self.prompt_for_deepseek),
-            len(generated_text),
-            self.model,
+        @traceable(
+            run_type="llm",
+            name="Trail_Analysis_Deepseek",
+            metadata={
+                "ls_provider": self.provider,
+                "ls_model_name": self.model,
+                "ls_temperature": self.temperature,
+                "ls_max_tokens": self.thinking_budget,
+            },
         )
+        async def _run(_: str) -> tuple[TrailConditionSchemaList, TokenStats]:
+            """LangSmithのデコレータを定義するためだけのネスト関数
 
-        logger.debug("DeepseekClientの処理終了")
-        return validated_data, stats
+            Args:
+                _ (str): LangSmithトレースのためのプロンプト入力
+
+            Returns:
+                tuple[TrailConditionSchemaList, TokenStats]
+            """
+            logger.info(f"{self.model}の応答を待っています。")
+            logger.debug(f"LlmConfig詳細： \n{self._config}")
+            logger.debug(f"APIキー: ...{self.api_key[-5:]}")
+
+            client = AsyncOpenAI(api_key=self.api_key, base_url="https://api.deepseek.com")
+
+            max_retries = 3
+            for i in range(max_retries):
+                try:
+                    response = await client.chat.completions.create(
+                        model=self.model,
+                        temperature=self.temperature,
+                        messages=[{"role": "user", "content": self.prompt_for_deepseek}],
+                        response_format={"type": "json_object"},
+                        stream=False,
+                    )
+                    generated_text = response.choices[0].message.content or ""
+                    validated_data = self.validate_response(generated_text)
+                    break
+                except ValidationError:
+                    await self.validation_error(i, max_retries, generated_text)
+                except Exception as e:
+                    # https://api-docs.deepseek.com/quick_start/error_codes
+                    if any(code in str(e) for code in ["500", "502", "503"]):
+                        await self.handle_server_error(i, max_retries)
+                    elif "429" in str(e):
+                        logger.error("APIレート制限。しばらく経ってから再実行してください。")
+                        raise
+                    elif "401" in str(e):
+                        logger.error("エラー：APIキーが誤っているか、入力されていません。")
+                        logger.error(f"実行を中止します。詳細：{e}")
+                        raise
+                    elif "402" in str(e):
+                        logger.error("残高が不足しているようです。アカウントを確認してください。")
+                        logger.error(f"実行を中止します。詳細：{e}")
+                        raise
+                    elif "422" in str(e):
+                        logger.error("リクエストに無効なパラメータが含まれています。設定を見直してください。")
+                        logger.error(f"実行を中止します。詳細：{e}")
+                        raise
+                    else:
+                        self.handle_unexpected_error(e)
+
+            # 安全なNoneチェックを追加
+            if response.usage:
+                prompt_tokens = response.usage.prompt_tokens
+                completion_tokens = response.usage.completion_tokens
+                thoughts_tokens = getattr(response.usage.completion_tokens_details, "reasoning_tokens", 0) or 0
+                # 純粋なoutput_tokensを計算
+                output_tokens = completion_tokens - thoughts_tokens
+
+            else:
+                logger.warning("Deepseek API response did not include usage metadata.")
+                prompt_tokens = 0
+                thoughts_tokens = 0
+                output_tokens = 0
+
+            stats = TokenStats(
+                prompt_tokens,
+                thoughts_tokens,
+                output_tokens,
+                len(self.prompt_for_deepseek),
+                len(generated_text),
+                self.model,
+            )
+
+            logger.debug("DeepseekClientの処理終了")
+            return validated_data, stats
+
+        return await _run(self.prompt_for_deepseek)
 
 
 class GeminiClient(ConversationalAi):
     @property
     def prompt_for_gemini(self):
-        return self.prompt + "\n" + self.data
+        return self.prompt + "\n\n\n" + self.data
 
     async def generate(self) -> tuple[TrailConditionSchemaList, TokenStats]:
         from google import genai
         from google.genai import types
         from google.genai.errors import ClientError, ServerError
 
-        logger.info(f"{self.model}の応答を待っています。")
-        logger.debug(f"LlmConfig詳細： \n{self._config}")
-        logger.debug(f"APIキー: ...{self.api_key[-5:]}")
-
-        # api_key引数なしでも、環境変数"GEMNI_API_KEY"の値を勝手に参照するが、可読性のため代入
-        client = genai.Client()
-
-        max_retries = 3
-        for i in range(max_retries):
-            try:
-                response = await client.aio.models.generate_content(  # リクエスト
-                    model=self.model,
-                    contents=self.prompt_for_gemini,
-                    config=types.GenerateContentConfig(
-                        temperature=self.temperature,
-                        response_mime_type="application/json",  # 構造化出力
-                        response_json_schema=TrailConditionSchemaList.model_json_schema(),
-                        thinking_config=types.ThinkingConfig(thinking_budget=self.thinking_budget),
-                    ),
-                )
-                validated_data = super().validate_response(response.text)
-                break
-            except ValidationError:
-                await super().validation_error(i, max_retries, response.text)
-            except ServerError:
-                await super().handle_server_error(i, max_retries)
-            except ClientError as e:
-                super().handle_client_error(e)
-            except Exception as e:
-                super().handle_unexpected_error(e)
-
-        for part in response.candidates[0].content.parts:
-            if not part.text:
-                continue
-            elif part.thought:
-                logger.debug("## **Thoughts summary:**")
-                logger.debug(part.text)
-            else:
-                logger.debug("## **Answer:**")
-                logger.debug(part.text)
-
-        # 安全なNoneチェックを追加
-        if response.usage_metadata:
-            prompt_tokens = response.usage_metadata.prompt_token_count
-            thoughts_tokens = getattr(response.usage_metadata, "thoughts_token_count", 0) or 0
-            output_tokens = response.usage_metadata.candidates_token_count
-        else:
-            logger.warning("Gemini API response did not include usage metadata.")
-            prompt_tokens = 0
-            thoughts_tokens = 0
-            output_tokens = 0
-
-        stats = TokenStats(
-            prompt_tokens,
-            thoughts_tokens,
-            output_tokens,
-            len(self.prompt),
-            len(response.text),
-            self.model,
+        @traceable(
+            run_type="llm",
+            name="Trail_Analysis_Gemini",
+            metadata={
+                "ls_provider": self.provider,
+                "ls_model_name": self.model,
+                "ls_temperature": self.temperature,
+                "ls_max_tokens": self.thinking_budget,
+            },
         )
+        async def _run(_: str) -> tuple[TrailConditionSchemaList, TokenStats]:
+            """LangSmithのデコレータを定義するためだけのネスト関数
 
-        logger.debug("GeminiClientの処理終了")
+            Args:
+                _ (str): LangSmithトレースのためのプロンプト入力
 
-        return validated_data, stats
+            Returns:
+                tuple[TrailConditionSchemaList, TokenStats]
+            """
+            logger.info(f"{self.model}の応答を待っています。")
+            logger.debug(f"LlmConfig詳細： \n{self._config}")
+            logger.debug(f"APIキー: ...{self.api_key[-5:]}")
+
+            # api_key引数なしでも、環境変数"GEMNI_API_KEY"の値を勝手に参照するが、可読性のため代入
+            client = genai.Client()
+
+            max_retries = 3
+            for i in range(max_retries):
+                try:
+                    response = await client.aio.models.generate_content(  # リクエスト
+                        model=self.model,
+                        contents=self.prompt_for_gemini,
+                        config=types.GenerateContentConfig(
+                            temperature=self.temperature,
+                            response_mime_type="application/json",  # 構造化出力
+                            response_json_schema=TrailConditionSchemaList.model_json_schema(),
+                            thinking_config=types.ThinkingConfig(thinking_budget=self.thinking_budget),
+                        ),
+                    )
+                    validated_data = self.validate_response(response.text)
+                    break
+                except ValidationError:
+                    await self.validation_error(i, max_retries, response.text)
+                except ServerError:
+                    await self.handle_server_error(i, max_retries)
+                except ClientError as e:
+                    self.handle_client_error(e)
+                except Exception as e:
+                    self.handle_unexpected_error(e)
+
+            for part in response.candidates[0].content.parts:
+                if not part.text:
+                    continue
+                elif part.thought:
+                    logger.debug("## **Thoughts summary:**")
+                    logger.debug(part.text)
+                else:
+                    logger.debug("## **Answer:**")
+                    logger.debug(part.text)
+
+            # 安全なNoneチェックを追加
+            if response.usage_metadata:
+                prompt_tokens = response.usage_metadata.prompt_token_count
+                thoughts_tokens = getattr(response.usage_metadata, "thoughts_token_count", 0) or 0
+                output_tokens = response.usage_metadata.candidates_token_count
+            else:
+                logger.warning("Gemini API response did not include usage metadata.")
+                prompt_tokens = 0
+                thoughts_tokens = 0
+                output_tokens = 0
+
+            stats = TokenStats(
+                prompt_tokens,
+                thoughts_tokens,
+                output_tokens,
+                len(self.prompt),
+                len(response.text),
+                self.model,
+            )
+
+            logger.debug("GeminiClientの処理終了")
+
+            return validated_data, stats
+
+        return await _run(self.prompt_for_gemini)
 
 
 # テスト用コードは削除されました

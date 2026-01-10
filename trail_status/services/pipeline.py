@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 import httpx
+from langsmith import traceable
 from pydantic import BaseModel, Field
 
 from .fetcher import DataFetcher
