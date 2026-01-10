@@ -12,7 +12,7 @@ from .schema import TrailConditionSchemaList
 logger = logging.getLogger(__name__)
 
 
-class ModelDataSingle(BaseModel):
+class SourceSchemaSingle(BaseModel):
     id: int = Field(description="Djangoモデルから取り出した情報源ID")
     name: str = Field(description="Djangoモデルから取り出した情報源名")
     url1: str = Field(description="Djangoモデルから取り出した情報源URL")
@@ -33,16 +33,16 @@ class ResultSingle(BaseModel):
     model_config = {"arbitrary_types_allowed": True}
 
 
-UpdatedDataList = list[tuple[ModelDataSingle, ResultSingle | BaseException]]
+UpdatedDataList = list[tuple[SourceSchemaSingle, ResultSingle | BaseException]]
 
 
 class TrailConditionPipeline:
     """登山道状況の自動処理パイプライン（純粋async処理）"""
 
-    async def __call__(self, source_data_list: list[ModelDataSingle], ai_model: str) -> UpdatedDataList:
+    async def __call__(self, source_data_list: list[SourceSchemaSingle], ai_model: str) -> UpdatedDataList:
         return await self.run(source_data_list, ai_model)
 
-    async def run(self, source_data_list: list[ModelDataSingle], ai_model: str) -> UpdatedDataList:
+    async def run(self, source_data_list: list[SourceSchemaSingle], ai_model: str) -> UpdatedDataList:
         """ソースデータリストを並行処理（Django ORM一切なし）"""
         logger.info(f"パイプライン処理開始 - 対象: {len(source_data_list)}件, モデル: {ai_model or 'デフォルト'}")
 
@@ -60,7 +60,7 @@ class TrailConditionPipeline:
 
     # コア処理
     async def process_single_source_data(
-        self, client: httpx.AsyncClient, source_data: ModelDataSingle, ai_model: str
+        self, client: httpx.AsyncClient, source_data: SourceSchemaSingle, ai_model: str
     ) -> ResultSingle:
         """単一ソースデータの処理パイプライン（純粋async）"""
         logger.debug(f"処理開始: {source_data.name} (ID: {source_data.id})")
@@ -127,7 +127,7 @@ class TrailConditionPipeline:
             raise e
 
     async def _analyze_with_ai(
-        self, source_data: ModelDataSingle, scraped_text: str, ai_model: str | None
+        self, source_data: SourceSchemaSingle, scraped_text: str, ai_model: str | None
     ) -> tuple[LlmConfig, TrailConditionSchemaList, LlmStats]:
         """AI解析処理"""
         import time
@@ -166,7 +166,7 @@ class TrailConditionPipeline:
 
         return config, ai_result, llm_stats
 
-    def _get_prompt_filename_from_data(self, source_data: ModelDataSingle) -> str:
+    def _get_prompt_filename_from_data(self, source_data: SourceSchemaSingle) -> str:
         """ソースデータからプロンプトファイル名を取得"""
         # 形式: {id:03d}_{prompt_key}.yaml
         source_id = source_data.id
