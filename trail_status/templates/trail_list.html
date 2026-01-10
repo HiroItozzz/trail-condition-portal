@@ -54,7 +54,10 @@
          style="width:100%">
     <thead>
       <tr>
-        <th>サイト更新日</th>
+        <th>
+          <span class="hidden md:inline">元サイト更新日</span>
+          <span class="md:hidden">更新日</span>
+        </th>
         <th>山域</th>
         <th>対象</th>
         <th>状況種別</th>
@@ -65,7 +68,10 @@
     <tbody>
       {% for item in conditions %}
         <tr class="hover:bg-[#f5f5f5]">
-          <td class="whitespace-nowrap">{{ item.updated_at|date:"Y/m/d"|default:"-" }}</td>
+          <td class="whitespace-nowrap">
+            <span class="hidden md:inline">{{ item.updated_at|date:"Y/m/d"|default:"-" }}</span>
+            <span class="md:hidden">{{ item.updated_at|date:"y/m/d"|default:"-" }}</span>
+          </td>
           <td>{{ item.get_area_display }}</td>
           <td>
             <div style="font-weight: bold; color: #000;">{{ item.mountain_name_raw }}</div>
@@ -74,7 +80,7 @@
                         white-space: nowrap;
                         overflow: hidden;
                         text-overflow: ellipsis;
-                        max-width: 120px">{{ item.trail_name }}</div>
+                        max-width: 128px">{{ item.trail_name }}</div>
           </td>
           <td class="whitespace-nowrap" style="vertical-align: middle;">
             <span class="px-2 py-1 text-xs rounded font-medium {% if item.status == 'CLOSURE' %}bg-red-100 text-red-700 {% elif item.status == 'HAZARD' %}bg-orange-100 text-orange-700 {% elif item.status == 'SNOW' %}bg-cyan-100 text-cyan-700 {% elif item.status == 'CLEAR' %}bg-green-100 text-green-700 {% elif item.status == 'RESOLVED' %}bg-green-100 text-green-700 {% else %}bg-blue-100 text-blue-700{% endif %}">
@@ -95,7 +101,7 @@
                target="_blank"
                style="text-decoration: none;
                       border-bottom: 1px solid #18439a88">
-              {{ item.source.name|default:"情報元" }} <small style="font-size: 10px;">↗</small>
+              {{ item.source.name|default:"情報源" }} <small style="font-size: 10px;">↗</small>
             </a>
           </td>
         </tr>
