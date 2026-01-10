@@ -199,3 +199,37 @@ DJANGO_SECRET_KEY=...
 - AI解析は変更検知時のみ実行（コスト最適化）
 - プロンプトファイル名規則: `{source_id:03d}_{prompt_key}.yaml`
 - ログは `logs/django.log` に記録（RotatingFileHandler、5MB制限）
+
+## Production Deployment Checklist
+
+### Priority 1: セキュリティ対応（必須）
+
+- [ ] **DEBUG を環境変数化**: `DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"`
+- [ ] **ALLOWED_HOSTS を環境変数化**: 本番ドメインを環境変数から読み込む
+- [ ] **SECRET_KEY のデフォルト値削除**: 本番環境では環境変数必須にする
+- [ ] **STATIC_ROOT 設定追加**: `STATIC_ROOT = BASE_DIR / "staticfiles"`
+- [ ] **WhiteNoise 導入**: 静的ファイル配信用ミドルウェア
+
+### Priority 2: 本番運用対応（必須）
+
+- [ ] **Gunicorn 導入**: WSGIサーバー（`pyproject.toml`に追加）
+- [ ] **本番用 Dockerfile 作成**: `Dockerfile.prod` など
+- [ ] **docker-compose.prod.yml 作成**: 本番環境用の構成ファイル
+- [ ] **.env.example 作成**: 環境変数テンプレート（API keyは空にする）
+- [ ] **マイグレーション自動化**: デプロイ時の自動実行スクリプト
+
+### Priority 3: 運用改善（推奨）
+
+- [ ] **ヘルスチェックエンドポイント**: `/health/` など
+- [ ] **エラートラッキング**: Sentry などの導入
+- [ ] **nginx リバースプロキシ**: パフォーマンス向上
+- [ ] **SSL/TLS 証明書**: Let's Encrypt など
+- [ ] **定期バックアップ**: データベースバックアップスクリプト
+
+### 現在の問題点
+
+⚠️ **現在の設定は開発環境向け** - 以下の点が本番環境では不適切:
+- `DEBUG = True` がハードコード
+- `runserver` を使用（Dockerfile）
+- CORS設定が開発用（localhost:5173）
+- 静的ファイル配信設定が不足
