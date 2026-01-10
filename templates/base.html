@@ -134,6 +134,19 @@
               overflow-y: auto;
           }
 
+          /* 情報ボックスとフッターの透明化 */
+          #content .mb-3 {
+              background: rgba(255, 255, 255, 0.7) !important;
+              backdrop-filter: blur(10px);
+              -webkit-backdrop-filter: blur(10px);
+          }
+
+          footer {
+              background: rgba(248, 249, 250, 0.8) !important;
+              backdrop-filter: blur(8px);
+              -webkit-backdrop-filter: blur(8px);
+          }
+
           /* ハンバーガーボタン */
           .hamburger {
               display: none;
