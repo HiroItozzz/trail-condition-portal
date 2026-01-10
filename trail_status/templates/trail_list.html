@@ -15,7 +15,9 @@
           <!--一週間以内の情報源を表示-->
           {% for item in updated_sources %}
             {% if item.latest_date.date >= seven_days_ago %}
-              <div class="text-[14px]">
+              <div class="flex items-center text-[14px]">
+                <span class="text-xs" style="color: #888; margin-left: 2px;">({{ item.latest_date|date:"m/d" }})</span>
+                <br class="md:hidden">
                 <a href="{{ item.source__url1 }}"
                    target="_blank"
                    rel="noopener"
@@ -25,7 +27,6 @@
                           border-radius: 4px;
                           font-weight: 600;
                           text-decoration: underline">{{ item.source__name }}</a>
-                <span style="color: #888; margin-left: 2px;">({{ item.latest_date|date:"m/d" }})</span>
               </div>
             {% endif %}
           {% endfor %}
@@ -42,13 +43,13 @@
           display: none;
       }
 
-      @media (max-width: 767px) {
+      @media (max-width: 1024px) {
           .mobile-hint {
               display: block !important;
           }
       }
   </style>
-  <div class="text-xs text-gray-500 mb-2 mobile-hint">👆 各行をタップで詳細情報・情報源リンクを表示</div>
+  <div class="text-xs text-gray-500 mb-2 mobile-hint">👆 各行をタップで詳細情報を表示</div>
   <table id="trail-table"
          class="display compact cell-border w-full text-[13px] leading-tight nowrap"
          style="width:100%">
@@ -61,7 +62,7 @@
         <th>山域</th>
         <th>対象</th>
         <th>状況種別</th>
-        <th>原文タイトル・詳細</th>
+        <th>原文タイトル・備考</th>
         <th>情報源</th>
       </tr>
     </thead>
@@ -74,34 +75,33 @@
           </td>
           <td>{{ item.get_area_display }}</td>
           <td>
-            <div style="font-weight: bold; color: #000;">{{ item.mountain_name_raw }}</div>
-            <div style="color: #666;
-                        font-size: 11px;
-                        white-space: nowrap;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        max-width: 128px">{{ item.trail_name }}</div>
+            <div style="font-weight: bold;  color: #000;">{{ item.mountain_name_raw }}</div>
+            <div style="color: #666; font-size: 11px;">{{ item.trail_name }}</div>
           </td>
           <td class="whitespace-nowrap" style="vertical-align: middle;">
-            <span class="px-2 py-1 text-xs rounded font-medium {% if item.status == 'CLOSURE' %}bg-red-100 text-red-700 {% elif item.status == 'HAZARD' %}bg-orange-100 text-orange-700 {% elif item.status == 'SNOW' %}bg-cyan-100 text-cyan-700 {% elif item.status == 'CLEAR' %}bg-green-100 text-green-700 {% elif item.status == 'RESOLVED' %}bg-green-100 text-green-700 {% else %}bg-blue-100 text-blue-700{% endif %}">
+            <span class="px-1 py-1 text-xs rounded font-medium {% if item.status == 'CLOSURE' %}bg-red-100 text-red-700 {% elif item.status == 'HAZARD' %}bg-orange-100 text-orange-700 {% elif item.status == 'SNOW' %}bg-cyan-100 text-cyan-700 {% elif item.status == 'CLEAR' %}bg-green-100 text-green-700 {% elif item.status == 'RESOLVED' %}bg-green-100 text-green-700 {% else %}bg-blue-100 text-blue-700{% endif %}">
               {{ item.get_status_display }}
             </span>
           </td>
           <td>
-            <div style="font-weight: bold; color: #000;">{{ item.title }}</div>
+            <div style="font-weight: bold; font-style: italic; color: #000;">{{ item.title }}</div>
             {% if item.comment %}
               <div class="mt-1 pl-1"
                    style="color: #777;
                           font-size: 11px;
-                          border-left: 2px solid #ddd">備考: {{ item.comment }}</div>
+                          border-left: 2px solid #ddd;
+                          white-space: normal">備考: {{ item.comment }}</div>
             {% endif %}
           </td>
-          <td class="whitespace-nowrap text-[#18439a]">
+          <td class="whitespace-normal overflow-hidden text-xs">
             <a href="{{ item.url1 }}"
                target="_blank"
-               style="text-decoration: none;
-                      border-bottom: 1px solid #18439a88">
-              {{ item.source.name|default:"情報源" }} <small style="font-size: 10px;">↗</small>
+               style="color: #18439a;
+                      text-decoration: none;
+                      border-bottom: 1px solid rgba(24,67,154,0.53);
+                      display: inline">
+              {{ item.source.name|default:"情報源" }}
+              <small style="font-size:10px; color:#18439a;">↗</small>
             </a>
           </td>
         </tr>

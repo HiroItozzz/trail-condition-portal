@@ -44,10 +44,14 @@
                     background-color: #f8f9fa;
                     background-image: linear-gradient(to bottom,
                         rgba(240, 244, 248, 0.9) 0%,
-                        rgba(248, 249, 250, 0.9) 40%,
-                        rgba(248, 249, 250, 0.85) 60%,
-                        rgba(248, 249, 250, 0.8) 80%,
-                        rgba(248, 249, 250, 0.95) 100%),
+                        rgba(248, 249, 250, 0.85) 40%,
+                        rgba(248, 249, 250, 0.65) 50%,
+                        rgba(248, 249, 250, 0.7) 60%,
+                        rgba(248, 249, 250, 0.78) 70%,
+                        rgba(248, 249, 250, 0.9) 80%,
+                        rgba(248, 249, 250, 0.95) 90%,
+                        rgba(248, 249, 250, 1) 95%,
+                        rgba(248, 249, 250, 1) 100%),
                     url('{% static "mountain_3.webp" %}');
                     background-size: cover;
                     background-position: center top;
@@ -62,7 +66,7 @@
 
                 /* 洗練させたサイドバー：透明度50% + ぼかし15px（採用版） */
                 #sidebar {
-                    width: 250px;
+                    width: 240px;
                     height: auto;
                     padding: 24px 20px;
                     border-right: 1px #f1f1f1;
@@ -139,14 +143,6 @@
                     min-height: 100vh;
                 }
 
-                /* 原文タイトル・詳細欄の幅を画面サイズに応じて調整 */
-                @media (max-width: 1200px) {
-                    #trail-table td>div[style*="border-left: 2px solid #ddd"] {
-                        white-space: normal;
-                        max-width: 180px !important;
-                        /* タブレットサイズ */
-                    }
-                }
 
 
                 /* 情報ボックスとフッターの透明化 */
@@ -169,6 +165,18 @@
                     line-height: 1.2;
                 }
 
+                /* テーブルヘッダーの色を統一 */
+                #trail-table th {
+                    font-size: 12px;
+                    color: #666;
+                }
+
+                /* 展開された詳細情報のヘッダー*/
+                .dtr-title {
+                    font-size: 12px;
+                    color: #666;
+                }
+
                 /* テーブルセルの垂直配置 */
                 #trail-table td {
                     vertical-align: middle;
@@ -176,6 +184,14 @@
                     padding-bottom: 8px !important;
                 }
 
+                /* 原文タイトル・詳細欄の幅を画面サイズに応じて調整 */
+                @media (max-width: 1200px) {
+                    #trail-table td>div[style*="border-left: 2px solid #ddd"] {
+                        white-space: normal;
+                        max-width: 180px !important;
+                        /* タブレットサイズ */
+                    }
+                }
 
                 /* ハンバーガーボタン */
                 .hamburger {
@@ -244,10 +260,19 @@
                     }
 
 
-                    #trail-table td,
                     #trail-table th {
+                        font-size: 10px;
+                        color: #666;
+
                         padding: 4px 2px !important;
-                        font-size: 12px;
+
+                    }
+
+                    /* 展開された詳細情報のヘッダー*/
+                    .dtr-title {
+                        font-size: 10px;
+                        color: #666;
+                        font-weight: bold;
                     }
 
                     /* ヘッダー（th）も強制的に狭くする */
@@ -263,10 +288,29 @@
                     }
 
                     /* 1列目（更新日）だけ特に狭く */
-
                     #trail-table th:nth-child(1),
                     #trail-table td:nth-child(1) {
-                        max-width: 50px !important;
+                        max-width: 54px !important;
+                    }
+
+                    /* 3列目（備考）は畳まれすぎないように */
+                    #trail-table th:nth-child(3),
+                    #trail-table td:nth-child(3) {
+                        white-space: normal;
+                        max-width: 124px !important;
+                        min-width: 100px !important;
+                    }
+
+                    /* 展開された詳細情報の境界線 */
+                    .dtr-details li {
+                        border-bottom: 1px solid rgb(104, 115, 130) !important;
+                        /* 色を変更 */
+                        padding: 8px 0;
+                    }
+
+                    /* 最後の項目は境界線なし */
+                    .dtr-details li:last-child {
+                        border-bottom: none !important;
                     }
 
                     /* テーブル行のカーソル */
