@@ -505,6 +505,17 @@
                         hamburger.addEventListener('click', toggleSidebar);
                         overlay.addEventListener('click', toggleSidebar);
 
+                        // サイドバーのtransition終了時に強制リペイント
+                        sidebar.addEventListener('transitionend', function(e) {
+                            if (e.propertyName === 'left' && sidebar.classList.contains('open')) {
+                                // transition終了直後に強制再描画
+                                const computed = window.getComputedStyle(sidebar, '::before').backdropFilter;
+                                sidebar.style.transform = 'translateZ(0.001px)';
+                                void sidebar.offsetHeight; // 強制リフロー
+                                sidebar.style.transform = '';
+                            }
+                        });
+
                         // サイドバー内リンククリック時も閉じる
                         sidebar.addEventListener('click', function(e) {
                             if (e.target.matches('a')) {
