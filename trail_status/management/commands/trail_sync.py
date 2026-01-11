@@ -20,7 +20,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--model",
             type=str,
-            choices=["deepseek-reasoner", "deepseek-chat", "gemini-3-flash-preview", "gemini-2.5-flash"],
+            choices=["deepseek-reasoner", "deepseek-chat", "gemini-3-flash-preview", "gemini-2.5-flash","gpt-5-mini", "gpt-5-nano"],
             help="使用するAIモデル（指定しなければプロンプトファイル設定またはデフォルトを使用）",
         )
         parser.add_argument("--dry-run", action="store_true", help="実際にDBに保存せず、処理結果のみ表示")

@@ -155,9 +155,19 @@ class LlmFee(BaseLlmFee):
             "under_0.2M": {"input": 1.25, "output": 10.00},
             "over_0.2M": {"input": 2.5, "output": 15.0},
         },
-        "deepseek": {"input(cache_hit)": 0.028, "input(cache_miss)": 0.28, "output": 0.42},
+        "deepseek": {"input(cache_hit)": 0.028, "input": 0.28, "output": 0.42},
+        "gpt-5-mini": {"input(cache_hit)": 0.025, "input": 0.25, "output": 2.0},
+        "gpt-5-nano": {"input(cache_hit)": 0.005, "input": 0.05, "output": 0.4},
     }
-    _model_list = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-3-flash-preview", "deepseek-chat", "deepseek-reasoner"]
+    _model_list = [
+        "gemini-2.5-pro",
+        "gemini-2.5-flash",
+        "gemini-3-flash-preview",
+        "deepseek-chat",
+        "deepseek-reasoner",
+        "gpt-5-mini",
+        "gpt-5-nano",
+    ]
 
     @property
     def fees(self) -> dict:
@@ -183,10 +193,7 @@ class LlmFee(BaseLlmFee):
             else:
                 dollar_per_1M_tokens = base_fee["input(cache_miss)"]
 
-        elif self.model == "gemini-2.5-flash":
-            dollar_per_1M_tokens = self.fees[self.model][token_type]
-
-        elif self.model == "gemini-3-flash-preview":
+        elif self.model in ["gemini-2.5-flash", "gemini-3-flash-preview", "gpt-5-mini", "gpt-5-nano"]:
             dollar_per_1M_tokens = self.fees[self.model][token_type]
 
         else:

@@ -2,11 +2,10 @@ import asyncio
 import logging
 
 import httpx
-from langsmith import traceable
 from pydantic import BaseModel, Field
 
 from .fetcher import DataFetcher
-from .llm_client import DeepseekClient, GeminiClient, LlmConfig
+from .llm_client import DeepseekClient, GeminiClient, GptClient, LlmConfig
 from .llm_stats import LlmStats
 from .schema import TrailConditionSchemaList
 
@@ -149,6 +148,8 @@ class TrailConditionPipeline:
             ai_client = DeepseekClient(config)
         elif config.model.startswith("gemini"):
             ai_client = GeminiClient(config)
+        elif config.model.startswith("gpt"):
+            ai_client = GptClient(config)
         else:
             raise ValueError(f"サポートされていないモデル: {ai_model}")
 
