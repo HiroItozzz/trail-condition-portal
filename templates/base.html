@@ -237,14 +237,15 @@
 
                     #sidebar::before {
                         position: fixed;
-                        left: -250px;
+                        left: 0;
                         width: 250px;
-                        transition: left 0.3s ease;
                         background: rgba(255, 255, 255, 0.9);
                         backdrop-filter: blur(15px) saturate(180%);
                         -webkit-backdrop-filter: blur(15px) saturate(180%);
                         transform: translateZ(0);
                         will-change: backdrop-filter;
+                        opacity: 0;
+                        transition: opacity 0.3s ease;
                     }
 
                     #sidebar.open {
@@ -252,7 +253,7 @@
                     }
 
                     #sidebar.open::before {
-                        left: 0;
+                        opacity: 1;
                     }
 
                     #content {
