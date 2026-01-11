@@ -506,13 +506,21 @@
                         });
 
                         // backdrop-filter初期化問題の修正：強制リペイント
-                        window.addEventListener('load', function() {
-                            const sidebarBefore = window.getComputedStyle(sidebar, '::before');
-                            // 強制的にスタイル再計算をトリガー
-                            sidebar.style.transform = 'translateZ(0.01px)';
-                            requestAnimationFrame(() => {
-                                sidebar.style.transform = '';
-                            });
+                        // DOMContentLoadedで早めに実行
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // 複数の方法で強制再描画
+                            setTimeout(() => {
+                                // 方法1: opacity微調整
+                                sidebar.style.opacity = '0.9999';
+                                // 方法2: ::beforeの計算スタイル取得
+                                const computed = window.getComputedStyle(sidebar, '::before').backdropFilter;
+                                // 方法3: 強制リフロー
+                                const forceReflow = sidebar.offsetHeight;
+
+                                requestAnimationFrame(() => {
+                                    sidebar.style.opacity = '';
+                                });
+                            }, 50);
                         });
                     });
                 </script>
