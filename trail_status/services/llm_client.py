@@ -6,6 +6,7 @@ import os
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from pathlib import Path
+from typing import Optional
 
 import yaml
 from django.conf import settings
@@ -295,6 +296,7 @@ class DeepseekClient(ConversationalAi):
 
     async def generate(self) -> tuple[TrailConditionSchemaList, TokenStats]:
         from openai import AsyncOpenAI
+        from langsmith.wrappers import wrap_openai
 
         @traceable(
             run_type="llm",
@@ -306,7 +308,7 @@ class DeepseekClient(ConversationalAi):
                 "ls_max_tokens": self.thinking_budget,
             },
         )
-        async def _run(_: str) -> tuple[TrailConditionSchemaList, TokenStats]:
+        async def _run() -> tuple[TrailConditionSchemaList, TokenStats]:
             """LangSmithのデコレータを定義するためだけのネスト関数
 
             Args:
@@ -319,7 +321,7 @@ class DeepseekClient(ConversationalAi):
             logger.debug(f"LlmConfig詳細： \n{self._config}")
             logger.debug(f"APIキー: ...{self.api_key[-5:]}")
 
-            client = AsyncOpenAI(api_key=self.api_key, base_url="https://api.deepseek.com")
+            client = wrap_openai(AsyncOpenAI(api_key=self.api_key, base_url="https://api.deepseek.com"))
 
             max_retries = 3
             for i in range(max_retries):
@@ -384,7 +386,7 @@ class DeepseekClient(ConversationalAi):
             logger.debug("DeepseekClientの処理終了")
             return validated_data, stats
 
-        return await _run(self.prompt_for_deepseek)
+        return await _run()
 
 
 class GeminiClient(ConversationalAi):
@@ -396,6 +398,7 @@ class GeminiClient(ConversationalAi):
         from google import genai
         from google.genai import types
         from google.genai.errors import ClientError, ServerError
+        from langsmith.wrappers import wrap_gemini
 
         @traceable(
             run_type="llm",
@@ -407,7 +410,7 @@ class GeminiClient(ConversationalAi):
                 "ls_max_tokens": self.thinking_budget,
             },
         )
-        async def _run(_: str) -> tuple[TrailConditionSchemaList, TokenStats]:
+        async def _run() -> tuple[TrailConditionSchemaList, TokenStats]:
             """LangSmithのデコレータを定義するためだけのネスト関数
 
             Args:
@@ -421,7 +424,7 @@ class GeminiClient(ConversationalAi):
             logger.debug(f"APIキー: ...{self.api_key[-5:]}")
 
             # api_key引数なしでも、環境変数"GEMNI_API_KEY"の値を勝手に参照するが、可読性のため代入
-            client = genai.Client()
+            client = wrap_gemini(genai.Client())
 
             max_retries = 3
             for i in range(max_retries):
@@ -481,7 +484,7 @@ class GeminiClient(ConversationalAi):
 
             return validated_data, stats
 
-        return await _run(self.prompt_for_gemini)
+        return await _run()
 
 
 # テスト用コードは削除されました
