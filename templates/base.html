@@ -238,11 +238,13 @@
                     }
 
                     #sidebar::before {
-                        position: fixed;
+                        content: '';
+                        position: absolute;
                         top: 0;
-                        left: -250px;
-                        width: 250px;
-                        height: 100vh;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        min-height: 100vh;
                         background: rgba(255, 255, 255, 0.9);
                         backdrop-filter: blur(15px) saturate(180%);
                         -webkit-backdrop-filter: blur(15px) saturate(180%);
@@ -250,15 +252,10 @@
                         will-change: backdrop-filter;
                         z-index: 0;
                         pointer-events: none;
-                        transition: left 0.3s ease;
                     }
 
                     #sidebar.open {
                         transform: translateX(0);
-                    }
-
-                    #sidebar.open::before {
-                        left: 0;
                     }
 
                     #content {
