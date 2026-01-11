@@ -489,6 +489,17 @@
                             overlay.classList.toggle('show');
                             // サイドバーを開いているときは本文のスクロールを無効化
                             document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+
+                            // サイドバーを開いた時に強制リペイント
+                            if (sidebar.classList.contains('open')) {
+                                requestAnimationFrame(() => {
+                                    const computed = window.getComputedStyle(sidebar, '::before').backdropFilter;
+                                    sidebar.style.transform = 'translateZ(0.001px)';
+                                    requestAnimationFrame(() => {
+                                        sidebar.style.transform = '';
+                                    });
+                                });
+                            }
                         }
 
                         hamburger.addEventListener('click', toggleSidebar);
