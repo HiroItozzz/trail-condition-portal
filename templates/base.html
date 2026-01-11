@@ -504,6 +504,16 @@
                                 }, 100);
                             }
                         });
+
+                        // backdrop-filter初期化問題の修正：強制リペイント
+                        window.addEventListener('load', function() {
+                            const sidebarBefore = window.getComputedStyle(sidebar, '::before');
+                            // 強制的にスタイル再計算をトリガー
+                            sidebar.style.transform = 'translateZ(0.01px)';
+                            requestAnimationFrame(() => {
+                                sidebar.style.transform = '';
+                            });
+                        });
                     });
                 </script>
             </body>
