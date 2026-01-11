@@ -244,8 +244,8 @@
                         -webkit-backdrop-filter: blur(15px) saturate(180%);
                         transform: translateZ(0);
                         will-change: backdrop-filter;
-                        opacity: 0;
-                        transition: opacity 0.3s ease;
+                        clip-path: inset(0 100% 0 0);
+                        transition: clip-path 0.3s ease;
                     }
 
                     #sidebar.open {
@@ -253,7 +253,7 @@
                     }
 
                     #sidebar.open::before {
-                        opacity: 1;
+                        clip-path: inset(0 0 0 0);
                     }
 
                     #content {
