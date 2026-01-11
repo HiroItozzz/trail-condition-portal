@@ -67,31 +67,34 @@
                 /* 洗練させたサイドバー：透明度50% + ぼかし15px（採用版） */
                 #sidebar {
                     width: 240px;
-                    height: auto;
+                    min-height: 100vh;
                     padding: 24px 20px;
                     border-right: 1px #f1f1f1;
                     overflow-y: auto;
                     flex-shrink: 0;
-                    overflow-y: auto;
                     position: relative;
                     background-image: url('{% static "mountain_3.webp" %}');
                     background-size: cover;
                     background-position: center top;
                     background-attachment: fixed;
                     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+                    isolation: isolate;
                 }
 
                 #sidebar::before {
                     content: '';
-                    position: absolute;
+                    position: fixed;
                     top: 0;
                     left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(255, 255, 255, 0.5);
-                    backdrop-filter: blur(10px) saturate(180%);
-                    -webkit-backdrop-filter: blur(10px) saturate(180%);
+                    width: 240px;
+                    height: 100vh;
+                    background: rgba(255, 255, 255, 0.88);
+                    backdrop-filter: blur(15px) saturate(180%);
+                    -webkit-backdrop-filter: blur(15px) saturate(180%);
                     z-index: 0;
+                    pointer-events: none;
+                    transform: translateZ(0);
+                    will-change: backdrop-filter;
                 }
 
                 #sidebar>* {
@@ -212,18 +215,6 @@
 
                 /* レスポンシブデザイン */
                 @media (max-width: 640px) {
-                    
-                    
-                    .body {background-image: linear-gradient(to bottom,
-                        rgba(240, 244, 248, 0.9) 0%,
-                        rgba(248, 249, 250, 0.85) 40%,
-                        rgba(248, 249, 250, 0.65) 50%,
-                        rgba(248, 249, 250, 0.7) 60%,
-                        rgba(248, 249, 250, 0.75) 70%,
-                        rgba(248, 249, 250, 0.9) 80%,
-                        rgba(248, 249, 250, 0.95) 90%,
-                        rgba(248, 249, 250, 1) 95%,
-                        rgba(248, 249, 250, 1) 100%)}
                     .hamburger {
                         display: block;
                     }
@@ -231,23 +222,41 @@
                     #sidebar {
                         position: fixed;
                         top: 0;
-                        left: -250px;
+                        left: 0;
                         width: 250px;
                         height: 100vh;
-                        transition: left 0.3s ease;
+                        overflow-y: auto;
+                        overflow-x: hidden;
+                        transform: translateX(-100%);
+                        transition: transform 0.3s ease;
                         z-index: 999;
                         box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-                        background-image: url('{% static "mountain_2.webp" %}');
+                        background-image: url('{% static "mountain_3.webp" %}');
                         background-size: cover;
-                        background-position: left center;
+                        background-position: center top;
+                        background-attachment: scroll;
+                        isolation: isolate;
                     }
 
                     #sidebar::before {
-                        background: rgba(255, 255, 255, 0.6);
+                        content: '';
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        right: -5px;
+                        height: var(--sidebar-height, 100vh);
+                        min-height: 100vh;
+                        background: rgba(255, 255, 255, 0.9);
+                        backdrop-filter: blur(15px) saturate(180%);
+                        -webkit-backdrop-filter: blur(15px) saturate(180%);
+                        transform: translateZ(0);
+                        will-change: backdrop-filter;
+                        z-index: 0;
+                        pointer-events: none;
                     }
 
                     #sidebar.open {
-                        left: 0;
+                        transform: translateX(0);
                     }
 
                     #content {
@@ -482,10 +491,32 @@
                         function toggleSidebar() {
                             sidebar.classList.toggle('open');
                             overlay.classList.toggle('show');
+                            // サイドバーを開いているときは本文のスクロールを無効化
+                            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+
+                            // サイドバーを開いた時に強制リペイント
+                            if (sidebar.classList.contains('open')) {
+                                requestAnimationFrame(() => {
+                                    const computed = window.getComputedStyle(sidebar, '::before').backdropFilter;
+                                    sidebar.style.transform = 'translateZ(0.001px)';
+                                    requestAnimationFrame(() => {
+                                        sidebar.style.transform = '';
+                                    });
+                                });
+                            }
                         }
 
                         hamburger.addEventListener('click', toggleSidebar);
                         overlay.addEventListener('click', toggleSidebar);
+
+                        // サイドバーのtransition終了時に強制リペイント
+                        sidebar.addEventListener('transitionend', function(e) {
+                            if (e.propertyName === 'transform' && sidebar.classList.contains('open')) {
+                                // transition終了直後に強制再描画
+                                const computed = window.getComputedStyle(sidebar, '::before').backdropFilter;
+                                void sidebar.offsetHeight; // 強制リフロー
+                            }
+                        });
 
                         // サイドバー内リンククリック時も閉じる
                         sidebar.addEventListener('click', function(e) {
@@ -493,9 +524,46 @@
                                 setTimeout(() => {
                                     sidebar.classList.remove('open');
                                     overlay.classList.remove('show');
+                                    document.body.style.overflow = '';
                                 }, 100);
                             }
                         });
+
+                        // backdrop-filter初期化問題の修正：強制リペイント
+                        // DOMContentLoadedで早めに実行
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // 複数の方法で強制再描画
+                            setTimeout(() => {
+                                // 方法1: opacity微調整
+                                sidebar.style.opacity = '0.9999';
+                                // 方法2: ::beforeの計算スタイル取得
+                                const computed = window.getComputedStyle(sidebar, '::before').backdropFilter;
+                                // 方法3: 強制リフロー
+                                const forceReflow = sidebar.offsetHeight;
+
+                                requestAnimationFrame(() => {
+                                    sidebar.style.opacity = '';
+                                });
+                            }, 50);
+                        });
+
+                        // サイドバー::beforeの高さを動的に調整（モバイルのみ）
+                        function updateSidebarBeforeHeight() {
+                            if (window.innerWidth <= 640) {
+                                const scrollHeight = sidebar.scrollHeight;
+                                sidebar.style.setProperty('--sidebar-height', scrollHeight + 'px');
+                            }
+                        }
+
+                        // 初回実行
+                        updateSidebarBeforeHeight();
+
+                        // サイドバー開閉時とリサイズ時に更新
+                        hamburger.addEventListener('click', () => {
+                            setTimeout(updateSidebarBeforeHeight, 350);
+                        });
+
+                        window.addEventListener('resize', updateSidebarBeforeHeight);
                     });
                 </script>
             </body>
