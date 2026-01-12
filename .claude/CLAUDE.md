@@ -94,7 +94,7 @@ npm run build
 1. **収集（Fetcher）**: 公的機関サイトから自動スクレイピング（httpx + trafilatura）
 2. **変更検知**: ハッシュ比較で前回取得時からの変更を検出
 3. **AI解析（Pipeline）**: 変更があった場合のみ DeepSeek/Gemini で構造化データ抽出
-4. **保存（Synchronizer）**: PostgreSQL に原文 + 正規化データを保存
+4. **照合・保存（DbWriter）**: 既存DBレコードと照合し、PostgreSQL に原文 + 正規化データを保存
 5. **表示**: Django テンプレート + REST API で提供
 
 ### Core Components
@@ -105,7 +105,10 @@ npm run build
 - **fetcher.py**: HTTPリクエスト、trafilaturaによるテキスト抽出、ハッシュ計算
 - **llm_client.py**: DeepSeek/Gemini APIクライアント、Pydantic Structured Output対応
 - **llm_stats.py**: LLM使用状況の統計（トークン数、コスト計算、実行時間）
-- **synchronizer.py**: 既存DBデータとAI新規出力データの照合・同定処理（mountain_name_raw + trail_name で既存レコードを検索し、更新/新規作成リストを返却）
+- **db_writer.py**: DB永続化を担当する`DbWriter`クラス
+  - `save_to_source()`: DataSourceの更新（巡回日時、ハッシュ）
+  - `save_condition_and_usage()`: TrailCondition + LlmUsage の保存（トランザクション管理）
+  - `synchronizer()`: 既存DBレコードとAI出力の照合（mountain_name_raw + trail_name で既存レコードを検索し、更新/新規作成リストを返却）
 - **schema.py**: Pydantic モデル定義（AI出力スキーマ、内部データ構造）
 
 #### trail_status/services/prompts/
@@ -150,8 +153,9 @@ YAMLファイルでプロンプトとAI設定を管理:
 ### Async Pipeline with Django ORM
 
 - `trail_status/services/pipeline.py` は完全async実装（httpx.AsyncClient、AI API）
-- Django ORM操作は `trail_status/services/synchronizer.py` で `sync_to_async` を使用
-- 管理コマンド `trail_sync.py` が非同期処理を `asyncio.run()` で実行
+- Django ORM操作は `trail_status/services/db_writer.py` の `DbWriter` クラスで管理
+- `DbWriter` はインスタンスが状態を保持する設計（`SourceSchemaSingle` と `ResultSingle` を保持）
+- 管理コマンド `trail_sync.py` が非同期処理を `asyncio.run()` で実行し、結果を `DbWriter` に渡してDB保存
 
 ### Pydantic Structured Output
 
@@ -195,3 +199,37 @@ DJANGO_SECRET_KEY=...
 - AI解析は変更検知時のみ実行（コスト最適化）
 - プロンプトファイル名規則: `{source_id:03d}_{prompt_key}.yaml`
 - ログは `logs/django.log` に記録（RotatingFileHandler、5MB制限）
+
+## Production Deployment Checklist
+
+### Priority 1: セキュリティ対応（必須）
+
+- [ ] **DEBUG を環境変数化**: `DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"`
+- [ ] **ALLOWED_HOSTS を環境変数化**: 本番ドメインを環境変数から読み込む
+- [ ] **SECRET_KEY のデフォルト値削除**: 本番環境では環境変数必須にする
+- [ ] **STATIC_ROOT 設定追加**: `STATIC_ROOT = BASE_DIR / "staticfiles"`
+- [ ] **WhiteNoise 導入**: 静的ファイル配信用ミドルウェア
+
+### Priority 2: 本番運用対応（必須）
+
+- [ ] **Gunicorn 導入**: WSGIサーバー（`pyproject.toml`に追加）
+- [ ] **本番用 Dockerfile 作成**: `Dockerfile.prod` など
+- [ ] **docker-compose.prod.yml 作成**: 本番環境用の構成ファイル
+- [ ] **.env.example 作成**: 環境変数テンプレート（API keyは空にする）
+- [ ] **マイグレーション自動化**: デプロイ時の自動実行スクリプト
+
+### Priority 3: 運用改善（推奨）
+
+- [ ] **ヘルスチェックエンドポイント**: `/health/` など
+- [ ] **エラートラッキング**: Sentry などの導入
+- [ ] **nginx リバースプロキシ**: パフォーマンス向上
+- [ ] **SSL/TLS 証明書**: Let's Encrypt など
+- [ ] **定期バックアップ**: データベースバックアップスクリプト
+
+### 現在の問題点
+
+⚠️ **現在の設定は開発環境向け** - 以下の点が本番環境では不適切:
+- `DEBUG = True` がハードコード
+- `runserver` を使用（Dockerfile）
+- CORS設定が開発用（localhost:5173）
+- 静的ファイル配信設定が不足

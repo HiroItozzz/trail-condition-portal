@@ -4,7 +4,7 @@ from django.db import transaction
 
 from trail_status.models.source import DataSource
 from trail_status.services.schema import TrailConditionSchemaInternal
-from trail_status.services.synchronizer import sync_trail_conditions
+from trail_status.services.db_writer import sync_trail_conditions
 
 
 class Command(BaseCommand):

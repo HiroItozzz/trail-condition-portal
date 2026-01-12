@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from trail_status.services.llm_client import LlmConfig
-from trail_status.services.pipeline import ModelDataSingle, TrailConditionPipeline
+from trail_status.services.pipeline import SourceSchemaSingle, TrailConditionPipeline
 from trail_status.services.schema import TrailConditionSchemaList
 
 
@@ -26,7 +26,7 @@ async def test_process_source_data_full_flow(monkeypatch, mock_async_client, sam
     # --- テスト実行 ---
     pipeline = TrailConditionPipeline()
     source_data_list = [
-        ModelDataSingle(
+        SourceSchemaSingle(
             id=1,
             name="テスト山",
             url1="https://example.com/test",

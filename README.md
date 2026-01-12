@@ -12,7 +12,7 @@
 
 - **Backend**: Django 6.0, PostgreSQL
 - **Data Collection**: httpx, trafilatura
-- **AI Processing**: DeepSeek API, Gemini API, Pydantic
+- **AI Processing**: DeepSeek API, Gemini API, Pydantic, LangSmith
 - **Infrastructure**: Docker, uv
 
 ## 開発環境
