@@ -33,7 +33,7 @@ class LlmConfig(BaseModel):
     site_prompt: str | None = Field(default="", description="サイト固有プロンプト")
     use_template: bool = Field(default=True, description="template.yamlを使用するか")
     model: str = Field(
-        pattern=r"^(gemini|deepseek|gpt)-.+", default="deepseek-reasoner", description="使用するLLMモデル"
+        pattern=r"^(gemini|deepseek|gpt)-.+", default="gpt-5-mini", description="使用するLLMモデル"
     )
     data: str = Field(description="解析するテキスト")
     temperature: float = Field(
@@ -41,6 +41,7 @@ class LlmConfig(BaseModel):
     )
     thinking_budget: int = Field(default=10000, ge=-1, le=15000, description="Geminiの思考予算（トークン数）")
     prompt_filename: str | None = Field(default=None, description="LLMエラー処理での識別用ファイルネーム")
+    allow_websearch: bool = Field(default=True, description="Gemini, OpenAIでWeb検索を許可するかどうか")
 
     @computed_field
     @property
@@ -222,6 +223,7 @@ class ConversationalAi(ABC):
         self.thinking_budget: int = config.thinking_budget
         self.prompt_filename: str | None = config.prompt_filename
         self.provider: str | None = config.provider
+        self.websearch = config.allow_websearch
         self._config: LlmConfig | None = config
 
     @abstractmethod
@@ -446,7 +448,7 @@ class GeminiClient(ConversationalAi):
             client = wrap_gemini(genai.Client())
 
             # 検索許可設定
-            grounding_tool = types.Tool(google_search=types.GoogleSearch())
+            tools = [types.Tool(google_search=types.GoogleSearch())] if self.websearch else None
 
             max_retries = 3
             for i in range(max_retries):
@@ -459,7 +461,7 @@ class GeminiClient(ConversationalAi):
                             response_mime_type="application/json",  # 構造化出力
                             response_json_schema=TrailConditionSchemaList.model_json_schema(),
                             thinking_config=types.ThinkingConfig(thinking_budget=self.thinking_budget),
-                            tools=[grounding_tool],
+                            tools=tools,
                         ),
                     )
                     validated_data = self.validate_response(response.text)
@@ -543,6 +545,7 @@ class GptClient(ConversationalAi):
             logger.debug(f"LlmConfig詳細： \n{self._config}")
 
             client = wrap_openai(AsyncOpenAI())
+            tools = [{"type": "web_search"}] if self.websearch else None
 
             max_retries = 3
             for i in range(max_retries):
@@ -552,7 +555,7 @@ class GptClient(ConversationalAi):
 
                     response = await client.responses.parse(
                         model="gpt-5-mini",
-                        tools=[{"type": "web_search"}],
+                        tools=tools,
                         input=self.prompt_for_gpt,
                         text_format=TrailConditionSchemaList,
                     )

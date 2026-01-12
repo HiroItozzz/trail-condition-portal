@@ -39,37 +39,43 @@ UpdatedDataList = list[tuple[SourceSchemaSingle, ResultSingle | BaseException]]
 class TrailConditionPipeline:
     """登山道状況の自動処理パイプライン（純粋async処理）"""
 
-    async def __call__(self, source_data_list: list[SourceSchemaSingle], ai_model: str) -> UpdatedDataList:
-        return await self.run(source_data_list, ai_model)
+    def __init__(self, source_data_list: list[SourceSchemaSingle],**kwargs):
+        self.source_data_list = source_data_list
+        self.ai_model = kwargs.get("ai_model")
+        self.new_hash_mode = kwargs.get("new_hash")
 
-    async def run(self, source_data_list: list[SourceSchemaSingle], ai_model: str) -> UpdatedDataList:
+    async def __call__(self) -> UpdatedDataList:
+        return await self.run(self)
+
+    async def run(self) -> UpdatedDataList:
         """ソースデータリストを並行処理（Django ORM一切なし）"""
-        logger.info(f"パイプライン処理開始 - 対象: {len(source_data_list)}件, モデル: {ai_model or 'デフォルト'}")
+        logger.info(
+            f"パイプライン処理開始 - 対象: {len(self.source_data_list)}件, モデル: {self.ai_model or 'デフォルト'}"
+        )
 
         async with httpx.AsyncClient() as client:
             tasks = []
-            for source_data in source_data_list:
+            for source_data in self.source_data_list:
                 # コア処理
-                task = self.process_single_source_data(client, source_data, ai_model)
+                task = self.process_single_source_data(client, source_data)
                 tasks.append(task)
 
             results: list[ResultSingle | BaseException] = await asyncio.gather(*tasks, return_exceptions=True)
 
         logger.info(f"パイプライン処理完了 - 処理件数: {len(results)}")
-        return list(zip(source_data_list, results))
+        return list(zip(self.source_data_list, results))
 
     # コア処理
     async def process_single_source_data(
-        self, client: httpx.AsyncClient, source_data: SourceSchemaSingle, ai_model: str
-    ) -> ResultSingle:
+        self, client: httpx.AsyncClient, source_data: SourceSchemaSingle) -> ResultSingle:
         """単一ソースデータの処理パイプライン（純粋async）"""
         logger.debug(f"処理開始: {source_data.name} (ID: {source_data.id})")
 
         try:
-            fetcher = DataFetcher()
+            fetcher = DataFetcher(source_data.url1)
 
             # 1. 生HTMLのスクレイピング: HTMLボディを格納
-            scraped_html = await fetcher.fetch_html(client, source_data.url1)
+            scraped_html = await fetcher.fetch_html(client)
             if not scraped_html.strip():
                 logger.warning(f"スクレイピング結果が空: {source_data.name}")
                 return ResultSingle(success=False, message="スクレイピング結果が空でした")
@@ -78,24 +84,28 @@ class TrailConditionPipeline:
             content_changed, new_hash = fetcher.has_content_changed(scraped_html, source_data.content_hash)
 
             if not content_changed:
-                logger.info(f"コンテンツ変更なし（ソースID: {source_data.id}）- LLM処理をスキップ")
-                return ResultSingle(
-                    success=True,
-                    content_changed=False,
-                    new_hash=new_hash,
-                    scraped_length=len(scraped_html),
-                    message=f"コンテンツ変更なし（ソースID: {source_data.id}）- LLM処理をスキップ",
-                )
+                if new_hash:
+                    logger.info(f"コンテンツ変更なし（ソースID: {source_data.id}) - 既存データを上書き実行")
+                else:
+                    logger.info(f"コンテンツ変更なし（ソースID: {source_data.id}）- LLM処理をスキップ")
+                    return ResultSingle(
+                        success=True,
+                        content_changed=False,
+                        new_hash=new_hash,
+                        scraped_length=len(scraped_html),
+                        message=f"コンテンツ変更なし（ソースID: {source_data.id}）- LLM処理をスキップ",
+                    )
+                
 
             # 3. trafilaturaでテキスト抽出
-            parsed_text = await fetcher.fetch_parsed_text(scraped_html, source_data.url1)
+            parsed_text = await fetcher.fetch_parsed_text(scraped_html)
             if not parsed_text.strip():
                 logger.warning(f"テキスト抽出結果が空: {source_data.name}")
                 return ResultSingle(success=False, message="テキスト抽出結果が空でした")
 
-            # 4. AI解析（コンテンツ変更時のみ）
-            logger.info(f"AI解析開始: {source_data.name} - モデル: {ai_model or 'デフォルト'}")
-            config, ai_result, stats = await self._analyze_with_ai(source_data, parsed_text, ai_model)
+            # 4. AI解析（コンテンツ変更時 or new_hash=Trueのみ）
+            logger.info(f"AI解析開始: {source_data.name} - モデル: {self.ai_model or 'デフォルト'}")
+            config, ai_result, stats = await self._analyze_with_ai(source_data, parsed_text)
             logger.info(
                 f"AI解析完了: {source_data.name} - コスト: ${stats.total_fee:.4f}, 実行時間: {stats.execution_time:.2f}秒"
             )
@@ -127,15 +137,14 @@ class TrailConditionPipeline:
             raise e
 
     async def _analyze_with_ai(
-        self, source_data: SourceSchemaSingle, scraped_text: str, ai_model: str | None
-    ) -> tuple[LlmConfig, TrailConditionSchemaList, LlmStats]:
+        self, source_data: SourceSchemaSingle, scraped_text: str) -> tuple[LlmConfig, TrailConditionSchemaList, LlmStats]:
         """AI解析処理"""
         import time
 
         prompt_filename = self._get_prompt_filename_from_data(source_data)
 
         try:
-            config = LlmConfig.from_file(prompt_filename, data=scraped_text, model=ai_model)
+            config = LlmConfig.from_file(prompt_filename, data=scraped_text, model=self.ai_model)
         except FileNotFoundError:
             logger.error(f"プロンプトファイルが見つかりません: {prompt_filename}")
             raise ValueError(f"プロンプトファイルが見つかりません: {prompt_filename}")
@@ -151,7 +160,7 @@ class TrailConditionPipeline:
         elif config.model.startswith("gpt"):
             ai_client = GptClient(config)
         else:
-            raise ValueError(f"サポートされていないモデル: {ai_model}")
+            raise ValueError(f"サポートされていないモデル: {self.ai_model}")
 
         # 実行時間測定
         try:
@@ -159,7 +168,7 @@ class TrailConditionPipeline:
             ai_result, token_stats = await ai_client.generate()
             execution_time = time.time() - start_time
         except Exception as e:
-            logger.exception(f"AI解析エラー: {ai_model}")
+            logger.exception(f"AI解析エラー: {self.ai_model}")
             raise e
 
         # LlmStatsでラップして実行時間を追加

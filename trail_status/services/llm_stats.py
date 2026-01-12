@@ -191,7 +191,7 @@ class LlmFee(BaseLlmFee):
             if token_type == "output":
                 dollar_per_1M_tokens = base_fee["output"]
             else:
-                dollar_per_1M_tokens = base_fee["input(cache_miss)"]
+                dollar_per_1M_tokens = base_fee["input"]
 
         elif self.model in ["gemini-2.5-flash", "gemini-3-flash-preview", "gpt-5-mini", "gpt-5-nano"]:
             dollar_per_1M_tokens = self.fees[self.model][token_type]

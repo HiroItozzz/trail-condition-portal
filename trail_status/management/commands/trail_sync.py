@@ -20,21 +20,39 @@ class Command(BaseCommand):
         parser.add_argument(
             "--model",
             type=str,
-            choices=["deepseek-reasoner", "deepseek-chat", "gemini-3-flash-preview", "gemini-2.5-flash","gpt-5-mini", "gpt-5-nano"],
+            choices=[
+                "deepseek-reasoner",
+                "deepseek-chat",
+                "gemini-3-flash-preview",
+                "gemini-2.5-flash",
+                "gpt-5-mini",
+                "gpt-5-nano",
+            ],
             help="使用するAIモデル（指定しなければプロンプトファイル設定またはデフォルトを使用）",
         )
         parser.add_argument("--dry-run", action="store_true", help="実際にDBに保存せず、処理結果のみ表示")
+        parser.add_argument("--new-hash", action="store_true", help="既存のハッシュを無視しLlm処理実行")
 
     def handle(self, *args, **options):
         source_id = options.get("source")
         ai_model = options.get("model")
         dry_run = options["dry_run"]
+        new_hash = options["new_hash"]
 
-        logger.info(f"trail_sync コマンド開始 - source_id: {source_id}, model: {ai_model}, dry_run: {dry_run}")
+        logger.info(
+            f"trail_sync コマンド開始 - source_id: {source_id}, model: {ai_model}, dry_run: {dry_run}, new_hash: {new_hash}"
+        )
+
+        if new_hash:
+            self.stdout.write(self.style.WARNING("NEW-HASHモード: 更新のないサイトデータも変更されます。本当に実行しますか？"))
+            choice = input("(y/N): ")
+            if choice != "y":
+                self.stdout.write(self.style.WARNING("実行を中断します。"))
+                return
 
         if dry_run:
             self.stdout.write(self.style.WARNING("DRY-RUNモード: DBには保存されません"))
-
+        
         # 処理対象の情報源を取得（事前にデータを準備）
         if source_id:
             try:
@@ -63,8 +81,8 @@ class Command(BaseCommand):
             self.stdout.write(f"全ての情報源を処理: {len(source_data_list)}件")
 
         # パイプライン処理を実行（純粋にasync処理のみ）
-        processor = TrailConditionPipeline()
-        all_source_results: UpdatedDataList = asyncio.run(processor(source_data_list, ai_model))
+        processor = TrailConditionPipeline(source_data_list, ai_model=ai_model, new_hash=new_hash)
+        all_source_results: UpdatedDataList = asyncio.run(processor.run())
 
         # DB保存（同期処理）
         if not dry_run:
@@ -74,10 +92,13 @@ class Command(BaseCommand):
                     writer.save_to_source()
 
                     if not result_by_source.content_changed:
-                        self.stdout.write(
-                            self.style.WARNING(f"コンテンツ変更なし: {source_data.name} - LLM処理スキップ")
-                        )
-                        continue
+                        if not new_hash:
+                            self.stdout.write(
+                                self.style.WARNING(f"コンテンツ変更なし: {source_data.name} - LLM処理スキップ")
+                            )
+                            continue
+                        else:
+                            logger.info("NEW-HASHモード: 既存データと再度照合します")
 
                     db_result = writer.save_condition_and_usage()
 
