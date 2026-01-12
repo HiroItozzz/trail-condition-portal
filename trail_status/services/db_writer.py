@@ -5,6 +5,7 @@ from typing import Any
 
 from django.db import transaction
 from django.utils import timezone
+from rapidfuzz import fuzz
 
 from ..models.condition import TrailCondition
 from ..models.llm_usage import LlmUsage
@@ -94,13 +95,16 @@ class DbWriter:
     ) -> tuple[list[TrailCondition], list[TrailCondition]]:
         """
         AIの抽出データ(Pydantic)を既存レコードと照合する。
-        所定の方法で同定し更新リストと新規作成リストをDjangoモデルで返却
+        3段階のアルゴリズムで同定を行う:
+        1. 完全一致チェック（高速パス）
+        2. RapidFuzzによる類似度計算（フォールバック）
+        3. 新規作成
 
         Args:
-            source: データソース
             ai_data_list: AI抽出データリスト
-            config: LlmConfig（AI設定情報）
-            prompt_file: 使用したプロンプトファイル名
+
+        Returns:
+            (更新対象レコードリスト, 新規作成レコードリスト)
         """
         to_update: list[TrailCondition] = []
         to_create: list[TrailCondition] = []
@@ -108,70 +112,137 @@ class DbWriter:
         config: LlmConfig = self.result.config
         prompt_filename = self.source_record.prompt_filename
 
-        for data in ai_data_list:
-            # 1. AIの出力を正規化（空白や全角半角の揺れを取る）
-            # これにより、AIが「雲取山 」と出しても「雲取山」として扱う
-            normalized_m_name = normalize_text(data.mountain_name_raw)
-            normalized_t_name = normalize_text(data.trail_name)
+        for new_data in ai_data_list:
+            # ステップ1: 候補レコードを取得（sourceのみで絞る）
+            candidates = TrailCondition.objects.filter(
+                source=self.source_record,
+                disabled=False,
+                resolved_at__isnull=True,  # 解消済みは除外
+            )
 
-            # 2. 既存レコードの検索
-            # ※ DB側も同様の正規化で比較したいところですが、
-            #    まずは「保存されている値」を正規化したものと比較します。
             existing_record = None
-            all_potential_records = TrailCondition.objects.filter(source=self.source_record, disabled=False)
-            for record in all_potential_records:
-                # 山名と登山道・区間名でまず同定
+
+            # ステップ2: 完全一致チェック（高速パス）
+            normalized_m = normalize_text(new_data.mountain_name_raw)
+            normalized_t = normalize_text(new_data.trail_name)
+
+            for candidate in candidates:
                 if (
-                    normalize_text(record.mountain_name_raw) == normalized_m_name
-                    and normalize_text(record.trail_name) == normalized_t_name
+                    normalize_text(candidate.mountain_name_raw) == normalized_m
+                    and normalize_text(candidate.trail_name) == normalized_t
                 ):
-                    existing_record = record
+                    existing_record = candidate
+                    logger.info(f"完全一致同定: {candidate.id} - {normalized_m}/{normalized_t}")
                     break
 
+            # ステップ3: 類似度計算（フォールバック）
+            if not existing_record and candidates.exists():
+                scored = [(c, self._calculate_similarity(c, new_data)) for c in candidates]
+                best_match, best_score = max(scored, key=lambda x: x[1])
+
+                if best_score >= 0.7:
+                    existing_record = best_match
+                    logger.info(
+                        f"類似度同定: {best_match.id} - スコア {best_score:.2f} - {normalized_m}/{normalized_t}"
+                    )
+                else:
+                    logger.info(f"類似度不足: 最高スコア {best_score:.2f} - 新規作成 - {normalized_m}/{normalized_t}")
+
+            # ステップ4: 更新 or 新規作成
             if existing_record:
-                # 2. 内容の比較（タイトル、説明、ステータスに変更があるか）
-                # reported_at が今日の日付に更新されているかもチェック対象に含める
+                # 内容変更チェック
                 has_changed = (
-                    existing_record.title != data.title
-                    or existing_record.description != data.description
-                    or existing_record.status != data.status
-                    or existing_record.reported_at != data.reported_at
-                    or existing_record.resolved_at != data.resolved_at
+                    existing_record.title != new_data.title
+                    or existing_record.description != new_data.description
+                    or existing_record.status != new_data.status
+                    or existing_record.reported_at != new_data.reported_at
+                    or existing_record.resolved_at != new_data.resolved_at
                 )
 
                 if has_changed:
-                    existing_record.title = data.title
-                    existing_record.description = data.description
-                    existing_record.status = data.status
-                    existing_record.reported_at = data.reported_at
-                    existing_record.resolved_at = data.resolved_at
-                    # AI関連情報を更新
+                    # 更新
+                    existing_record.title = new_data.title
+                    existing_record.description = new_data.description
+                    existing_record.status = new_data.status
+                    existing_record.reported_at = new_data.reported_at
+                    existing_record.resolved_at = new_data.resolved_at
                     existing_record.ai_model = config.model
                     existing_record.prompt_file = prompt_filename
-                    existing_record.ai_config = data.ai_config
+                    existing_record.ai_config = new_data.ai_config
 
                     to_update.append(existing_record)
-
-                    logger.info(f"更新リストに追加: {normalized_m_name}/{normalized_t_name} (ID: {existing_record.id})")
+                    logger.info(f"更新リストに追加: {existing_record.id}")
             else:
-                # 3. 新規レコードの作成
-                # mountain_group は signals.py が MountainAlias に基づいて自動解決する
-                # 山名原文、登山道原文は正規化する以前と以後を選択する余地のためにexculde
-                generated_data_dict = data.model_dump(exclude={"mountain_name_raw", "trail_name"})
+                # 新規作成
+                generated_data_dict = new_data.model_dump(exclude={"mountain_name_raw", "trail_name"})
                 new_record = TrailCondition(
                     source=self.source_record,
-                    mountain_name_raw=data.mountain_name_raw,
-                    trail_name=data.trail_name,
+                    mountain_name_raw=new_data.mountain_name_raw,
+                    trail_name=new_data.trail_name,
                     ai_model=config.model,
                     prompt_file=prompt_filename,
                     **generated_data_dict,
                 )
 
                 to_create.append(new_record)
-
-                logger.info(f"新規作成リストに追加: {normalized_m_name}/{normalized_t_name} (ID: {new_record.id})")
+                logger.info(f"新規作成リストに追加: {normalized_m}/{normalized_t}")
 
         return to_update, to_create
+
+    def _calculate_similarity(
+        self, existing: TrailCondition, new_data: TrailConditionSchemaInternal
+    ) -> float:
+        """
+        複数フィールドを組み合わせた類似度スコア（0.0 ~ 1.0）
+
+        Args:
+            existing: 既存のDBレコード
+            new_data: AIが抽出した新規データ
+
+        Returns:
+            類似度スコア（0.0 = 完全不一致、1.0 = 完全一致）
+        """
+        # 1. 山名の類似度（部分一致）
+        mountain_score = (
+            fuzz.partial_ratio(normalize_text(existing.mountain_name_raw), normalize_text(new_data.mountain_name_raw))
+            / 100.0
+        )
+
+        # 2. 登山道名の類似度（トークン順序無視）
+        trail_score = (
+            fuzz.token_sort_ratio(normalize_text(existing.trail_name), normalize_text(new_data.trail_name)) / 100.0
+        )
+
+        # 3. タイトルの類似度（部分一致）
+        title_score = fuzz.partial_ratio(normalize_text(existing.title), normalize_text(new_data.title)) / 100.0
+
+        # 4. 詳細説明の類似度（トークンセット比較）
+        if existing.description and new_data.description:
+            # 両方ある場合: 4フィールド使用
+            desc_score = (
+                fuzz.token_set_ratio(
+                    normalize_text(existing.description[:100]),  # 最初の100文字
+                    normalize_text(new_data.description[:100]),
+                )
+                / 100.0
+            )
+
+            base_score = mountain_score * 0.30 + trail_score * 0.30 + title_score * 0.25 + desc_score * 0.15
+        else:
+            # descriptionがない場合: 3フィールドに重み再配分
+            base_score = mountain_score * 0.35 + trail_score * 0.35 + title_score * 0.30
+
+        # ボーナス1: statusが一致（+0.1）
+        if existing.status == new_data.status:
+            base_score = min(1.0, base_score + 0.1)
+
+        # ボーナス2: 登録日が近い（±14日以内で+0.05）
+        if new_data.reported_at and existing.created_at:
+            days_diff = abs((existing.created_at.date() - new_data.reported_at).days)
+            if days_diff <= 14:
+                base_score = min(1.0, base_score + 0.05)
+
+        return base_score
 
     def _save_trail_condition(
         self, to_update: list[TrailCondition], to_create: list[TrailCondition]
