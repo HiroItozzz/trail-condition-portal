@@ -11,6 +11,7 @@ import yaml
 from django.conf import settings
 from langsmith import traceable
 from pydantic import BaseModel, Field, ValidationError, computed_field
+
 from .llm_stats import TokenStats
 from .schema import TrailConditionSchemaList
 
@@ -74,6 +75,7 @@ class LlmConfig(BaseModel):
         else:
             raise ValueError(f"サポートされていないモデル: {self.model}")
 
+    # langsmith測定用
     @property
     def provider(self):
         if self.model.startswith("gemini"):
@@ -280,7 +282,7 @@ class ConversationalAi(ABC):
         # デバッグ用：サンプル出力を保存
         from datetime import datetime
 
-        output_dir = get_sample_dir() / self.prompt_filename.stem
+        output_dir = get_sample_dir() / Path(self.prompt_filename).stem
         output_dir.mkdir(exist_ok=True)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -291,7 +293,7 @@ class ConversationalAi(ABC):
         # エラー時の出力保存
         from datetime import datetime
 
-        output_dir = settings.BASE_DIR / "outputs/trail_status"
+        output_dir: Path = settings.BASE_DIR / "outputs/trail_status"
         output_dir.mkdir(exist_ok=True)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -538,15 +540,16 @@ class GptClient(ConversationalAi):
             from langsmith.wrappers import wrap_openai
             from openai import AsyncOpenAI
 
-            logger.info(f"{self.model}の応答を待っています。")
             logger.debug(f"LlmConfig詳細： \n{self._config}")
-            logger.debug(f"APIキー: ...{self.api_key[-5:]}")
 
             client = wrap_openai(AsyncOpenAI())
 
             max_retries = 3
             for i in range(max_retries):
                 try:
+                    logger.info(f"{self.model}の応答を待っています。")
+                    logger.debug(f"APIキー: ...{self.api_key[-5:]}")
+
                     response = await client.responses.parse(
                         model="gpt-5-mini",
                         tools=[{"type": "web_search"}],
@@ -555,6 +558,7 @@ class GptClient(ConversationalAi):
                     )
                     validated_data = response.output_parsed
                     logger.info(f"{self.model}が構造化出力に成功")
+                    break
 
                 except Exception as e:
                     # https://api-docs.deepseek.com/quick_start/error_codes
