@@ -67,3 +67,4 @@ reformat = true
 use_gitignore = true
 format_js = true
 format_css = true
+indent = 2
