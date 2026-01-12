@@ -48,8 +48,8 @@ class DbWriter:
     FIELD_WEIGHT_TITLE_NO_DESC = 0.30
 
     # ボーナススコア
-    BONUS_STATUS_MATCH = 0.1      # status一致時のボーナス
-    BONUS_DATE_PROXIMITY = 0.05   # 日付が近い時のボーナス
+    BONUS_STATUS_MATCH = 0      # status一致時のボーナス
+    BONUS_DATE_PROXIMITY = 0   # 日付が近い時のボーナス
 
     # 日付近接判定の範囲（日数）
     DATE_PROXIMITY_DAYS = 14
@@ -60,9 +60,15 @@ class DbWriter:
     # ========================================
 
 
-    def __init__(self, schema_single: SourceSchemaSingle, result_by_source: ResultSingle | BaseException):
+    def __init__(
+        self,
+        schema_single: SourceSchemaSingle,
+        result_by_source: ResultSingle | BaseException,
+        on_duplicate_warning=None,
+    ):
         self.schema_single = schema_single
         self.result = result_by_source
+        self.on_duplicate_warning = on_duplicate_warning  # コールバック関数
 
     @property
     def source_record(self) -> DataSource:
@@ -106,7 +112,12 @@ class DbWriter:
         # DB同期とLLM使用履歴記録
         llm_stats: LlmStats = self.result.stats
         # 同期するレコードを照合
-        to_update, to_create = self._reconcile_records(internal_data_list)
+        to_update, to_create, duplicate_warnings = self._reconcile_records(internal_data_list)
+
+        # 重複警告があればログ出力
+        if duplicate_warnings:
+            logger.warning(f"重複照合警告が {len(duplicate_warnings)}件 発生しました")
+
         # 保存
         with transaction.atomic():
             updated_count, created_count = self._save_trail_condition(to_update, to_create)
@@ -126,7 +137,7 @@ class DbWriter:
 
     def _reconcile_records(
         self, ai_data_list: list[TrailConditionSchemaInternal]
-    ) -> tuple[list[TrailCondition], list[TrailCondition]]:
+    ) -> tuple[list[TrailCondition], list[TrailCondition], list[dict]]:
         """
         AIの抽出データ(Pydantic)を既存レコードと照合する。
         3段階のアルゴリズムで同定を行う:
@@ -138,10 +149,12 @@ class DbWriter:
             ai_data_list: AI抽出データリスト
 
         Returns:
-            (更新対象レコードリスト, 新規作成レコードリスト)
+            (更新対象レコードリスト, 新規作成レコードリスト, 重複警告リスト)
         """
         to_update: list[TrailCondition] = []
         to_create: list[TrailCondition] = []
+        matched_record_ids: set[int] = set()  # 照合済みレコードIDを追跡
+        duplicate_warnings: list[dict] = []  # 重複警告情報
 
         config: LlmConfig = self.result.config
         prompt_filename = self.source_record.prompt_filename
@@ -184,6 +197,34 @@ class DbWriter:
 
             # ステップ4: 更新 or 新規作成
             if existing_record:
+                # 重複照合チェック
+                if existing_record.id in matched_record_ids:
+                    logger.warning(
+                        f"重複照合警告: レコードID {existing_record.id} が複数のAIデータと照合されました（スキップします）\n"
+                        f"  既存: {existing_record.mountain_name_raw}/{existing_record.trail_name}\n"
+                        f"  新規: {new_data.mountain_name_raw}/{new_data.trail_name}\n"
+                        f"  → AIが同一の登山道情報を重複抽出している可能性があります。プロンプトの見直しを推奨します。"
+                    )
+                    # 重複情報を記録
+                    duplicate_info = {
+                        "record_id": existing_record.id,
+                        "existing_mountain": existing_record.mountain_name_raw,
+                        "existing_trail": existing_record.trail_name,
+                        "new_mountain": new_data.mountain_name_raw,
+                        "new_trail": new_data.trail_name,
+                    }
+                    duplicate_warnings.append(duplicate_info)
+
+                    # コールバック関数が設定されていればリアルタイムで通知
+                    if self.on_duplicate_warning:
+                        self.on_duplicate_warning(duplicate_info)
+
+                    # スキップして次のレコードへ
+                    continue
+
+                # 照合済みIDに追加
+                matched_record_ids.add(existing_record.id)
+
                 # 内容変更チェック
                 has_changed = (
                     existing_record.title != new_data.title
@@ -221,7 +262,7 @@ class DbWriter:
                 to_create.append(new_record)
                 logger.info(f"新規作成リストに追加: {normalized_m}/{normalized_t}")
 
-        return to_update, to_create
+        return to_update, to_create, duplicate_warnings
 
     def _calculate_similarity(self, existing: TrailCondition, new_data: TrailConditionSchemaInternal) -> float:
         """
