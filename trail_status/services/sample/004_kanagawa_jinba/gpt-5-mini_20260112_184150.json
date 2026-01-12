@@ -1,0 +1,64 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "S01",
+      "mountain_name_raw": "陣馬・相模湖エリア",
+      "title": "通行できません",
+      "description": "区間: 県道517号線～顕鏡寺付近。理由: 送電線建替工事のため",
+      "reported_at": "2025-12-24",
+      "resolved_at": "2027-09-24",
+      "status": "CLOSURE",
+      "area": "SAGAMIKO",
+      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "comment": ""
+    },
+    {
+      "trail_name": "S01",
+      "mountain_name_raw": "陣馬・相模湖エリア",
+      "title": "通行できません",
+      "description": "区間: 大明神展望台～箕石橋。理由: 送電線建替工事のため",
+      "reported_at": "2025-12-24",
+      "resolved_at": "2027-09-24",
+      "status": "CLOSURE",
+      "area": "SAGAMIKO",
+      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "comment": ""
+    },
+    {
+      "trail_name": "K13_山里から津久井湖へのみち",
+      "mountain_name_raw": "城山",
+      "title": "迂回してください",
+      "description": "区間: 城山周辺。理由: 登山道崩落",
+      "reported_at": "2025-12-24",
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "SAGAMIKO",
+      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "comment": "登山道崩落のため、指定区間は迂回を推奨。復旧時期未定。"
+    },
+    {
+      "trail_name": "東京都_②鳥のみち",
+      "mountain_name_raw": "陣馬・相模湖エリア",
+      "title": "詳細参照",
+      "description": "詳細については、以下をご覧ください。※通行止め解除の情報は1か月程度記載した後、削除します。",
+      "reported_at": "2025-12-24",
+      "resolved_at": null,
+      "status": "OTHER",
+      "area": "SAGAMIKO",
+      "reference_URL": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/kouenhodou_top.html",
+      "comment": ""
+    },
+    {
+      "trail_name": "陣馬・相模湖エリアの登山道通行情報（ページ）",
+      "mountain_name_raw": "陣馬・相模湖エリア",
+      "title": "登山道通行状況（更新日：2025-12-24）",
+      "description": "ページ本文: 陣馬・相模湖地域の登山道の状況案内。登山前に所管の自然環境保全センターへ電話で確認可能。PDF: 陣馬・相模湖エリアの登山道通行状況（令和7年12月23日更新）",
+      "reported_at": "2025-12-24",
+      "resolved_at": null,
+      "status": "OTHER",
+      "area": "SAGAMIKO",
+      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "comment": "PDFは令和7年（2025年）12月23日更新。林道情報は各センターのページを参照してください。"
+    }
+  ]
+}
