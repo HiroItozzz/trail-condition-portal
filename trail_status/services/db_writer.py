@@ -18,9 +18,48 @@ from .schema import TrailConditionSchemaInternal, TrailConditionSchemaList
 logger = logging.getLogger(__name__)
 
 
-
-
 class DbWriter:
+    """
+    DB永続化とレコード同定を担当するクラス
+
+    レコード同定の設定パラメータ:
+    - SIMILARITY_THRESHOLD: 類似度判定の閾値（0.7推奨）
+    - FIELD_WEIGHTS_*: 各フィールドの重み付け
+    - BONUS_*: ボーナススコア設定
+    """
+
+    # === レコード同定アルゴリズムの設定 ===
+
+    # 類似度判定閾値（0.0-1.0）
+    # 0.8: 厳格モード（精度重視、新規作成が増える）
+    # 0.7: バランスモード（推奨）
+    # 0.6: 緩和モード（重複回避重視、誤同定リスク増）
+    SIMILARITY_THRESHOLD = 0.7
+
+    # フィールド重み（4フィールド使用時: description有り）
+    FIELD_WEIGHT_MOUNTAIN = 0.30  # 山名
+    FIELD_WEIGHT_TRAIL = 0.30     # 登山道名
+    FIELD_WEIGHT_TITLE = 0.25     # タイトル
+    FIELD_WEIGHT_DESC = 0.15      # 詳細説明
+
+    # フィールド重み（3フィールド使用時: description無し）
+    FIELD_WEIGHT_MOUNTAIN_NO_DESC = 0.35
+    FIELD_WEIGHT_TRAIL_NO_DESC = 0.35
+    FIELD_WEIGHT_TITLE_NO_DESC = 0.30
+
+    # ボーナススコア
+    BONUS_STATUS_MATCH = 0.1      # status一致時のボーナス
+    BONUS_DATE_PROXIMITY = 0.05   # 日付が近い時のボーナス
+
+    # 日付近接判定の範囲（日数）
+    DATE_PROXIMITY_DAYS = 14
+
+    # description比較時の使用文字数
+    DESC_COMPARE_LENGTH = 100
+
+    # ========================================
+
+
     def __init__(self, schema_single: SourceSchemaSingle, result_by_source: ResultSingle | BaseException):
         self.schema_single = schema_single
         self.result = result_by_source
@@ -126,7 +165,7 @@ class DbWriter:
                     self.normalize_text(candidate.mountain_name_raw) == normalized_m
                     and self.normalize_text(candidate.trail_name) == normalized_t
                 ):
-                    existing_record = candidate
+                    existing_record: TrailCondition = candidate
                     logger.info(f"完全一致同定: {candidate.id} - {normalized_m}/{normalized_t}")
                     break
 
@@ -135,7 +174,7 @@ class DbWriter:
                 scored = [(c, self._calculate_similarity(c, new_data)) for c in candidates]
                 best_match, best_score = max(scored, key=lambda x: x[1])
 
-                if best_score >= 0.7:
+                if best_score >= self.SIMILARITY_THRESHOLD:
                     existing_record = best_match
                     logger.info(
                         f"類似度同定: {best_match.id} - スコア {best_score:.2f} - {normalized_m}/{normalized_t}"
@@ -184,9 +223,7 @@ class DbWriter:
 
         return to_update, to_create
 
-    def _calculate_similarity(
-        self, existing: TrailCondition, new_data: TrailConditionSchemaInternal
-    ) -> float:
+    def _calculate_similarity(self, existing: TrailCondition, new_data: TrailConditionSchemaInternal) -> float:
         """
         複数フィールドを組み合わせた類似度スコア（0.0 ~ 1.0）
 
@@ -199,43 +236,57 @@ class DbWriter:
         """
         # 1. 山名の類似度（部分一致）
         mountain_score = (
-            fuzz.partial_ratio(self.normalize_text(existing.mountain_name_raw), self.self.normalize_text(new_data.mountain_name_raw))
+            fuzz.partial_ratio(
+                self.normalize_text(existing.mountain_name_raw), self.normalize_text(new_data.mountain_name_raw)
+            )
             / 100.0
         )
 
         # 2. 登山道名の類似度（トークン順序無視）
         trail_score = (
-            fuzz.token_sort_ratio(self.normalize_text(existing.trail_name), self.normalize_text(new_data.trail_name)) / 100.0
+            fuzz.token_sort_ratio(self.normalize_text(existing.trail_name), self.normalize_text(new_data.trail_name))
+            / 100.0
         )
 
         # 3. タイトルの類似度（部分一致）
-        title_score = fuzz.partial_ratio(self.normalize_text(existing.title), self.normalize_text(new_data.title)) / 100.0
+        title_score = (
+            fuzz.partial_ratio(self.normalize_text(existing.title), self.normalize_text(new_data.title)) / 100.0
+        )
 
         # 4. 詳細説明の類似度（トークンセット比較）
         if existing.description and new_data.description:
             # 両方ある場合: 4フィールド使用
             desc_score = (
                 fuzz.token_set_ratio(
-                    self.normalize_text(existing.description[:100]),  # 最初の100文字
-                    self.normalize_text(new_data.description[:100]),
+                    self.normalize_text(existing.description[: self.DESC_COMPARE_LENGTH]),
+                    self.normalize_text(new_data.description[: self.DESC_COMPARE_LENGTH]),
                 )
                 / 100.0
             )
 
-            base_score = mountain_score * 0.30 + trail_score * 0.30 + title_score * 0.25 + desc_score * 0.15
+            base_score = (
+                mountain_score * self.FIELD_WEIGHT_MOUNTAIN
+                + trail_score * self.FIELD_WEIGHT_TRAIL
+                + title_score * self.FIELD_WEIGHT_TITLE
+                + desc_score * self.FIELD_WEIGHT_DESC
+            )
         else:
             # descriptionがない場合: 3フィールドに重み再配分
-            base_score = mountain_score * 0.35 + trail_score * 0.35 + title_score * 0.30
+            base_score = (
+                mountain_score * self.FIELD_WEIGHT_MOUNTAIN_NO_DESC
+                + trail_score * self.FIELD_WEIGHT_TRAIL_NO_DESC
+                + title_score * self.FIELD_WEIGHT_TITLE_NO_DESC
+            )
 
-        # ボーナス1: statusが一致（+0.1）
+        # ボーナス1: statusが一致
         if existing.status == new_data.status:
-            base_score = min(1.0, base_score + 0.1)
+            base_score = min(1.0, base_score + self.BONUS_STATUS_MATCH)
 
-        # ボーナス2: 登録日が近い（±14日以内で+0.05）
+        # ボーナス2: 登録日が近い
         if new_data.reported_at and existing.created_at:
             days_diff = abs((existing.created_at.date() - new_data.reported_at).days)
-            if days_diff <= 14:
-                base_score = min(1.0, base_score + 0.05)
+            if days_diff <= self.DATE_PROXIMITY_DAYS:
+                base_score = min(1.0, base_score + self.BONUS_DATE_PROXIMITY)
 
         return base_score
 
@@ -288,7 +339,7 @@ class DbWriter:
             success=True,
             execution_time_seconds=stats.get("execution_time"),  # Noneでも可
         )
-    
+
     @staticmethod
     def normalize_text(text: str) -> str:
         """全角半角・空白を揃えて比較の精度を上げる"""

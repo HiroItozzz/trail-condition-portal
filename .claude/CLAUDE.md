@@ -108,7 +108,9 @@ npm run build
 - **db_writer.py**: DB永続化を担当する`DbWriter`クラス
   - `save_to_source()`: DataSourceの更新（巡回日時、ハッシュ）
   - `save_condition_and_usage()`: TrailCondition + LlmUsage の保存（トランザクション管理）
-  - `synchronizer()`: 既存DBレコードとAI出力の照合（mountain_name_raw + trail_name で既存レコードを検索し、更新/新規作成リストを返却）
+  - `_reconcile_records()`: 既存DBレコードとAI出力の照合（3段階ハイブリッドアルゴリズム）
+  - `_calculate_similarity()`: RapidFuzzによる複合類似度スコアリング
+  - 詳細: [レコード同定アルゴリズム](../documents/record-matching-algorithm.md)
 - **schema.py**: Pydantic モデル定義（AI出力スキーマ、内部データ構造）
 
 #### trail_status/services/prompts/
@@ -174,6 +176,21 @@ YAMLファイルでプロンプトとAI設定を管理:
 - YAMLファイルでプロンプトとAI設定をバージョン管理
 - `LlmConfig.from_file()` で設定読み込み（CLI引数 > YAML > デフォルト）
 - `use_template: true` で共通テンプレートと個別プロンプトを結合
+
+### Record Matching Algorithm
+
+- **3段階ハイブリッド同定**: 完全一致 → RapidFuzz類似度 → 新規作成
+- **RapidFuzz使用**: 山名・登山道名・タイトル・説明の複合スコアリング
+- **デフォルト閾値**: 0.7（調整可能）
+- **詳細ドキュメント**: [record-matching-algorithm.md](../documents/record-matching-algorithm.md)
+
+同定アルゴリズムの調整パラメータ（`db_writer.py` クラス定数 L37-58）:
+- `SIMILARITY_THRESHOLD = 0.7`: 類似度判定閾値
+- `FIELD_WEIGHT_*`: フィールド重み（山名0.3, 登山道0.3, タイトル0.25, 説明0.15）
+- `BONUS_STATUS_MATCH = 0.1`: status一致ボーナス
+- `BONUS_DATE_PROXIMITY = 0.05`: 日付近接ボーナス
+- `DATE_PROXIMITY_DAYS = 14`: 日付近接判定範囲（±14日）
+- `DESC_COMPARE_LENGTH = 100`: description比較文字数
 
 ## Environment Variables
 

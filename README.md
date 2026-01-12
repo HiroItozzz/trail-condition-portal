@@ -11,7 +11,7 @@
 ## 技術スタック
 
 - **Backend**: Django 6.0, PostgreSQL
-- **Data Collection**: httpx, trafilatura
+- **Data Collection**: httpx, trafilatura, rapidfuzz
 - **AI Processing**: DeepSeek API, Gemini API, Pydantic, LangSmith
 - **Infrastructure**: Docker, uv
 
