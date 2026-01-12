@@ -6,13 +6,11 @@ import os
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
 
 import yaml
 from django.conf import settings
 from langsmith import traceable
 from pydantic import BaseModel, Field, ValidationError, computed_field
-
 from .llm_stats import TokenStats
 from .schema import TrailConditionSchemaList
 
@@ -269,11 +267,8 @@ class ConversationalAi(ABC):
         raise
 
     @traceable
-    def validate_response(self, response_text):
-        # デバッグ用：サンプル出力を保存
-        sample_path = get_sample_dir() / f"{self.model}_sample.json"
-        sample_path.write_text(response_text, encoding="utf-8")
-
+    def validate_response(self, response_text: str) -> TrailConditionSchemaList:
+        """AI出力データのバリデーション"""
         try:
             validated_data = TrailConditionSchemaList.model_validate_json(response_text)
             logger.info(f"{self.model}が構造化出力に成功")
@@ -281,15 +276,26 @@ class ConversationalAi(ABC):
             raise e
         return validated_data
 
-    def save_invalid_data(self, response_text):
-        # エラー時の出力保存
+    def save_sample_data(self, response_text: str):
+        # デバッグ用：サンプル出力を保存
         from datetime import datetime
 
-        output_dir = settings.BASE_DIR / "outputs"
+        output_dir = get_sample_dir() / self.prompt_filename.stem
         output_dir.mkdir(exist_ok=True)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        error_file = output_dir / f"validation_error_{self.model}_{timestamp}.txt"
+        output_path = output_dir / f"{self.model}_{timestamp}.json"
+        output_path.write_text(response_text, encoding="utf-8")
+
+    def save_invalid_data(self, response_text: str):
+        # エラー時の出力保存
+        from datetime import datetime
+
+        output_dir = settings.BASE_DIR / "outputs/trail_status"
+        output_dir.mkdir(exist_ok=True)
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        error_file = output_dir / f"validation_error_{self.model}_{self.prompt_filename}_{timestamp}.txt"
         error_file.write_text(response_text, encoding="utf-8")
 
         logger.error(f"{error_file}へ出力を保存しました。")
@@ -316,7 +322,7 @@ class DeepseekClient(ConversationalAi):
             },
         )
         async def _run() -> tuple[TrailConditionSchemaList, TokenStats]:
-            """LangSmithのデコレータを定義するためだけのネスト関数
+            """LangSmithのデコレータを定義するためだけの関数内関数
 
             Args:
                 _ (str): LangSmithトレースのためのプロンプト入力
@@ -390,6 +396,10 @@ class DeepseekClient(ConversationalAi):
                 self.model,
             )
 
+            # AI出力の保存設定
+            if os.getenv("SAVE_AI_OUTPUTS") in ["True", "true", "t"]:
+                self.save_sample_data(generated_text)
+
             logger.debug("DeepseekClientの処理終了")
             return validated_data, stats
 
@@ -418,7 +428,7 @@ class GeminiClient(ConversationalAi):
             },
         )
         async def _run() -> tuple[TrailConditionSchemaList, TokenStats]:
-            """LangSmithのデコレータを定義するためだけのネスト関数
+            """LangSmithのデコレータを定義するためだけの関数内関数
 
             Args:
                 _ (str): LangSmithトレースのためのプロンプト入力
@@ -491,8 +501,11 @@ class GeminiClient(ConversationalAi):
                 self.model,
             )
 
-            logger.debug("GeminiClientの処理終了")
+            # AI出力の保存設定
+            if os.getenv("SAVE_AI_OUTPUTS") in ["True", "true", "t"]:
+                self.save_sample_data(response.text)
 
+            logger.debug("GeminiClientの処理終了")
             return validated_data, stats
 
         return await _run()
@@ -542,6 +555,7 @@ class GptClient(ConversationalAi):
                     )
                     validated_data = response.output_parsed
                     logger.info(f"{self.model}が構造化出力に成功")
+
                 except Exception as e:
                     # https://api-docs.deepseek.com/quick_start/error_codes
                     if any(code in str(e) for code in ["500", "502", "503"]):
@@ -577,6 +591,11 @@ class GptClient(ConversationalAi):
                 input_tokens = 0
                 thoughts_tokens = 0
                 pure_output_tokens = 0
+
+            # AI出力の保存設定
+            if os.getenv("SAVE_AI_OUTPUTS", "False") in ["True", "true", "t"]:
+                raw_text = validated_data.model_dump_json()
+                self.save_sample_data(raw_text)
 
             stats = TokenStats(
                 input_tokens,

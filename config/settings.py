@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-b^^&7&(v)4=pcr
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # デバッグモード（開発中はTrue）
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", "False") in ["True", "true", "t"]
 
 
 # 設定項目 | チェックのタイミング | 役割（Djangoが何を見ているか）

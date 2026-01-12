@@ -18,11 +18,6 @@ from .schema import TrailConditionSchemaInternal, TrailConditionSchemaList
 logger = logging.getLogger(__name__)
 
 
-def normalize_text(text: str) -> str:
-    """全角半角・空白を揃えて比較の精度を上げる"""
-    if not text:
-        return ""
-    return unicodedata.normalize("NFKC", text).strip().replace(" ", "").replace("　", "")
 
 
 class DbWriter:
@@ -123,13 +118,13 @@ class DbWriter:
             existing_record = None
 
             # ステップ2: 完全一致チェック（高速パス）
-            normalized_m = normalize_text(new_data.mountain_name_raw)
-            normalized_t = normalize_text(new_data.trail_name)
+            normalized_m = self.normalize_text(new_data.mountain_name_raw)
+            normalized_t = self.normalize_text(new_data.trail_name)
 
             for candidate in candidates:
                 if (
-                    normalize_text(candidate.mountain_name_raw) == normalized_m
-                    and normalize_text(candidate.trail_name) == normalized_t
+                    self.normalize_text(candidate.mountain_name_raw) == normalized_m
+                    and self.normalize_text(candidate.trail_name) == normalized_t
                 ):
                     existing_record = candidate
                     logger.info(f"完全一致同定: {candidate.id} - {normalized_m}/{normalized_t}")
@@ -204,25 +199,25 @@ class DbWriter:
         """
         # 1. 山名の類似度（部分一致）
         mountain_score = (
-            fuzz.partial_ratio(normalize_text(existing.mountain_name_raw), normalize_text(new_data.mountain_name_raw))
+            fuzz.partial_ratio(self.normalize_text(existing.mountain_name_raw), self.self.normalize_text(new_data.mountain_name_raw))
             / 100.0
         )
 
         # 2. 登山道名の類似度（トークン順序無視）
         trail_score = (
-            fuzz.token_sort_ratio(normalize_text(existing.trail_name), normalize_text(new_data.trail_name)) / 100.0
+            fuzz.token_sort_ratio(self.normalize_text(existing.trail_name), self.normalize_text(new_data.trail_name)) / 100.0
         )
 
         # 3. タイトルの類似度（部分一致）
-        title_score = fuzz.partial_ratio(normalize_text(existing.title), normalize_text(new_data.title)) / 100.0
+        title_score = fuzz.partial_ratio(self.normalize_text(existing.title), self.normalize_text(new_data.title)) / 100.0
 
         # 4. 詳細説明の類似度（トークンセット比較）
         if existing.description and new_data.description:
             # 両方ある場合: 4フィールド使用
             desc_score = (
                 fuzz.token_set_ratio(
-                    normalize_text(existing.description[:100]),  # 最初の100文字
-                    normalize_text(new_data.description[:100]),
+                    self.normalize_text(existing.description[:100]),  # 最初の100文字
+                    self.normalize_text(new_data.description[:100]),
                 )
                 / 100.0
             )
@@ -293,3 +288,10 @@ class DbWriter:
             success=True,
             execution_time_seconds=stats.get("execution_time"),  # Noneでも可
         )
+    
+    @staticmethod
+    def normalize_text(text: str) -> str:
+        """全角半角・空白を揃えて比較の精度を上げる"""
+        if not text:
+            return ""
+        return unicodedata.normalize("NFKC", text).strip().replace(" ", "").replace("　", "")
