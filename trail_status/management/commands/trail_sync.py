@@ -44,7 +44,9 @@ class Command(BaseCommand):
         )
 
         if new_hash:
-            self.stdout.write(self.style.WARNING("NEW-HASHモード: 更新のないサイトデータも変更されます。本当に実行しますか？"))
+            self.stdout.write(
+                self.style.WARNING("NEW-HASHモード: 更新のないサイトデータも変更されます。本当に実行しますか？")
+            )
             choice = input("(y/N): ")
             if choice != "y":
                 self.stdout.write(self.style.WARNING("実行を中断します。"))
@@ -52,7 +54,7 @@ class Command(BaseCommand):
 
         if dry_run:
             self.stdout.write(self.style.WARNING("DRY-RUNモード: DBには保存されません"))
-        
+
         # 処理対象の情報源を取得（事前にデータを準備）
         if source_id:
             try:
@@ -100,7 +102,7 @@ class Command(BaseCommand):
                         else:
                             logger.info("NEW-HASHモード: 既存データと再度照合します")
 
-                    db_result = writer.save_condition_and_usage()
+                    db_result = writer.persist_condition_and_usage()
 
                     self.stdout.write(
                         self.style.SUCCESS(

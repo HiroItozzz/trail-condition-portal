@@ -1,5 +1,4 @@
 import logging
-import os
 import unicodedata
 from decimal import Decimal
 from functools import lru_cache
@@ -8,7 +7,9 @@ from typing import Any
 from django.db import transaction
 from django.utils import timezone
 from rapidfuzz import fuzz
-from sudachipy import Dictionary, SplitMode, Tokenizer
+from sudachipy import Dictionary, SplitMode
+
+from config.settings import DEBUG
 
 from ..models.condition import TrailCondition
 from ..models.llm_usage import LlmUsage
@@ -37,7 +38,7 @@ class DbWriter:
     # 0.8: 厳格モード（精度重視、新規作成が増える）
     # 0.7: バランスモード（推奨）
     # 0.6: 緩和モード（重複回避重視、誤同定リスク増）
-    SIMILARITY_THRESHOLD = 0.5
+    SIMILARITY_THRESHOLD = 0.7
 
     # フィールド重み（4フィールド使用時: description有り）
     FIELD_WEIGHT_MOUNTAIN = 0.30  # 山名
@@ -60,7 +61,13 @@ class DbWriter:
     # description比較時の使用文字数
     DESC_COMPARE_LENGTH = 100
 
+    # sudachipyのトークン分割モード (A | B | C)
+    SPLIT_MODE = SplitMode.C
+
     # ========================================
+
+    # 形態素解析器の初期化
+    sudachi = Dictionary().create()
 
     def __init__(
         self,
@@ -91,8 +98,39 @@ class DbWriter:
         # コミット
         source.save(update_fields=["content_hash", "last_scraped_at", "last_checked_at"])
 
-    def save_condition_and_usage(self) -> dict[str, Any]:
+    def persist_condition_and_usage(self) -> dict[str, Any]:
         """登山道状況とLLM使用履歴をDBに保存"""
+
+        internal_data_list = self._convert_to_internal_schema()
+
+        # DB同期とLLM使用履歴記録
+        llm_stats: LlmStats = self.result.stats
+        # 同期するレコードを照合
+        to_update, to_create, duplicate_warnings = self.reconcile_records(internal_data_list)
+
+        # 重複警告があればログ出力
+        if duplicate_warnings:
+            logger.warning(f"重複照合警告が {len(duplicate_warnings)}件 発生しました")
+
+        # 保存
+        with transaction.atomic():
+            updated_count, created_count = self._commit_trail_condition(to_update, to_create)
+            self._commit_llm_usage(llm_stats, len(internal_data_list))
+
+        logger.info(
+            f"DB保存完了: {self.source_schema_single.name} - {len(internal_data_list)}件 (コスト: ${llm_stats.total_fee:.4f})"
+        )
+
+        return {
+            "name": self.source_schema_single.name,
+            "count": len(internal_data_list),
+            "cost": llm_stats.total_fee,
+            "updated": updated_count,
+            "created": created_count,
+        }
+
+    def _convert_to_internal_schema(self):
+        """AI出力結果とAI設定を保存用スキーマへ統合"""
         # 単一ソースのAI出力を取得
         trail_conditions_list: TrailConditionSchemaList = self.result.extracted_trail_conditions
 
@@ -112,34 +150,59 @@ class DbWriter:
             )
             for record in trail_conditions_list.trail_condition_records
         ]
+        return internal_data_list
 
-        # DB同期とLLM使用履歴記録
-        llm_stats: LlmStats = self.result.stats
-        # 同期するレコードを照合
-        to_update, to_create, duplicate_warnings = self._reconcile_records(internal_data_list)
+    def _commit_trail_condition(
+        self, to_update: list[TrailCondition], to_create: list[TrailCondition]
+    ) -> tuple[int, int]:
+        """TrailConditionをDBに保存"""
 
-        # 重複警告があればログ出力
-        if duplicate_warnings:
-            logger.warning(f"重複照合警告が {len(duplicate_warnings)}件 発生しました")
+        now = timezone.now()
 
-        # 保存
-        with transaction.atomic():
-            updated_count, created_count = self._save_trail_condition(to_update, to_create)
-            self._save_llm_usage(llm_stats, len(internal_data_list))
+        if to_update:
+            # TrailConditionSchemaInternalのフィールド名を取得
+            # Djangoモデルの更新対象フィールドと一致している前提
+            fields_to_update = list(TrailConditionSchemaInternal.model_fields.keys())
 
-        logger.info(
-            f"DB保存完了: {self.source_schema_single.name} - {len(internal_data_list)}件 (コスト: ${llm_stats.total_fee:.4f})"
+            # bulk_updateではauto_now=Trueが機能しないため手動でセット
+            for record in to_update:
+                record.updated_at = now
+
+            if "updated_at" not in fields_to_update:
+                fields_to_update.append("updated_at")
+
+            # 更新
+            TrailCondition.objects.bulk_update(to_update, fields_to_update)
+            logger.info(f"更新完了: {len(to_update)}件")
+
+        if to_create:
+            # bulk_createではauto_now_add=Trueが機能しないため手動でセット
+            for record in to_create:
+                record.created_at = now
+                record.updated_at = now
+
+            # 新規作成
+            TrailCondition.objects.bulk_create(to_create)
+            logger.info(f"新規作成完了: {len(to_create)}件")
+
+        return len(to_update), len(to_create)
+
+    def _commit_llm_usage(self, llm_stats: LlmStats, extracted_record_count: int) -> None:
+        """LLM使用履歴をDBに保存"""
+        stats = llm_stats.to_dict()
+        LlmUsage.objects.create(
+            source=self.source_record,
+            model=stats["model"],
+            prompt_tokens=stats["input_tokens"],
+            thinking_tokens=stats["thoughts_tokens"],
+            output_tokens=stats["output_tokens"],
+            cost_usd=Decimal(str(stats["total_fee"])),
+            conditions_extracted=extracted_record_count,
+            success=True,
+            execution_time_seconds=stats.get("execution_time"),  # Noneでも可
         )
 
-        return {
-            "name": self.source_schema_single.name,
-            "count": len(internal_data_list),
-            "cost": llm_stats.total_fee,
-            "updated": updated_count,
-            "created": created_count,
-        }
-
-    def _reconcile_records(
+    def reconcile_records(
         self, ai_record_list: list[TrailConditionSchemaInternal]
     ) -> tuple[list[TrailCondition], list[TrailCondition], list[dict]]:
         """
@@ -163,15 +226,18 @@ class DbWriter:
         prompt_filename = self.source_record.prompt_filename
 
         matches = []
-        for ai_idx, ai_record in enumerate(ai_record_list):
-            # ステップ1: 候補レコードを取得（sourceのみで絞る）
-            candidates = TrailCondition.objects.filter(
+        # ステップ1: 候補レコードを取得（sourceのみで絞る）
+        candidates = list(
+            TrailCondition.objects.filter(
                 source=self.source_record,
                 disabled=False,
                 resolved_at__isnull=True,  # 解消済みは除外
             )
+        )
+
+        # ステップ2: 候補レコード×AI出力レコードを総当りで類似度計算
+        for ai_idx, ai_record in enumerate(ai_record_list):
             for candidate in candidates:
-                # ステップ2: 候補レコード・全AI出力を対象に類似度計算
                 score = self._calculate_similarity(candidate, ai_record)
                 if score >= self.SIMILARITY_THRESHOLD:
                     matches.append((score, candidate, ai_idx))
@@ -193,7 +259,10 @@ class DbWriter:
 
             matched_m_name = matched_ai_record.mountain_name_raw
             matched_t_name = matched_ai_record.trail_name
-            logger.info(f"類似度同定 - DB_ID: {db_record.id} / スコア: {score:.2f} - {matched_m_name}/{matched_t_name}")
+            logger.info(f"類似度同定 - AI出力: {matched_m_name}/{matched_t_name}")
+            logger.info(
+                f"スコア: {score:.2f} - DB_ID: {db_record.id} / {db_record.mountain_name_raw}/{db_record.trail_name} "
+            )
 
             # 内容変更チェック
             has_changed = (
@@ -236,15 +305,16 @@ class DbWriter:
 
             to_create.append(new_record)
             logger.info(f"新規作成リストに追加 - AI出力名: {ai_record.mountain_name_raw}/{ai_record.trail_name}")
-            for loser_score, loser_db_record, loser_idx in matches:
-                if ai_idx == loser_idx:
-                    d_i = loser_db_record.id
-                    d_m = loser_db_record.mountain_name_raw
-                    d_t = loser_db_record.trail_name
-                    logger.info(f"最高スコア: {loser_score:.2f} - 対象既存レコード:{d_i}/{d_m}{d_t}")
-                    break
-            else:
-                logger.info("所定の閾値を超えるレコードは見つかりません")
+            if DEBUG:
+                for loser_score, loser_db_record, loser_idx in matches:
+                    if ai_idx == loser_idx:
+                        d_i = loser_db_record.id
+                        d_m = loser_db_record.mountain_name_raw
+                        d_t = loser_db_record.trail_name
+                        logger.info(f"最高スコア: {loser_score:.2f} - 対象既存レコード: {d_i} / {d_m}/{d_t}")
+                        break
+                else:
+                    logger.info(f"所定の閾値{self.SIMILARITY_THRESHOLD}を超えるレコードは見つかりません")
 
         return to_update, to_create, duplicate_warnings
 
@@ -267,12 +337,14 @@ class DbWriter:
 
         # 2. 登山道名の類似度
         trail_score = (
-            fuzz.token_sort_ratio(self.decompose_text(existing.trail_name), self.decompose_text(new_data.trail_name))
+            fuzz.token_sort_ratio(self.decompose_text(existing.trail_name, noun_only=True), self.decompose_text(new_data.trail_name, noun_only=True))
             / 100.0
         )
 
         # 3. タイトルの類似度
-        title_score = fuzz.ratio(self.normalize_text(existing.title), self.normalize_text(new_data.title)) / 100.0
+        title_score = (
+            fuzz.partial_ratio(self.normalize_text(existing.title), self.normalize_text(new_data.title)) / 100.0
+        )
 
         # 4. 詳細説明の類似度（トークンセット比較）
         if existing.description and new_data.description:
@@ -312,68 +384,20 @@ class DbWriter:
         return base_score
 
     @lru_cache
-    def decompose_text(self, text: str) -> str:
+    def decompose_text(self, text: str, noun_only: bool = False) -> str:
         """テキストの形態素解析をしトークンごとに分かち書きした文字列を返却
-        
+
         - token_set_ratio, token_sort_ratio用
         """
-        sudachi = Dictionary().create()
-        mode = SplitMode.C
-
         normalized = self.normalize_text(text)
-        decomposed = [m.surface() for m in sudachi.tokenize(normalized, mode)]
-        return " ".join(decomposed)
-
-    def _save_trail_condition(
-        self, to_update: list[TrailCondition], to_create: list[TrailCondition]
-    ) -> tuple[int, int]:
-        """TrailConditionをDBに保存"""
-
-        now = timezone.now()
-
-        if to_update:
-            # TrailConditionSchemaInternalのフィールド名を取得
-            # Djangoモデルの更新対象フィールドと一致している前提
-            fields_to_update = list(TrailConditionSchemaInternal.model_fields.keys())
-
-            # bulk_updateではauto_now=Trueが機能しないため手動でセット
-            for record in to_update:
-                record.updated_at = now
-
-            if "updated_at" not in fields_to_update:
-                fields_to_update.append("updated_at")
-
-            # 更新
-            TrailCondition.objects.bulk_update(to_update, fields_to_update)
-            logger.info(f"更新完了: {len(to_update)}件")
-
-        if to_create:
-            # bulk_createではauto_now_add=Trueが機能しないため手動でセット
-            for record in to_create:
-                record.created_at = now
-                record.updated_at = now
-
-            # 新規作成
-            TrailCondition.objects.bulk_create(to_create)
-            logger.info(f"新規作成完了: {len(to_create)}件")
-
-        return len(to_update), len(to_create)
-
-    def _save_llm_usage(self, llm_stats: LlmStats, extracted_record_count: int) -> None:
-        """LLM使用履歴をDBに保存"""
-        stats = llm_stats.to_dict()
-        LlmUsage.objects.create(
-            source=self.source_record,
-            model=stats["model"],
-            prompt_tokens=stats["input_tokens"],
-            thinking_tokens=stats["thoughts_tokens"],
-            output_tokens=stats["output_tokens"],
-            cost_usd=Decimal(str(stats["total_fee"])),
-            conditions_extracted=extracted_record_count,
-            success=True,
-            execution_time_seconds=stats.get("execution_time"),  # Noneでも可
-        )
-
+        tokens = []
+        for m in self.sudachi.tokenize(normalized, self.SPLIT_MODE):
+            pos = m.part_of_speech()
+            if noun_only and pos[0] != "名詞":
+                continue
+            tokens.append(m.surface())
+        return " ".join(tokens)
+    
     @staticmethod
     def normalize_text(text: str) -> str:
         """全角半角・空白を揃えて比較の精度を上げる"""

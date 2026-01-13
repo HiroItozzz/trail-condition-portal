@@ -214,7 +214,7 @@ class Command(BaseCommand):
 
         # DbWriterで照合ロジックを実行（DB保存なし）
         writer = DbWriter(source_schema, result, on_duplicate_warning=on_duplicate)
-        to_update, to_create, duplicate_warnings = writer._reconcile_records(internal_data_list)
+        to_update, to_create, duplicate_warnings = writer.reconcile_records(internal_data_list)
 
         return {
             "to_update": to_update,
