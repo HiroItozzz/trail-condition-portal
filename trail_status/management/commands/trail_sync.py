@@ -8,6 +8,7 @@ from trail_status.models.source import DataSource
 from trail_status.services.db_writer import DbWriter
 from trail_status.services.pipeline import ResultSingle, SourceSchemaSingle, TrailConditionPipeline, UpdatedDataList
 from trail_status.services.schema import TrailConditionSchemaList
+from trail_status.services.slack_notifier import SlackNotifier
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +110,17 @@ class Command(BaseCommand):
                             f"DB保存完了: {db_result['name']}\n更新: {db_result['updated']}件 - 新規作成: {db_result['created']}件 - 計: {db_result['count']}件 (コスト: ${db_result['cost']:.4f})"
                         )
                     )
+
+                    # Slack通知を送信（ハッシュ更新検知時）
+                    if db_result['updated'] > 0 or db_result['created'] > 0:
+                        notifier = SlackNotifier()
+                        notifier.send_update_notification(
+                            source_name=db_result['name'],
+                            updated_count=db_result['updated'],
+                            created_count=db_result['created'],
+                            total_count=db_result['count'],
+                            cost=db_result['cost'],
+                        )
 
         # 結果サマリーを表示
         summary = self.generate_summary(all_source_results)
