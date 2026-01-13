@@ -18,7 +18,7 @@ prompt: |
 
 # AI設定
 config:
-  model: deepseek-chat
+  model: 
   # 動物目撃情報の正確な分類のため低温度
   temperature: 0.0
   

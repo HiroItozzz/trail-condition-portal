@@ -38,17 +38,17 @@ class DbWriter:
     # 0.8: 厳格モード（精度重視、新規作成が増える）
     # 0.7: バランスモード（推奨）
     # 0.6: 緩和モード（重複回避重視、誤同定リスク増）
-    SIMILARITY_THRESHOLD = 0.7
+    SIMILARITY_THRESHOLD = 0.65
 
     # フィールド重み（4フィールド使用時: description有り）
-    FIELD_WEIGHT_MOUNTAIN = 0.30  # 山名
-    FIELD_WEIGHT_TRAIL = 0.30  # 登山道名
-    FIELD_WEIGHT_TITLE = 0.25  # タイトル
-    FIELD_WEIGHT_DESC = 0.15  # 詳細説明
+    FIELD_WEIGHT_MOUNTAIN = 0.20  # 山名
+    FIELD_WEIGHT_TRAIL = 0.25  # 登山道名
+    FIELD_WEIGHT_TITLE = 0.20  # タイトル
+    FIELD_WEIGHT_DESC = 0.35  # 詳細説明
 
     # フィールド重み（3フィールド使用時: description無し）
-    FIELD_WEIGHT_MOUNTAIN_NO_DESC = 0.35
-    FIELD_WEIGHT_TRAIL_NO_DESC = 0.35
+    FIELD_WEIGHT_MOUNTAIN_NO_DESC = 0.30
+    FIELD_WEIGHT_TRAIL_NO_DESC = 0.40
     FIELD_WEIGHT_TITLE_NO_DESC = 0.30
 
     # ボーナススコア

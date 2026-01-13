@@ -23,11 +23,10 @@ prompt: |
 
 # AI設定
 config:
-  model: "gemini-3-flash-preview"
+  model: 
   # 山名抽出の精度重視のため低温度設定
   temperature: 0.0
   
-  # 奥多摩はテーブル形式で情報が豊富なため予算多め
   thinking_budget: 15000
   
   # テンプレートと併用で精度向上
