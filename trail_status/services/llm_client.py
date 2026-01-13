@@ -223,7 +223,7 @@ class ConversationalAi(ABC):
         self.thinking_budget: int = config.thinking_budget
         self.prompt_filename: str | None = config.prompt_filename
         self.provider: str | None = config.provider
-        self.websearch = config.allow_websearch
+        self.websearch: bool = config.allow_websearch
         self._config: LlmConfig | None = config
 
     @abstractmethod
@@ -327,9 +327,6 @@ class DeepseekClient(ConversationalAi):
         )
         async def _run() -> tuple[TrailConditionSchemaList, TokenStats]:
             """LangSmithのデコレータを定義するためだけの関数内関数
-
-            Args:
-                _ (str): LangSmithトレースのためのプロンプト入力
 
             Returns:
                 tuple[TrailConditionSchemaList, TokenStats]
