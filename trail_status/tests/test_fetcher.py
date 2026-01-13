@@ -6,7 +6,7 @@ from trail_status.services.fetcher import DataFetcher
 @pytest.mark.asyncio
 async def test_parse_html():
     """テキスト取得成功のテスト（モック使用）"""
-    fetcher = DataFetcher()
+    fetcher = DataFetcher("https://example.com/trail")
 
     # HTTPレスポンスをモック
     mock_response_text = """
@@ -17,7 +17,7 @@ async def test_parse_html():
         </body>
     </html>
     """
-    text = await fetcher.fetch_parsed_text(mock_response_text, "https://example.com/trail")
+    text = await fetcher.fetch_parsed_text(mock_response_text)
 
     assert len(text) > 0
     assert "登山道情報" in text or "通行止め" in text  # trafilaturaで抽出されたテキスト
@@ -26,7 +26,7 @@ async def test_parse_html():
 @pytest.mark.asyncio
 async def test_content_hash_calculation():
     """コンテンツハッシュ計算のテスト"""
-    fetcher = DataFetcher()
+    fetcher = DataFetcher("https://example.com/trail")
     html = "<html><body><p>テスト</p></body></html>"
 
     hash1 = fetcher.calculate_content_hash(html)
@@ -40,7 +40,7 @@ async def test_content_hash_calculation():
 @pytest.mark.asyncio
 async def test_content_change_detection():
     """コンテンツ変更検知のテスト"""
-    fetcher = DataFetcher()
+    fetcher = DataFetcher("https://example.com/trail")
     html1 = "<html><body><p>テスト1</p></body></html>"
     html2 = "<html><body><p>テスト2</p></body></html>"
 
