@@ -143,7 +143,7 @@ class Command(BaseCommand):
                     result["to_update"],
                     result["to_create"],
                     result["total_count"],
-                    result.get("duplicate_warnings", [])
+                    result.get("duplicate_warnings", []),
                 )
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"エラーが発生: {e}"))

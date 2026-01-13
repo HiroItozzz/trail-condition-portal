@@ -1,11 +1,14 @@
 import logging
+import os
 import unicodedata
 from decimal import Decimal
+from functools import lru_cache
 from typing import Any
 
 from django.db import transaction
 from django.utils import timezone
 from rapidfuzz import fuzz
+from sudachipy import Dictionary, SplitMode, Tokenizer
 
 from ..models.condition import TrailCondition
 from ..models.llm_usage import LlmUsage
@@ -34,7 +37,7 @@ class DbWriter:
     # 0.8: 厳格モード（精度重視、新規作成が増える）
     # 0.7: バランスモード（推奨）
     # 0.6: 緩和モード（重複回避重視、誤同定リスク増）
-    SIMILARITY_THRESHOLD = 0.7
+    SIMILARITY_THRESHOLD = 0.5
 
     # フィールド重み（4フィールド使用時: description有り）
     FIELD_WEIGHT_MOUNTAIN = 0.30  # 山名
@@ -190,7 +193,7 @@ class DbWriter:
 
             matched_m_name = matched_ai_record.mountain_name_raw
             matched_t_name = matched_ai_record.trail_name
-            logger.info(f"類似度同定: {db_record.id} - スコア {score:.2f} - {matched_m_name}/{matched_t_name}")
+            logger.info(f"類似度同定 - DB_ID: {db_record.id} / スコア: {score:.2f} - {matched_m_name}/{matched_t_name}")
 
             # 内容変更チェック
             has_changed = (
@@ -213,7 +216,7 @@ class DbWriter:
                 db_record.ai_config = matched_ai_record.ai_config
 
                 to_update.append(db_record)
-                logger.info(f"更新リストに追加: {db_record.id}")
+                logger.info(f"変更検出/更新リストに追加 - DB_ID:{db_record.id}")
 
         for ai_idx, ai_record in enumerate(ai_record_list):
             if ai_idx in used_ai_records:
@@ -232,13 +235,16 @@ class DbWriter:
             )
 
             to_create.append(new_record)
-            logger.info(f"新規作成リストに追加: {ai_record.mountain_name_raw}/{ai_record.trail_name}")
+            logger.info(f"新規作成リストに追加 - AI出力名: {ai_record.mountain_name_raw}/{ai_record.trail_name}")
             for loser_score, loser_db_record, loser_idx in matches:
                 if ai_idx == loser_idx:
-                    _i = loser_db_record.id
-                    _m = loser_db_record.mountain_name_raw
-                    _t = loser_db_record.trail_name
-                    logger.info(f"最高類似度: 最高スコア {loser_score:.2f} - 対象レコード:{_i}/{_m}{_t}")
+                    d_i = loser_db_record.id
+                    d_m = loser_db_record.mountain_name_raw
+                    d_t = loser_db_record.trail_name
+                    logger.info(f"最高スコア: {loser_score:.2f} - 対象既存レコード:{d_i}/{d_m}{d_t}")
+                    break
+            else:
+                logger.info("所定の閾値を超えるレコードは見つかりません")
 
         return to_update, to_create, duplicate_warnings
 
@@ -255,30 +261,26 @@ class DbWriter:
         """
         # 1. 山名の類似度
         mountain_score = (
-            fuzz.ratio(
-                self.normalize_text(existing.mountain_name_raw), self.normalize_text(new_data.mountain_name_raw)
-            )
+            fuzz.ratio(self.normalize_text(existing.mountain_name_raw), self.normalize_text(new_data.mountain_name_raw))
             / 100.0
         )
 
-        # 2. 登山道名の類似度（トークン順序無視）
+        # 2. 登山道名の類似度
         trail_score = (
-            fuzz.token_set_ratio(self.normalize_text(existing.trail_name), self.normalize_text(new_data.trail_name))
+            fuzz.token_sort_ratio(self.decompose_text(existing.trail_name), self.decompose_text(new_data.trail_name))
             / 100.0
         )
 
-        # 3. タイトルの類似度（部分一致）
-        title_score = (
-            fuzz.ratio(self.normalize_text(existing.title), self.normalize_text(new_data.title)) / 100.0
-        )
+        # 3. タイトルの類似度
+        title_score = fuzz.ratio(self.normalize_text(existing.title), self.normalize_text(new_data.title)) / 100.0
 
         # 4. 詳細説明の類似度（トークンセット比較）
         if existing.description and new_data.description:
             # 両方ある場合: 4フィールド使用
             desc_score = (
-                fuzz.token_sort_ratio(
-                    self.normalize_text(existing.description[: self.DESC_COMPARE_LENGTH]),
-                    self.normalize_text(new_data.description[: self.DESC_COMPARE_LENGTH]),
+                fuzz.token_set_ratio(
+                    self.decompose_text(existing.description[: self.DESC_COMPARE_LENGTH]),
+                    self.decompose_text(new_data.description[: self.DESC_COMPARE_LENGTH]),
                 )
                 / 100.0
             )
@@ -308,6 +310,19 @@ class DbWriter:
                 base_score = min(1.0, base_score + self.BONUS_DATE_PROXIMITY)
 
         return base_score
+
+    @lru_cache
+    def decompose_text(self, text: str) -> str:
+        """テキストの形態素解析をしトークンごとに分かち書きした文字列を返却
+        
+        - token_set_ratio, token_sort_ratio用
+        """
+        sudachi = Dictionary().create()
+        mode = SplitMode.C
+
+        normalized = self.normalize_text(text)
+        decomposed = [m.surface() for m in sudachi.tokenize(normalized, mode)]
+        return " ".join(decomposed)
 
     def _save_trail_condition(
         self, to_update: list[TrailCondition], to_create: list[TrailCondition]
