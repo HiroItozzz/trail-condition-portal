@@ -84,7 +84,7 @@ class TrailConditionPipeline:
             content_changed, new_hash = fetcher.has_content_changed(scraped_html, source_data.content_hash)
 
             if not content_changed:
-                if new_hash:
+                if self.new_hash_mode:
                     logger.info(f"コンテンツ変更なし（ソースID: {source_data.id}) - 既存データを上書き実行")
                 else:
                     logger.info(f"コンテンツ変更なし（ソースID: {source_data.id}）- LLM処理をスキップ")
