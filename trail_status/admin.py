@@ -48,6 +48,7 @@ class MountainAliasAdmin(admin.ModelAdmin):
 class TrailConditionAdmin(admin.ModelAdmin):
     list_display = [
         "mountain_name_raw",
+        "id",
         "updated_at",
         "trail_name",
         "title",

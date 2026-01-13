@@ -1,10 +1,15 @@
 import logging
 import unicodedata
 from decimal import Decimal
+from functools import lru_cache
 from typing import Any
 
 from django.db import transaction
 from django.utils import timezone
+from rapidfuzz import fuzz
+from sudachipy import Dictionary, SplitMode
+
+from config.settings import DEBUG
 
 from ..models.condition import TrailCondition
 from ..models.llm_usage import LlmUsage
@@ -17,21 +22,66 @@ from .schema import TrailConditionSchemaInternal, TrailConditionSchemaList
 logger = logging.getLogger(__name__)
 
 
-def normalize_text(text: str) -> str:
-    """全角半角・空白を揃えて比較の精度を上げる"""
-    if not text:
-        return ""
-    return unicodedata.normalize("NFKC", text).strip().replace(" ", "").replace("　", "")
-
-
 class DbWriter:
-    def __init__(self, schema_single: SourceSchemaSingle, result_by_source: ResultSingle | BaseException):
-        self.schema_single = schema_single
+    """
+    DB永続化とレコード同定を担当するクラス
+
+    レコード同定の設定パラメータ:
+    - SIMILARITY_THRESHOLD: 類似度判定の閾値（0.7推奨）
+    - FIELD_WEIGHTS_*: 各フィールドの重み付け
+    - BONUS_*: ボーナススコア設定
+    """
+
+    # === レコード同定アルゴリズムの設定 ===
+
+    # 類似度判定閾値（0.0-1.0）
+    # 0.8: 厳格モード（精度重視、新規作成が増える）
+    # 0.7: バランスモード（推奨）
+    # 0.6: 緩和モード（重複回避重視、誤同定リスク増）
+    SIMILARITY_THRESHOLD = 0.7
+
+    # フィールド重み（4フィールド使用時: description有り）
+    FIELD_WEIGHT_MOUNTAIN = 0.30  # 山名
+    FIELD_WEIGHT_TRAIL = 0.30  # 登山道名
+    FIELD_WEIGHT_TITLE = 0.25  # タイトル
+    FIELD_WEIGHT_DESC = 0.15  # 詳細説明
+
+    # フィールド重み（3フィールド使用時: description無し）
+    FIELD_WEIGHT_MOUNTAIN_NO_DESC = 0.35
+    FIELD_WEIGHT_TRAIL_NO_DESC = 0.35
+    FIELD_WEIGHT_TITLE_NO_DESC = 0.30
+
+    # ボーナススコア
+    BONUS_STATUS_MATCH = 0  # status一致時のボーナス
+    BONUS_DATE_PROXIMITY = 0  # 日付が近い時のボーナス
+
+    # 日付近接判定の範囲（日数）
+    DATE_PROXIMITY_DAYS = 14
+
+    # description比較時の使用文字数
+    DESC_COMPARE_LENGTH = 100
+
+    # sudachipyのトークン分割モード (A | B | C)
+    SPLIT_MODE = SplitMode.C
+
+    # ========================================
+
+    # 形態素解析器の初期化
+    sudachi = Dictionary().create()
+
+    def __init__(
+        self,
+        source_schema_single: SourceSchemaSingle,
+        result_by_source: ResultSingle | BaseException,
+        on_duplicate_warning=None,
+    ):
+        self.source_schema_single = source_schema_single
         self.result = result_by_source
+        self.on_duplicate_warning = on_duplicate_warning  # コールバック関数
 
     @property
     def source_record(self) -> DataSource:
-        return DataSource.objects.get(id=self.schema_single.id)
+        return DataSource.objects.get(id=self.source_schema_single.id)
 
     def save_to_source(self) -> None:
         """情報源モデルへ保存"""
@@ -48,8 +98,39 @@ class DbWriter:
         # コミット
         source.save(update_fields=["content_hash", "last_scraped_at", "last_checked_at"])
 
-    def save_condition_and_usage(self) -> dict[str, Any]:
+    def persist_condition_and_usage(self) -> dict[str, Any]:
         """登山道状況とLLM使用履歴をDBに保存"""
+
+        internal_data_list = self._convert_to_internal_schema()
+
+        # DB同期とLLM使用履歴記録
+        llm_stats: LlmStats = self.result.stats
+        # 同期するレコードを照合
+        to_update, to_create, duplicate_warnings = self.reconcile_records(internal_data_list)
+
+        # 重複警告があればログ出力
+        if duplicate_warnings:
+            logger.warning(f"重複照合警告が {len(duplicate_warnings)}件 発生しました")
+
+        # 保存
+        with transaction.atomic():
+            updated_count, created_count = self._commit_trail_condition(to_update, to_create)
+            self._commit_llm_usage(llm_stats, len(internal_data_list))
+
+        logger.info(
+            f"DB保存完了: {self.source_schema_single.name} - {len(internal_data_list)}件 (コスト: ${llm_stats.total_fee:.4f})"
+        )
+
+        return {
+            "name": self.source_schema_single.name,
+            "count": len(internal_data_list),
+            "cost": llm_stats.total_fee,
+            "updated": updated_count,
+            "created": created_count,
+        }
+
+    def _convert_to_internal_schema(self):
+        """AI出力結果とAI設定を保存用スキーマへ統合"""
         # 単一ソースのAI出力を取得
         trail_conditions_list: TrailConditionSchemaList = self.result.extracted_trail_conditions
 
@@ -64,116 +145,14 @@ class DbWriter:
         }
         # Djangoモデル格納のため同じ形式のパイダンティックスキーマにダンプ
         internal_data_list = [
-            TrailConditionSchemaInternal(**record.model_dump(), url1=self.schema_single.url1, ai_config=ai_config)
+            TrailConditionSchemaInternal(
+                **record.model_dump(), url1=self.source_schema_single.url1, ai_config=ai_config
+            )
             for record in trail_conditions_list.trail_condition_records
         ]
+        return internal_data_list
 
-        # DB同期とLLM使用履歴記録
-        llm_stats: LlmStats = self.result.stats
-        # 同期するレコードを照合
-        to_update, to_create = self._reconcile_records(internal_data_list)
-        # 保存
-        with transaction.atomic():
-            updated_count, created_count = self._save_trail_condition(to_update, to_create)
-            self._save_llm_usage(llm_stats, len(internal_data_list))
-
-        logger.info(
-            f"DB保存完了: {self.schema_single.name} - {len(internal_data_list)}件 (コスト: ${llm_stats.total_fee:.4f})"
-        )
-
-        return {
-            "name": self.schema_single.name,
-            "count": len(internal_data_list),
-            "cost": llm_stats.total_fee,
-            "updated": updated_count,
-            "created": created_count,
-        }
-
-    def _reconcile_records(
-        self, ai_data_list: list[TrailConditionSchemaInternal]
-    ) -> tuple[list[TrailCondition], list[TrailCondition]]:
-        """
-        AIの抽出データ(Pydantic)を既存レコードと照合する。
-        所定の方法で同定し更新リストと新規作成リストをDjangoモデルで返却
-
-        Args:
-            source: データソース
-            ai_data_list: AI抽出データリスト
-            config: LlmConfig（AI設定情報）
-            prompt_file: 使用したプロンプトファイル名
-        """
-        to_update: list[TrailCondition] = []
-        to_create: list[TrailCondition] = []
-
-        config: LlmConfig = self.result.config
-        prompt_filename = self.source_record.prompt_filename
-
-        for data in ai_data_list:
-            # 1. AIの出力を正規化（空白や全角半角の揺れを取る）
-            # これにより、AIが「雲取山 」と出しても「雲取山」として扱う
-            normalized_m_name = normalize_text(data.mountain_name_raw)
-            normalized_t_name = normalize_text(data.trail_name)
-
-            # 2. 既存レコードの検索
-            # ※ DB側も同様の正規化で比較したいところですが、
-            #    まずは「保存されている値」を正規化したものと比較します。
-            existing_record = None
-            all_potential_records = TrailCondition.objects.filter(source=self.source_record, disabled=False)
-            for record in all_potential_records:
-                # 山名と登山道・区間名でまず同定
-                if (
-                    normalize_text(record.mountain_name_raw) == normalized_m_name
-                    and normalize_text(record.trail_name) == normalized_t_name
-                ):
-                    existing_record = record
-                    break
-
-            if existing_record:
-                # 2. 内容の比較（タイトル、説明、ステータスに変更があるか）
-                # reported_at が今日の日付に更新されているかもチェック対象に含める
-                has_changed = (
-                    existing_record.title != data.title
-                    or existing_record.description != data.description
-                    or existing_record.status != data.status
-                    or existing_record.reported_at != data.reported_at
-                    or existing_record.resolved_at != data.resolved_at
-                )
-
-                if has_changed:
-                    existing_record.title = data.title
-                    existing_record.description = data.description
-                    existing_record.status = data.status
-                    existing_record.reported_at = data.reported_at
-                    existing_record.resolved_at = data.resolved_at
-                    # AI関連情報を更新
-                    existing_record.ai_model = config.model
-                    existing_record.prompt_file = prompt_filename
-                    existing_record.ai_config = data.ai_config
-
-                    to_update.append(existing_record)
-
-                    logger.info(f"更新リストに追加: {normalized_m_name}/{normalized_t_name} (ID: {existing_record.id})")
-            else:
-                # 3. 新規レコードの作成
-                # mountain_group は signals.py が MountainAlias に基づいて自動解決する
-                # 山名原文、登山道原文は正規化する以前と以後を選択する余地のためにexculde
-                generated_data_dict = data.model_dump(exclude={"mountain_name_raw", "trail_name"})
-                new_record = TrailCondition(
-                    source=self.source_record,
-                    mountain_name_raw=data.mountain_name_raw,
-                    trail_name=data.trail_name,
-                    ai_model=config.model,
-                    prompt_file=prompt_filename,
-                    **generated_data_dict,
-                )
-
-                to_create.append(new_record)
-
-                logger.info(f"新規作成リストに追加: {normalized_m_name}/{normalized_t_name} (ID: {new_record.id})")
-
-        return to_update, to_create
-
-    def _save_trail_condition(
+    def _commit_trail_condition(
         self, to_update: list[TrailCondition], to_create: list[TrailCondition]
     ) -> tuple[int, int]:
         """TrailConditionをDBに保存"""
@@ -208,7 +187,7 @@ class DbWriter:
 
         return len(to_update), len(to_create)
 
-    def _save_llm_usage(self, llm_stats: LlmStats, extracted_record_count: int) -> None:
+    def _commit_llm_usage(self, llm_stats: LlmStats, extracted_record_count: int) -> None:
         """LLM使用履歴をDBに保存"""
         stats = llm_stats.to_dict()
         LlmUsage.objects.create(
@@ -222,3 +201,206 @@ class DbWriter:
             success=True,
             execution_time_seconds=stats.get("execution_time"),  # Noneでも可
         )
+
+    def reconcile_records(
+        self, ai_record_list: list[TrailConditionSchemaInternal]
+    ) -> tuple[list[TrailCondition], list[TrailCondition], list[dict]]:
+        """
+        AIの抽出データ(Pydantic)を既存レコードと照合する。
+        3段階のアルゴリズムで同定を行う:
+        1. 完全一致チェック（高速パス）
+        2. RapidFuzzによる類似度計算（フォールバック）
+        3. 新規作成
+
+        Args:
+            ai_data_list: AI抽出データリスト
+
+        Returns:
+            (更新対象レコードリスト, 新規作成レコードリスト, 重複警告リスト)
+        """
+        to_update: list[TrailCondition] = []
+        to_create: list[TrailCondition] = []
+        duplicate_warnings: list[dict] = []  # 重複警告情報
+
+        config: LlmConfig = self.result.config
+        prompt_filename = self.source_record.prompt_filename
+
+        matches = []
+        # ステップ1: 候補レコードを取得（sourceのみで絞る）
+        candidates = list(
+            TrailCondition.objects.filter(
+                source=self.source_record,
+                disabled=False,
+                resolved_at__isnull=True,  # 解消済みは除外
+            )
+        )
+
+        # ステップ2: 候補レコード×AI出力レコードを総当りで類似度計算
+        for ai_idx, ai_record in enumerate(ai_record_list):
+            for candidate in candidates:
+                score = self._calculate_similarity(candidate, ai_record)
+                if score >= self.SIMILARITY_THRESHOLD:
+                    matches.append((score, candidate, ai_idx))
+
+        # 類似度順にソート
+        matches.sort(key=lambda x: x[0], reverse=True)
+
+        used_model_records = set()
+        used_ai_records = set()
+        for score, db_record, ai_idx in matches:
+            if db_record.id in used_model_records or ai_idx in used_ai_records:
+                continue
+
+            # ピックアップ済みのDB,AI出力をそれぞれ登録
+            used_model_records.add(db_record.id)
+            used_ai_records.add(ai_idx)
+
+            matched_ai_record: TrailConditionSchemaInternal = ai_record_list[ai_idx]
+
+            matched_m_name = matched_ai_record.mountain_name_raw
+            matched_t_name = matched_ai_record.trail_name
+            logger.info(f"類似度同定 - AI出力: {matched_m_name}/{matched_t_name}")
+            logger.info(
+                f"スコア: {score:.2f} - DB_ID: {db_record.id} / {db_record.mountain_name_raw}/{db_record.trail_name} "
+            )
+
+            # 内容変更チェック
+            has_changed = (
+                db_record.title != matched_ai_record.title
+                or db_record.description != matched_ai_record.description
+                or db_record.status != matched_ai_record.status
+                or db_record.reported_at != matched_ai_record.reported_at
+                or db_record.resolved_at != matched_ai_record.resolved_at
+            )
+
+            if has_changed:
+                # 更新
+                db_record.title = matched_ai_record.title
+                db_record.description = matched_ai_record.description
+                db_record.status = matched_ai_record.status
+                db_record.reported_at = matched_ai_record.reported_at
+                db_record.resolved_at = matched_ai_record.resolved_at
+                db_record.ai_model = config.model
+                db_record.prompt_file = prompt_filename
+                db_record.ai_config = matched_ai_record.ai_config
+
+                to_update.append(db_record)
+                logger.info(f"変更検出/更新リストに追加 - DB_ID:{db_record.id}")
+
+        for ai_idx, ai_record in enumerate(ai_record_list):
+            if ai_idx in used_ai_records:
+                # すでにピックアップされていたらスキップ
+                continue
+
+            # 新規作成
+            generated_record_dict = ai_record.model_dump(exclude={"mountain_name_raw", "trail_name"})
+            new_record = TrailCondition(
+                source=self.source_record,
+                mountain_name_raw=ai_record.mountain_name_raw,
+                trail_name=ai_record.trail_name,
+                ai_model=config.model,
+                prompt_file=prompt_filename,
+                **generated_record_dict,
+            )
+
+            to_create.append(new_record)
+            logger.info(f"新規作成リストに追加 - AI出力名: {ai_record.mountain_name_raw}/{ai_record.trail_name}")
+            if DEBUG:
+                for loser_score, loser_db_record, loser_idx in matches:
+                    if ai_idx == loser_idx:
+                        d_i = loser_db_record.id
+                        d_m = loser_db_record.mountain_name_raw
+                        d_t = loser_db_record.trail_name
+                        logger.info(f"最高スコア: {loser_score:.2f} - 対象既存レコード: {d_i} / {d_m}/{d_t}")
+                        break
+                else:
+                    logger.info(f"所定の閾値{self.SIMILARITY_THRESHOLD}を超えるレコードは見つかりません")
+
+        return to_update, to_create, duplicate_warnings
+
+    def _calculate_similarity(self, existing: TrailCondition, new_data: TrailConditionSchemaInternal) -> float:
+        """
+        複数フィールドを組み合わせた類似度スコア（0.0 ~ 1.0）
+
+        Args:
+            existing: 既存のDBレコード
+            new_data: AIが抽出した新規データ
+
+        Returns:
+            類似度スコア（0.0 = 完全不一致、1.0 = 完全一致）
+        """
+        # 1. 山名の類似度
+        mountain_score = (
+            fuzz.ratio(self.normalize_text(existing.mountain_name_raw), self.normalize_text(new_data.mountain_name_raw))
+            / 100.0
+        )
+
+        # 2. 登山道名の類似度
+        trail_score = (
+            fuzz.token_sort_ratio(self.decompose_text(existing.trail_name, noun_only=True), self.decompose_text(new_data.trail_name, noun_only=True))
+            / 100.0
+        )
+
+        # 3. タイトルの類似度
+        title_score = (
+            fuzz.partial_ratio(self.normalize_text(existing.title), self.normalize_text(new_data.title)) / 100.0
+        )
+
+        # 4. 詳細説明の類似度（トークンセット比較）
+        if existing.description and new_data.description:
+            # 両方ある場合: 4フィールド使用
+            desc_score = (
+                fuzz.token_set_ratio(
+                    self.decompose_text(existing.description[: self.DESC_COMPARE_LENGTH]),
+                    self.decompose_text(new_data.description[: self.DESC_COMPARE_LENGTH]),
+                )
+                / 100.0
+            )
+
+            base_score = (
+                mountain_score * self.FIELD_WEIGHT_MOUNTAIN
+                + trail_score * self.FIELD_WEIGHT_TRAIL
+                + title_score * self.FIELD_WEIGHT_TITLE
+                + desc_score * self.FIELD_WEIGHT_DESC
+            )
+        else:
+            # descriptionがない場合: 3フィールドに重み再配分
+            base_score = (
+                mountain_score * self.FIELD_WEIGHT_MOUNTAIN_NO_DESC
+                + trail_score * self.FIELD_WEIGHT_TRAIL_NO_DESC
+                + title_score * self.FIELD_WEIGHT_TITLE_NO_DESC
+            )
+
+        # ボーナス1: statusが一致
+        if existing.status == new_data.status:
+            base_score = min(1.0, base_score + self.BONUS_STATUS_MATCH)
+
+        # ボーナス2: 登録日が近い
+        if new_data.reported_at and existing.created_at:
+            days_diff = abs((existing.created_at.date() - new_data.reported_at).days)
+            if days_diff <= self.DATE_PROXIMITY_DAYS:
+                base_score = min(1.0, base_score + self.BONUS_DATE_PROXIMITY)
+
+        return base_score
+
+    @lru_cache
+    def decompose_text(self, text: str, noun_only: bool = False) -> str:
+        """テキストの形態素解析をしトークンごとに分かち書きした文字列を返却
+
+        - token_set_ratio, token_sort_ratio用
+        """
+        normalized = self.normalize_text(text)
+        tokens = []
+        for m in self.sudachi.tokenize(normalized, self.SPLIT_MODE):
+            pos = m.part_of_speech()
+            if noun_only and pos[0] != "名詞":
+                continue
+            tokens.append(m.surface())
+        return " ".join(tokens)
+    
+    @staticmethod
+    def normalize_text(text: str) -> str:
+        """全角半角・空白を揃えて比較の精度を上げる"""
+        if not text:
+            return ""
+        return unicodedata.normalize("NFKC", text).strip().replace(" ", "").replace("　", "")

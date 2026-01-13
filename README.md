@@ -11,8 +11,10 @@
 ## 技術スタック
 
 - **Backend**: Django 6.0, PostgreSQL
-- **Data Collection**: httpx, trafilatura
-- **AI Processing**: DeepSeek API, Gemini API, Pydantic, LangSmith
+- **frontend**: Vite, TypeScript, TailwindCSS 4.x
+- **Data Collection**: httpx, trafilatura, RapidFuzz, SudachiPy
+- **AI Processing**: DeepSeek API, Gemini API, OpenAI API, Pydantic, LangSmith
+- **Task Scheduling**: django-apscheduler
 - **Infrastructure**: Docker, uv
 
 ## 開発環境
@@ -31,3 +33,8 @@ docker compose exec web uv run manage.py runserver
 2. **正規化**: AIが危険レベル・エリア等を構造化
 3. **保存**: PostgreSQLに原文+正規化データを保存
 4. **表示**: 管理画面・API経由で提供
+
+## 参考文献
+- https://trafilatura.readthedocs.io/en/latest/
+- https://rapidfuzz.github.io/RapidFuzz/index.html
+- https://github.com/WorksApplications/SudachiPy

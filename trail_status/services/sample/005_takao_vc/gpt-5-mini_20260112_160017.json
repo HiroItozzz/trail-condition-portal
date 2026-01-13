@@ -1,0 +1,136 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "台風19号（2019）および台風10号（2024）影響",
+      "mountain_name_raw": "高尾山系・小仏・陣場・丹沢周辺",
+      "title": "土砂崩れ等による通行影響",
+      "description": "2019年に通過した台風19号および2024年8月に発生した台風10号の影響により、未だ土砂崩れなどによる通行止め箇所がございます。コースの状況を事前にご確認の上お越しください。※下記通行止め区間の情報と併せてご確認ください。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TANZAWA",
+      "reference_URL": "",
+      "comment": "広域で土砂崩れ・通行止めが継続しています。個別区間の情報を必ず確認してください。"
+    },
+    {
+      "trail_name": "４号路（浄心門～いろはの森コース分岐）",
+      "mountain_name_raw": "高尾山",
+      "title": "通行止め",
+      "description": "日時： 令和8年1月13日（火）～1月14日（水）8：00～17：00（予備日： 令和8年1月15日（木）～1月16日（金）） 詳細はこちらからご確認ください。",
+      "reported_at": "2026-01-13",
+      "resolved_at": "2026-01-14",
+      "status": "CLOSURE",
+      "area": "TAKAO",
+      "reference_URL": "https://takaovc.ces-net.jp/?p=7761",
+      "comment": "通行止めは日中（8:00～17:00）の実施。予備日：2026-01-15～2026-01-16。詳細は掲載URL参照。"
+    },
+    {
+      "trail_name": "小仏峠～小仏城山中間地点から日影林道に続くまき道",
+      "mountain_name_raw": "小仏城山周辺",
+      "title": "通行止め",
+      "description": "小仏峠～小仏城山中間地点から日影林道に続くまき道",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": ""
+    },
+    {
+      "trail_name": "北高尾山稜",
+      "mountain_name_raw": "北高尾山稜",
+      "title": "通行止め情報なし",
+      "description": "現在、通行止め情報はありません。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLEAR",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": ""
+    },
+    {
+      "trail_name": "陣場山周辺",
+      "mountain_name_raw": "陣場山周辺",
+      "title": "通行止め情報なし",
+      "description": "現在、通行止め情報はありません。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLEAR",
+      "area": "TANZAWA",
+      "reference_URL": "",
+      "comment": "神奈川県側の情報も参照してください（下段リンク参照）。"
+    },
+    {
+      "trail_name": "金毘羅台コース",
+      "mountain_name_raw": "高尾山",
+      "title": "通行注意",
+      "description": "倒木あり通行注意",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": "倒木あり。通行の際は十分注意してください。"
+    },
+    {
+      "trail_name": "日影林道",
+      "mountain_name_raw": "小仏城山周辺",
+      "title": "通行注意",
+      "description": "土砂崩れのため通行注意",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": "土砂崩れ箇所あり。状況により通行止めとなる可能性があります。"
+    },
+    {
+      "trail_name": "景信山～小下沢林道方向",
+      "mountain_name_raw": "北高尾山稜",
+      "title": "通行注意",
+      "description": "上記個所は林道の為通行止めにはなっておりませんが、崩落個所がいくつかあります。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": "林道のため通行止め表示ではないが崩落あり。歩行注意。"
+    },
+    {
+      "trail_name": "小下沢林道中間地点～関場峠",
+      "mountain_name_raw": "北高尾山稜",
+      "title": "通行注意",
+      "description": "崩落箇所があるため通行注意",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": "崩落箇所あり。十分な装備と注意が必要。"
+    },
+    {
+      "trail_name": "松竹～八王子城山",
+      "mountain_name_raw": "八王子城山",
+      "title": "通行注意",
+      "description": "道が荒れている為通行注意",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": "道の荒れあり。滑りやすい箇所があるため注意。"
+    },
+    {
+      "trail_name": "神奈川県（情報参照）",
+      "mountain_name_raw": "神奈川県（藤野・陣場周辺）",
+      "title": "情報参照",
+      "description": "状況は、下記ホームページをご覧ください。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "OTHER",
+      "area": "TANZAWA",
+      "reference_URL": "http://info-fujino.com/ http://www.pref.kanagawa.jp/docs/f4y/02yama/kanagawaparkranger/pr-jinnbatoukaisizennhodou.html",
+      "comment": "藤野観光協会、かながわパークレンジャーの最新情報を参照してください。"
+    }
+  ]
+}

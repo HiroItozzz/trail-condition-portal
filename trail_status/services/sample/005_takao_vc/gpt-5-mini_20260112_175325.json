@@ -1,0 +1,136 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "４号路（浄心門～いろはの森コース分岐）",
+      "mountain_name_raw": "高尾山",
+      "title": "通行止め",
+      "description": "４号路（浄心門～いろはの森コース分岐）\n日時： 令和8年1月13日（火）～1月14日（水）8:00～17:00（予備日： 令和8年1月15日（木）～1月16日（金））\n詳細はhttps://takaovc.ces-net.jp/?p=7761 をご確認ください。",
+      "reported_at": null,
+      "resolved_at": "2026-01-14",
+      "status": "CLOSURE",
+      "area": "TAKAO",
+      "reference_URL": "https://takaovc.ces-net.jp/?p=7761",
+      "comment": "作業日時は2026-01-13～2026-01-14の8:00～17:00。予備日：2026-01-15～2026-01-16。現地作業による日次通行止め（時間帯あり）。"
+    },
+    {
+      "trail_name": "小仏峠～小仏城山中間地点から日影林道に続くまき道",
+      "mountain_name_raw": "小仏城山",
+      "title": "通行止め",
+      "description": "小仏峠～小仏城山中間地点から日影林道に続くまき道（通行止め）",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": "2019年台風19号および2024年台風10号の影響による土砂崩れ等のため通行止め。復旧時期は未確定のため現地情報を確認のこと。"
+    },
+    {
+      "trail_name": "北高尾山稜",
+      "mountain_name_raw": "北高尾山稜",
+      "title": "通行止め情報なし",
+      "description": "現在、通行止め情報はありません。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLEAR",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": ""
+    },
+    {
+      "trail_name": "陣場山周辺",
+      "mountain_name_raw": "陣場山",
+      "title": "通行止め情報なし",
+      "description": "現在、通行止め情報はありません。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLEAR",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": ""
+    },
+    {
+      "trail_name": "金毘羅台コース",
+      "mountain_name_raw": "高尾山",
+      "title": "通行注意（倒木）",
+      "description": "金毘羅台コース：倒木あり通行注意",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": "倒木あり。通過時は足元・頭上に注意。大型装備や迂回検討を推奨。"
+    },
+    {
+      "trail_name": "日影林道",
+      "mountain_name_raw": "小仏城山",
+      "title": "通行注意（土砂崩れ）",
+      "description": "日影林道 ：土砂崩れのため通行注意",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": "土砂崩れ箇所あり。通行には十分注意。まき道の通行止め区間と合わせて事前確認を。"
+    },
+    {
+      "trail_name": "景信山～小下沢林道方向",
+      "mountain_name_raw": "景信山（北高尾山稜）",
+      "title": "通行注意（崩落あり）",
+      "description": "景信山～小下沢林道方向 ：林道の為通行止めにはなっておりませんが、崩落個所がいくつかあります。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": "林道のため公式には通行止めではないが複数の崩落箇所あり。徒歩でも通行注意。"
+    },
+    {
+      "trail_name": "小下沢林道中間地点～関場峠",
+      "mountain_name_raw": "北高尾山稜",
+      "title": "通行注意（崩落あり）",
+      "description": "小下沢林道中間地点～関場峠 ：崩落箇所があるため通行注意",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": "崩落箇所あり。通行時は十分な注意と必要に応じた迂回を検討してください。"
+    },
+    {
+      "trail_name": "松竹～八王子城山",
+      "mountain_name_raw": "八王子城山",
+      "title": "通行注意（道荒れ）",
+      "description": "松竹～八王子城山 ：道が荒れている為通行注意",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": "道が荒れているため足元注意。悪天候時は通行を見合わせることを推奨。"
+    },
+    {
+      "trail_name": "地域全体（台風19号／台風10号影響）",
+      "mountain_name_raw": "高尾山周辺（小仏城山、北高尾、陣場山など）",
+      "title": "台風被害による影響継続",
+      "description": "2019年に通過した台風19号および2024年8月に発生した台風10号の影響により、未だ土砂崩れなどによる通行止め箇所がございます。コースの状況を事前にご確認の上お越しください。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "OTHER",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": "台風による土砂崩れ・倒木等の影響が残存。個別区間の情報を必ず確認のこと。"
+    },
+    {
+      "trail_name": "神奈川県 情報参照",
+      "mountain_name_raw": "神奈川県（藤野・陣馬周辺）",
+      "title": "参照：県／観光協会情報",
+      "description": "状況は、下記ホームページをご覧ください。藤野観光協会、かながわパークレンジャー",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "OTHER",
+      "area": "TANZAWA",
+      "reference_URL": "http://info-fujino.com/ http://www.pref.kanagawa.jp/docs/f4y/02yama/kanagawaparkranger/pr-jinnbatoukaisizennhodou.html",
+      "comment": "最新の現地情報は各ホームページで確認してください（藤野観光協会、かながわパークレンジャー）。"
+    }
+  ]
+}

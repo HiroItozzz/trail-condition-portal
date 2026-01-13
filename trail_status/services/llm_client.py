@@ -6,7 +6,6 @@ import os
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
 
 import yaml
 from django.conf import settings
@@ -34,7 +33,7 @@ class LlmConfig(BaseModel):
     site_prompt: str | None = Field(default="", description="サイト固有プロンプト")
     use_template: bool = Field(default=True, description="template.yamlを使用するか")
     model: str = Field(
-        pattern=r"^(gemini|deepseek|gpt)-.+", default="deepseek-reasoner", description="使用するLLMモデル"
+        pattern=r"^(gemini|deepseek|gpt)-.+", default="gpt-5-mini", description="使用するLLMモデル"
     )
     data: str = Field(description="解析するテキスト")
     temperature: float = Field(
@@ -42,6 +41,7 @@ class LlmConfig(BaseModel):
     )
     thinking_budget: int = Field(default=10000, ge=-1, le=15000, description="Geminiの思考予算（トークン数）")
     prompt_filename: str | None = Field(default=None, description="LLMエラー処理での識別用ファイルネーム")
+    allow_websearch: bool = Field(default=True, description="Gemini, OpenAIでWeb検索を許可するかどうか")
 
     @computed_field
     @property
@@ -76,6 +76,7 @@ class LlmConfig(BaseModel):
         else:
             raise ValueError(f"サポートされていないモデル: {self.model}")
 
+    # langsmith測定用
     @property
     def provider(self):
         if self.model.startswith("gemini"):
@@ -222,6 +223,7 @@ class ConversationalAi(ABC):
         self.thinking_budget: int = config.thinking_budget
         self.prompt_filename: str | None = config.prompt_filename
         self.provider: str | None = config.provider
+        self.websearch: bool = config.allow_websearch
         self._config: LlmConfig | None = config
 
     @abstractmethod
@@ -269,11 +271,8 @@ class ConversationalAi(ABC):
         raise
 
     @traceable
-    def validate_response(self, response_text):
-        # デバッグ用：サンプル出力を保存
-        sample_path = get_sample_dir() / f"{self.model}_sample.json"
-        sample_path.write_text(response_text, encoding="utf-8")
-
+    def validate_response(self, response_text: str) -> TrailConditionSchemaList:
+        """AI出力データのバリデーション"""
         try:
             validated_data = TrailConditionSchemaList.model_validate_json(response_text)
             logger.info(f"{self.model}が構造化出力に成功")
@@ -281,15 +280,26 @@ class ConversationalAi(ABC):
             raise e
         return validated_data
 
-    def save_invalid_data(self, response_text):
-        # エラー時の出力保存
+    def save_sample_data(self, response_text: str):
+        # デバッグ用：サンプル出力を保存
         from datetime import datetime
 
-        output_dir = settings.BASE_DIR / "outputs"
+        output_dir = get_sample_dir() / Path(self.prompt_filename).stem
         output_dir.mkdir(exist_ok=True)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        error_file = output_dir / f"validation_error_{self.model}_{timestamp}.txt"
+        output_path = output_dir / f"{self.model}_{timestamp}.json"
+        output_path.write_text(response_text, encoding="utf-8")
+
+    def save_invalid_data(self, response_text: str):
+        # エラー時の出力保存
+        from datetime import datetime
+
+        output_dir: Path = settings.BASE_DIR / "outputs/trail_status"
+        output_dir.mkdir(exist_ok=True)
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        error_file = output_dir / f"validation_error_{self.model}_{self.prompt_filename}_{timestamp}.txt"
         error_file.write_text(response_text, encoding="utf-8")
 
         logger.error(f"{error_file}へ出力を保存しました。")
@@ -316,10 +326,7 @@ class DeepseekClient(ConversationalAi):
             },
         )
         async def _run() -> tuple[TrailConditionSchemaList, TokenStats]:
-            """LangSmithのデコレータを定義するためだけのネスト関数
-
-            Args:
-                _ (str): LangSmithトレースのためのプロンプト入力
+            """LangSmithのデコレータを定義するためだけの関数内関数
 
             Returns:
                 tuple[TrailConditionSchemaList, TokenStats]
@@ -390,6 +397,10 @@ class DeepseekClient(ConversationalAi):
                 self.model,
             )
 
+            # AI出力の保存設定
+            if os.getenv("SAVE_AI_OUTPUTS") in ["True", "true", "t"]:
+                self.save_sample_data(generated_text)
+
             logger.debug("DeepseekClientの処理終了")
             return validated_data, stats
 
@@ -418,7 +429,7 @@ class GeminiClient(ConversationalAi):
             },
         )
         async def _run() -> tuple[TrailConditionSchemaList, TokenStats]:
-            """LangSmithのデコレータを定義するためだけのネスト関数
+            """LangSmithのデコレータを定義するためだけの関数内関数
 
             Args:
                 _ (str): LangSmithトレースのためのプロンプト入力
@@ -434,7 +445,7 @@ class GeminiClient(ConversationalAi):
             client = wrap_gemini(genai.Client())
 
             # 検索許可設定
-            grounding_tool = types.Tool(google_search=types.GoogleSearch())
+            tools = [types.Tool(google_search=types.GoogleSearch())] if self.websearch else None
 
             max_retries = 3
             for i in range(max_retries):
@@ -447,7 +458,7 @@ class GeminiClient(ConversationalAi):
                             response_mime_type="application/json",  # 構造化出力
                             response_json_schema=TrailConditionSchemaList.model_json_schema(),
                             thinking_config=types.ThinkingConfig(thinking_budget=self.thinking_budget),
-                            tools=[grounding_tool],
+                            tools=tools,
                         ),
                     )
                     validated_data = self.validate_response(response.text)
@@ -491,8 +502,11 @@ class GeminiClient(ConversationalAi):
                 self.model,
             )
 
-            logger.debug("GeminiClientの処理終了")
+            # AI出力の保存設定
+            if os.getenv("SAVE_AI_OUTPUTS") in ["True", "true", "t"]:
+                self.save_sample_data(response.text)
 
+            logger.debug("GeminiClientの処理終了")
             return validated_data, stats
 
         return await _run()
@@ -525,23 +539,27 @@ class GptClient(ConversationalAi):
             from langsmith.wrappers import wrap_openai
             from openai import AsyncOpenAI
 
-            logger.info(f"{self.model}の応答を待っています。")
             logger.debug(f"LlmConfig詳細： \n{self._config}")
-            logger.debug(f"APIキー: ...{self.api_key[-5:]}")
 
             client = wrap_openai(AsyncOpenAI())
+            tools = [{"type": "web_search"}] if self.websearch else None
 
             max_retries = 3
             for i in range(max_retries):
                 try:
+                    logger.info(f"{self.model}の応答を待っています。")
+                    logger.debug(f"APIキー: ...{self.api_key[-5:]}")
+
                     response = await client.responses.parse(
                         model="gpt-5-mini",
-                        tools=[{"type": "web_search"}],
+                        tools=tools,
                         input=self.prompt_for_gpt,
                         text_format=TrailConditionSchemaList,
                     )
                     validated_data = response.output_parsed
                     logger.info(f"{self.model}が構造化出力に成功")
+                    break
+
                 except Exception as e:
                     # https://api-docs.deepseek.com/quick_start/error_codes
                     if any(code in str(e) for code in ["500", "502", "503"]):
@@ -577,6 +595,11 @@ class GptClient(ConversationalAi):
                 input_tokens = 0
                 thoughts_tokens = 0
                 pure_output_tokens = 0
+
+            # AI出力の保存設定
+            if os.getenv("SAVE_AI_OUTPUTS", "False") in ["True", "true", "t"]:
+                raw_text = validated_data.model_dump_json()
+                self.save_sample_data(raw_text)
 
             stats = TokenStats(
                 input_tokens,

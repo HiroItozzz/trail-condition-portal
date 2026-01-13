@@ -38,9 +38,6 @@
     "django-html": "html"
   },
 
-  "prettier.prettierPath": "frontend/node_modules/prettier",
-  "prettier.configPath": "frontend/.prettierrc",
-
   "tailwindCSS.includeLanguages": {
     "plaintext": "html",
     "django-html": "html",
