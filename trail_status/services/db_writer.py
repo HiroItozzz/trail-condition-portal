@@ -38,7 +38,7 @@ class DbWriter:
     # 0.8: 厳格モード（精度重視、新規作成が増える）
     # 0.7: バランスモード（推奨）
     # 0.6: 緩和モード（重複回避重視、誤同定リスク増）
-    SIMILARITY_THRESHOLD = 0.65
+    SIMILARITY_THRESHOLD = 0.7
 
     # フィールド重み（4フィールド使用時: description有り）
     FIELD_WEIGHT_MOUNTAIN = 0.2  # 山名
@@ -286,7 +286,7 @@ class DbWriter:
                 db_record.ai_config = matched_ai_record.ai_config
 
                 to_update.append(db_record)
-                logger.info(f"変更検出/更新リストに追加 - DB_ID:{db_record.id}")
+                logger.info("==> 変更あり/更新リストに追加")
 
         for ai_idx, ai_record in enumerate(ai_record_list):
             if ai_idx in used_ai_records:

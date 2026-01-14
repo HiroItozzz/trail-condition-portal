@@ -1,0 +1,76 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "T09_大倉尾根線",
+      "mountain_name_raw": "鍋割山",
+      "title": "通行できません",
+      "description": "山林火災発生中",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TANZAWA",
+      "reference_URL": "/documents/68091/map.pdf",
+      "comment": "天神尾根：通行止め"
+    },
+    {
+      "trail_name": "T13_寄ユーシン線",
+      "mountain_name_raw": "雨山",
+      "title": "通行できません",
+      "description": "登山道崩落（寄～雨山峠～雨山橋） 登山道の安全を確認中のため",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TANZAWA",
+      "reference_URL": "/documents/68091/map.pdf",
+      "comment": ""
+    },
+    {
+      "trail_name": "T22_同角山稜線",
+      "mountain_name_raw": "同角山",
+      "title": "通行できません",
+      "description": "登山道の安全を確認中のため",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TANZAWA",
+      "reference_URL": "/documents/68091/map.pdf",
+      "comment": ""
+    },
+    {
+      "trail_name": "T23_ユーシン塔ノ岳線",
+      "mountain_name_raw": "塔ノ岳",
+      "title": "通行できません",
+      "description": "登山道の安全を確認中のため",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TANZAWA",
+      "reference_URL": "/documents/68091/map.pdf",
+      "comment": ""
+    },
+    {
+      "trail_name": "T27_世附不老山線",
+      "mountain_name_raw": "不老山",
+      "title": "通行できます",
+      "description": "令和7年2月12日～",
+      "reported_at": null,
+      "resolved_at": "2025-02-12",
+      "status": "CLEAR",
+      "area": "TANZAWA",
+      "reference_URL": "/documents/68091/map.pdf",
+      "comment": ""
+    },
+    {
+      "trail_name": "T37_平戸焼山線",
+      "mountain_name_raw": "焼山",
+      "title": "通行できます",
+      "description": "登山道崩落 登山道に接続する大棚沢林道・水ノ木幹線が通行止 通行できます （一部ルートの変更）",
+      "reported_at": "2026-01-06",
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TANZAWA",
+      "reference_URL": "/documents/68091/map.pdf",
+      "comment": "一部ルートの変更"
+    }
+  ]
+}
