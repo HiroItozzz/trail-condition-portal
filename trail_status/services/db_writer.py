@@ -9,12 +9,11 @@ from django.utils import timezone
 from rapidfuzz import fuzz
 from sudachipy import Dictionary, SplitMode
 
-from config.settings import DEBUG
+from django.conf import settings
 
 from ..models.condition import TrailCondition
 from ..models.llm_usage import LlmUsage
 from ..models.source import DataSource
-from .llm_client import LlmConfig
 from .llm_stats import LlmStats
 from .pipeline import ResultSingle, SourceSchemaSingle
 from .schema import TrailConditionSchemaInternal, TrailConditionSchemaList
@@ -304,7 +303,7 @@ class DbWriter:
 
             to_create.append(new_record)
             logger.info(f"新規作成リストに追加 - AI出力名: {ai_record.mountain_name_raw}/{ai_record.trail_name}")
-            if DEBUG:
+            if settings.DEBUG:
                 for loser_score, loser_db_record, loser_idx in matches:
                     if ai_idx == loser_idx:
                         d_i = loser_db_record.id

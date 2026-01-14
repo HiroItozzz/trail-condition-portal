@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from trail_status.services.llm_client import LlmConfig
-from trail_status.services.pipeline import SourceSchemaSingle, TrailConditionPipeline
+from trail_status.services.pipeline import AiPipeline, SourceSchemaSingle
 from trail_status.services.schema import TrailConditionSchemaList
 
 
@@ -35,7 +35,7 @@ async def test_process_source_data_full_flow(monkeypatch, mock_async_client, sam
         )
     ]
     # --- テスト実行 ---
-    pipeline = TrailConditionPipeline(source_data_list, ai_model="deepseek-chat")
+    pipeline = AiPipeline(source_data_list, ai_model="deepseek-chat")
 
     results = await pipeline.run()
 

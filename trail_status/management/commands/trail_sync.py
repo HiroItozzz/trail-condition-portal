@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 
 from trail_status.models.source import DataSource
 from trail_status.services.db_writer import DbWriter
-from trail_status.services.pipeline import ResultSingle, SourceSchemaSingle, TrailConditionPipeline, UpdatedDataList
+from trail_status.services.pipeline import AiPipeline, ResultSingle, SourceSchemaSingle, UpdatedDataList
 from trail_status.services.schema import TrailConditionSchemaList
 from trail_status.services.slack_notifier import SlackNotifier
 
@@ -84,7 +84,7 @@ class Command(BaseCommand):
             self.stdout.write(f"全ての情報源を処理: {len(source_data_list)}件")
 
         # パイプライン処理を実行（純粋にasync処理のみ）
-        processor = TrailConditionPipeline(source_data_list, ai_model=ai_model, new_hash_mode=new_hash_mode)
+        processor = AiPipeline(source_data_list, ai_model=ai_model, new_hash_mode=new_hash_mode)
         all_source_results: UpdatedDataList = asyncio.run(processor.run())
 
         # DB保存（同期処理）

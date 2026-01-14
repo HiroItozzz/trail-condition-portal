@@ -36,16 +36,16 @@ class ResultSingle(BaseModel):
 UpdatedDataList = list[tuple[SourceSchemaSingle, ResultSingle | BaseException]]
 
 
-class TrailConditionPipeline:
-    """登山道状況の自動処理パイプライン（純粋async処理）"""
+class AiPipeline:
+    """登山道状況のスクレイピング・AI出力パイプライン（純粋async処理）"""
 
-    def __init__(self, source_data_list: list[SourceSchemaSingle],**kwargs):
+    def __init__(self, source_data_list: list[SourceSchemaSingle], **kwargs):
         self.source_data_list = source_data_list
         self.ai_model = kwargs.get("ai_model")
         self.new_hash_mode = kwargs.get("new_hash_mode")
 
     async def __call__(self) -> UpdatedDataList:
-        return await self.run(self)
+        return await self.run()
 
     async def run(self) -> UpdatedDataList:
         """ソースデータリストを並行処理（Django ORM一切なし）"""
@@ -67,7 +67,8 @@ class TrailConditionPipeline:
 
     # コア処理
     async def process_single_source_data(
-        self, client: httpx.AsyncClient, source_data: SourceSchemaSingle) -> ResultSingle:
+        self, client: httpx.AsyncClient, source_data: SourceSchemaSingle
+    ) -> ResultSingle:
         """単一ソースデータの処理パイプライン（純粋async）"""
         logger.debug(f"処理開始: {source_data.name} (ID: {source_data.id})")
 
@@ -95,7 +96,6 @@ class TrailConditionPipeline:
                         scraped_length=len(scraped_html),
                         message=f"コンテンツ変更なし（ソースID: {source_data.id}）- LLM処理をスキップ",
                     )
-                
 
             # 3. trafilaturaでテキスト抽出
             parsed_text = await fetcher.fetch_parsed_text(scraped_html)
@@ -118,26 +118,16 @@ class TrailConditionPipeline:
                 extracted_trail_conditions=ai_result,  # TrailConditionSchemaListのまま
                 stats=stats,  # LlmStatsオブジェクト
                 config=config,  # LlmConfigオブジェクト
-                message="AI解析結果をDBに保存しました",
+                message="AIでの解析に成功",
             )
 
         except Exception as e:
             logger.error(f"処理エラー: {source_data.name} - {str(e)}")
             return ResultSingle(success=False, message=f"処理エラー：{str(e)}")
 
-    async def fetch_raw_content(self, client: httpx.AsyncClient, url: str) -> str:
-        """生HTMLのスクレイピング（ハッシュ計算用）"""
-        fetcher = DataFetcher()
-        try:
-            response = await client.get(url, headers=fetcher.headers)
-            response.raise_for_status()
-            return response.text
-        except Exception as e:
-            logger.exception(f"HTMLスクレイピング失敗 - URL: {url}")
-            raise e
-
     async def _analyze_with_ai(
-        self, source_data: SourceSchemaSingle, scraped_text: str) -> tuple[LlmConfig, TrailConditionSchemaList, LlmStats]:
+        self, source_data: SourceSchemaSingle, scraped_text: str
+    ) -> tuple[LlmConfig, TrailConditionSchemaList, LlmStats]:
         """AI解析処理"""
         import time
 

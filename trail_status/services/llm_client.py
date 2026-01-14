@@ -284,7 +284,7 @@ class ConversationalAi(ABC):
         # デバッグ用：サンプル出力を保存
         from datetime import datetime
 
-        output_dir = get_sample_dir() / Path(self.prompt_filename).stem
+        output_dir = get_sample_dir() / Path(self.prompt_filename or "").stem
         output_dir.mkdir(exist_ok=True)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -542,7 +542,11 @@ class GptClient(ConversationalAi):
             logger.debug(f"LlmConfig詳細： \n{self._config}")
 
             client = wrap_openai(AsyncOpenAI())
-            tools = [{"type": "web_search"}] if self.websearch else None
+            search_tool = (
+                {"type": "web_search", "user_location": {"city": "Tokyo", "type": "approximate"}}
+                if self.websearch
+                else None
+            )
 
             max_retries = 3
             for i in range(max_retries):
@@ -552,7 +556,7 @@ class GptClient(ConversationalAi):
 
                     response = await client.responses.parse(
                         model="gpt-5-mini",
-                        tools=tools,
+                        tools=[search_tool],
                         input=self.prompt_for_gpt,
                         text_format=TrailConditionSchemaList,
                     )
