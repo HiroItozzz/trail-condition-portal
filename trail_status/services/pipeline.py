@@ -42,7 +42,7 @@ class TrailConditionPipeline:
     def __init__(self, source_data_list: list[SourceSchemaSingle],**kwargs):
         self.source_data_list = source_data_list
         self.ai_model = kwargs.get("ai_model")
-        self.new_hash_mode = kwargs.get("new_hash")
+        self.new_hash_mode = kwargs.get("new_hash_mode")
 
     async def __call__(self) -> UpdatedDataList:
         return await self.run(self)

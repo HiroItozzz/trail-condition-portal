@@ -55,4 +55,6 @@ class TrailConditionSchemaInternal(TrailConditionSchemaAi):
 
     url1: str
     ai_config: dict
+    ai_model: str = ""
+    prompt_file: str = ""
     mountain_group: str | None = Field(default=None, description="山グループ / 後で手動入力")

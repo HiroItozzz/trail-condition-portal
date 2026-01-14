@@ -25,21 +25,23 @@ class Command(BaseCommand):
             default=0,
             help="使用するサンプルファイルの世代指定 (0が最新、数字が増えるごとに遡行)",
         )
+        parser.add_argument("--model", type=str, help="使用するサンプルファイルのAIモデル名（プレフィックス）")
 
     def handle(self, *args, **options):
         source_id = options.get("source")
         json_file = options.get("json_file")
         json_data = options.get("json_data")
         file_gen = options.get("file_gen")
+        ai_model = options.get("model")
 
         # 全情報源を処理する場合
         if source_id is None:
-            self._handle_all_sources(file_gen)
+            self._handle_all_sources(file_gen, ai_model)
         else:
             # 単一情報源を処理
             self._handle_single_source(source_id, json_file, json_data)
 
-    def _handle_all_sources(self, file_gen: int):
+    def _handle_all_sources(self, file_gen: int, ai_model: str):
         """全ての情報源について照合テストを実行"""
         sample_base_dir = Path("trail_status/services/sample")
 
@@ -79,6 +81,9 @@ class Command(BaseCommand):
 
             # 最新JSONファイルを取得
             json_files = sorted(sample_dir.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+            if ai_model:
+                json_files = [f for f in json_files if f.stem.startswith(ai_model)]
+
             if not json_files:
                 self.stdout.write(self.style.WARNING(f"スキップ: JSONファイルが見つかりません: {dir_name}"))
                 continue
