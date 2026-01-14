@@ -33,7 +33,7 @@ class LlmConfig(BaseModel):
     site_prompt: str | None = Field(default="", description="サイト固有プロンプト")
     use_template: bool = Field(default=True, description="template.yamlを使用するか")
     model: str = Field(
-        pattern=r"^(gemini|deepseek|gpt)-.+", default="gpt-5-mini", description="使用するLLMモデル"
+        pattern=r"^(gemini|deepseek|gpt)-.+", default="gemini-3-flash-preview", description="使用するLLMモデル"
     )
     data: str = Field(description="解析するテキスト")
     temperature: float = Field(
@@ -295,7 +295,7 @@ class ConversationalAi(ABC):
         # エラー時の出力保存
         from datetime import datetime
 
-        output_dir: Path = settings.BASE_DIR / "outputs/trail_status"
+        output_dir: Path = settings.BASE_DIR / "outputs"
         output_dir.mkdir(exist_ok=True)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -445,7 +445,7 @@ class GeminiClient(ConversationalAi):
             client = wrap_gemini(genai.Client())
 
             # 検索許可設定
-            tools = [types.Tool(google_search=types.GoogleSearch())] if self.websearch else None
+            search_tool = types.Tool(google_search=types.GoogleSearch()) if self.websearch else None
 
             max_retries = 3
             for i in range(max_retries):
@@ -458,7 +458,7 @@ class GeminiClient(ConversationalAi):
                             response_mime_type="application/json",  # 構造化出力
                             response_json_schema=TrailConditionSchemaList.model_json_schema(),
                             thinking_config=types.ThinkingConfig(thinking_budget=self.thinking_budget),
-                            tools=tools,
+                            tools=[search_tool],
                         ),
                     )
                     validated_data = self.validate_response(response.text)

@@ -1,0 +1,40 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "S01",
+      "mountain_name_raw": "",
+      "title": "通行できません",
+      "description": "区間: 県道517号線～顕鏡寺付近。理由: 送電線建替工事のため。期間: 令和9年9月24日まで(予定)。",
+      "reported_at": null,
+      "resolved_at": "2027-09-24",
+      "status": "CLOSURE",
+      "area": "SAGAMIKO",
+      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "comment": ""
+    },
+    {
+      "trail_name": "S01",
+      "mountain_name_raw": "",
+      "title": "通行できません",
+      "description": "区間: 大明神展望台～箕石橋。理由: 送電線建替工事のため。期間: 令和9年9月24日まで(予定)。",
+      "reported_at": null,
+      "resolved_at": "2027-09-24",
+      "status": "CLOSURE",
+      "area": "SAGAMIKO",
+      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "comment": ""
+    },
+    {
+      "trail_name": "K13_山里から津久井湖へのみち",
+      "mountain_name_raw": "",
+      "title": "迂回してください",
+      "description": "区間: 城山周辺。理由: 登山道崩落。期間: 当面の間。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "SAGAMIKO",
+      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "comment": "迂回推奨"
+    }
+  ]
+}

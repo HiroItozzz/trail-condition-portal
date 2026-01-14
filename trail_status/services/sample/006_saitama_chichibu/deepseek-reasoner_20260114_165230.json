@@ -1,0 +1,52 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "川又十文字峠線",
+      "mountain_name_raw": "秩父山地",
+      "title": "【注意】川又十文字峠線／秩父市大滝地内の土砂崩落及び路肩崩落の発生について",
+      "description": "",
+      "reported_at": "2025-05-13",
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "OKUCHICHIBU",
+      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/kawamatajyuumonjitouge2.pdf",
+      "comment": ""
+    },
+    {
+      "trail_name": "大輪三峰線（三峯神社表参道コース）",
+      "mountain_name_raw": "三峰山",
+      "title": "【注意】大輪三峰線（三峯神社表参道コース）の通行注意について",
+      "description": "",
+      "reported_at": "2025-03-25",
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "OKUCHICHIBU",
+      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/tyuuikannki2.pdf",
+      "comment": ""
+    },
+    {
+      "trail_name": "大日向霧藻ヶ峰線",
+      "mountain_name_raw": "霧藻ヶ峰",
+      "title": "【注意】大日向霧藻ヶ峰線の一部区間の通行止めについて",
+      "description": "",
+      "reported_at": "2025-01-10",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/hptuukoudome2.pdf",
+      "comment": ""
+    },
+    {
+      "trail_name": "黒岩尾根線",
+      "mountain_name_raw": "黒岩山",
+      "title": "【注意】黒岩尾根線通行止め／秩父市大滝地内の木橋破損について",
+      "description": "",
+      "reported_at": "2024-10-09",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/kuroiwaonesen4.pdf",
+      "comment": ""
+    }
+  ]
+}

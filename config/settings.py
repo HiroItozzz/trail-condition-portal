@@ -254,3 +254,8 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+
+# Slack Webhook URL（通知機能用）
+# 環境変数 SLACK_WEBHOOK_URL から読み込み
+# 設定されていなければ None（通知は送信されない）
+SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL", None)

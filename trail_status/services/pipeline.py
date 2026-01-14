@@ -42,7 +42,7 @@ class TrailConditionPipeline:
     def __init__(self, source_data_list: list[SourceSchemaSingle],**kwargs):
         self.source_data_list = source_data_list
         self.ai_model = kwargs.get("ai_model")
-        self.new_hash_mode = kwargs.get("new_hash")
+        self.new_hash_mode = kwargs.get("new_hash_mode")
 
     async def __call__(self) -> UpdatedDataList:
         return await self.run(self)
@@ -84,7 +84,7 @@ class TrailConditionPipeline:
             content_changed, new_hash = fetcher.has_content_changed(scraped_html, source_data.content_hash)
 
             if not content_changed:
-                if new_hash:
+                if self.new_hash_mode:
                     logger.info(f"コンテンツ変更なし（ソースID: {source_data.id}) - 既存データを上書き実行")
                 else:
                     logger.info(f"コンテンツ変更なし（ソースID: {source_data.id}）- LLM処理をスキップ")

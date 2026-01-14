@@ -1,0 +1,88 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "神の川林道",
+      "mountain_name_raw": "檜洞丸・大室山",
+      "title": "通り抜け禁止",
+      "description": "神ノ川公園橋付近から先は大変危険ですので、徒歩も含め林道の通り抜けはご遠慮ください。",
+      "reported_at": "2026-01-12",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "TANZAWA",
+      "reference_URL": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/kouenhodou_top.html",
+      "comment": "神ノ川公衆便所は令和7年6月1日より供用再開済み。林道管理者に詳細確認を推奨。"
+    },
+    {
+      "trail_name": "T09_大倉尾根線",
+      "mountain_name_raw": "塔ノ岳",
+      "title": "通行できません",
+      "description": "大倉登山口～金冷し（鍋割山稜と大倉尾根の分岐点）。山林火災発生中。天神尾根：通行止め",
+      "reported_at": "2026-01-12",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "TANZAWA",
+      "reference_URL": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/kouenhodou_top.html",
+      "comment": "秦野市堀山下での山林火災の影響。堀山の家が全焼との情報あり。当面の間通行不可。"
+    },
+    {
+      "trail_name": "T13_寄ユーシン線",
+      "mountain_name_raw": "雨山",
+      "title": "通行できません",
+      "description": "寄～雨山峠～雨山橋。登山道崩落（寄～雨山峠～雨山橋） 登山道の安全を確認中のため",
+      "reported_at": "2026-01-12",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "TANZAWA",
+      "reference_URL": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/kouenhodou_top.html",
+      "comment": "当面の間通行不可。"
+    },
+    {
+      "trail_name": "T22_同角山稜線",
+      "mountain_name_raw": "同角ノ頭",
+      "title": "通行できません",
+      "description": "ユーシン～同角分岐。登山道の安全を確認中のため",
+      "reported_at": "2026-01-12",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "TANZAWA",
+      "reference_URL": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/kouenhodou_top.html",
+      "comment": "当面の間通行不可。"
+    },
+    {
+      "trail_name": "T23_ユーシン塔ノ岳線",
+      "mountain_name_raw": "塔ノ岳",
+      "title": "通行できません",
+      "description": "塔ノ岳～尊仏ノ土平。登山道の安全を確認中のため",
+      "reported_at": "2026-01-12",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "TANZAWA",
+      "reference_URL": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/kouenhodou_top.html",
+      "comment": "当面の間通行不可。"
+    },
+    {
+      "trail_name": "T27_世附不老山線",
+      "mountain_name_raw": "不老山",
+      "title": "通行できます",
+      "description": "世附峠～芦沢橋",
+      "reported_at": "2025-02-12",
+      "resolved_at": null,
+      "status": "CLEAR",
+      "area": "TANZAWA",
+      "reference_URL": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/kouenhodou_top.html",
+      "comment": "令和7年2月12日より開通。"
+    },
+    {
+      "trail_name": "T37_平戸焼山線",
+      "mountain_name_raw": "焼山",
+      "title": "通行できます（一部ルートの変更）",
+      "description": "登山道崩落。登山道に接続する大棚沢林道・水ノ木幹線が通行止",
+      "reported_at": "2026-01-06",
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TANZAWA",
+      "reference_URL": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/kouenhodou_top.html",
+      "comment": "令和8年1月6日更新。一部ルート変更あり。接続する林道が通行止めのためアクセスに注意。"
+    }
+  ]
+} 

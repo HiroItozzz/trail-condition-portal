@@ -18,13 +18,13 @@ async def test_process_source_data_full_flow(monkeypatch, mock_async_client, sam
     # クラスのメソッドを差し替え
     monkeypatch.setattr("trail_status.services.pipeline.DeepseekClient.generate", async_gen_mock)
     monkeypatch.setattr("trail_status.services.pipeline.GeminiClient.generate", async_gen_mock)
+    monkeypatch.setattr("trail_status.services.pipeline.GptClient.generate", async_gen_mock)
 
     # --- LlmConfig.from_file のモック化 ---
-    mock_config = LlmConfig(data="テスト")
+    mock_config = LlmConfig(data="テスト", model="deepseek-chat")
     monkeypatch.setattr("trail_status.services.pipeline.LlmConfig.from_file", MagicMock(return_value=mock_config))
 
-    # --- テスト実行 ---
-    pipeline = TrailConditionPipeline()
+    # --- テスト用ソースデータ ---
     source_data_list = [
         SourceSchemaSingle(
             id=1,
@@ -34,8 +34,10 @@ async def test_process_source_data_full_flow(monkeypatch, mock_async_client, sam
             content_hash=None,
         )
     ]
+    # --- テスト実行 ---
+    pipeline = TrailConditionPipeline(source_data_list, ai_model="deepseek-chat")
 
-    results = await pipeline.run(source_data_list, "deepseek-chat")
+    results = await pipeline.run()
 
     # --- 検証 ---
     assert len(results) == 1

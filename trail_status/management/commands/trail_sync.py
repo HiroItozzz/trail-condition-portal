@@ -8,6 +8,7 @@ from trail_status.models.source import DataSource
 from trail_status.services.db_writer import DbWriter
 from trail_status.services.pipeline import ResultSingle, SourceSchemaSingle, TrailConditionPipeline, UpdatedDataList
 from trail_status.services.schema import TrailConditionSchemaList
+from trail_status.services.slack_notifier import SlackNotifier
 
 logger = logging.getLogger(__name__)
 
@@ -37,13 +38,13 @@ class Command(BaseCommand):
         source_id = options.get("source")
         ai_model = options.get("model")
         dry_run = options["dry_run"]
-        new_hash = options["new_hash"]
+        new_hash_mode = options["new_hash"]
 
         logger.info(
-            f"trail_sync コマンド開始 - source_id: {source_id}, model: {ai_model}, dry_run: {dry_run}, new_hash: {new_hash}"
+            f"trail_sync コマンド開始 - source_id: {source_id}, model: {ai_model}, dry_run: {dry_run}, new_hash: {new_hash_mode}"
         )
 
-        if new_hash:
+        if new_hash_mode:
             self.stdout.write(
                 self.style.WARNING("NEW-HASHモード: 更新のないサイトデータも変更されます。本当に実行しますか？")
             )
@@ -83,7 +84,7 @@ class Command(BaseCommand):
             self.stdout.write(f"全ての情報源を処理: {len(source_data_list)}件")
 
         # パイプライン処理を実行（純粋にasync処理のみ）
-        processor = TrailConditionPipeline(source_data_list, ai_model=ai_model, new_hash=new_hash)
+        processor = TrailConditionPipeline(source_data_list, ai_model=ai_model, new_hash_mode=new_hash_mode)
         all_source_results: UpdatedDataList = asyncio.run(processor.run())
 
         # DB保存（同期処理）
@@ -94,7 +95,7 @@ class Command(BaseCommand):
                     writer.save_to_source()
 
                     if not result_by_source.content_changed:
-                        if not new_hash:
+                        if not new_hash_mode:
                             self.stdout.write(
                                 self.style.WARNING(f"コンテンツ変更なし: {source_data.name} - LLM処理スキップ")
                             )
@@ -109,6 +110,17 @@ class Command(BaseCommand):
                             f"DB保存完了: {db_result['name']}\n更新: {db_result['updated']}件 - 新規作成: {db_result['created']}件 - 計: {db_result['count']}件 (コスト: ${db_result['cost']:.4f})"
                         )
                     )
+
+                    # Slack通知を送信（ハッシュ更新検知時）
+                    if db_result["updated"] > 0 or db_result["created"] > 0:
+                        notifier = SlackNotifier()
+                        notifier.send_update_notification(
+                            source_name=db_result["name"],
+                            updated_count=db_result["updated"],
+                            created_count=db_result["created"],
+                            total_count=db_result["count"],
+                            cost=db_result["cost"],
+                        )
 
         # 結果サマリーを表示
         summary = self.generate_summary(all_source_results)
