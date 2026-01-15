@@ -243,13 +243,13 @@ class ConversationalAi(ABC):
     async def validation_error(self, i, max_retries, response_text):
         if i < max_retries - 1:
             logger.warning(f"{self.model}が構造化出力に失敗。")
-            if self.temperature == 0:
-                self.temperature += 0.1
-                logger.warning(f"Temperatureを0.1上げてリトライします。更新後のTemperature: {self.temperature}")
+            self.temperature += 0.1
+            logger.warning(f"Temperatureを0.1上げてリトライします。更新後のTemperature: {self.temperature}")
+            if self.temperature == 0.0:    
                 logger.warning(
                     "Temperature=0は毎回同じ出力（＝構造化失敗）となります。設定を0.1以上にすることを検討してください"
                 )
-                logger.warning(f"設定ファイル名:{self.prompt_filename!r}")
+            logger.warning(f"設定ファイル名:{self.prompt_filename!r}")
             logger.warning("3秒後にリトライします")
             await asyncio.sleep(3)
         else:
@@ -331,14 +331,13 @@ class DeepseekClient(ConversationalAi):
             Returns:
                 tuple[TrailConditionSchemaList, TokenStats]
             """
-            logger.info(f"{self.model}の応答を待っています。")
-            logger.debug(f"LlmConfig詳細： \n{self._config}")
-            logger.debug(f"APIキー: ...{self.api_key[-5:]}")
-
             client = wrap_openai(AsyncOpenAI(api_key=self.api_key, base_url="https://api.deepseek.com"))
 
             max_retries = 3
             for i in range(max_retries):
+                logger.info(f"{self.model}の応答を待っています。")
+                logger.debug(f"LlmConfig詳細： \n{self._config}")
+                logger.debug(f"APIキー: ...{self.api_key[-5:]}")
                 try:
                     response = await client.chat.completions.create(
                         model=self.model,
@@ -437,10 +436,6 @@ class GeminiClient(ConversationalAi):
             Returns:
                 tuple[TrailConditionSchemaList, TokenStats]
             """
-            logger.info(f"{self.model}の応答を待っています。")
-            logger.debug(f"LlmConfig詳細： \n{self._config}")
-            logger.debug(f"APIキー: ...{self.api_key[-5:]}")
-
             # api_key引数なしでも、環境変数"GEMNI_API_KEY"の値を勝手に参照するが、可読性のため代入
             client = wrap_gemini(genai.Client())
 
@@ -449,6 +444,10 @@ class GeminiClient(ConversationalAi):
 
             max_retries = 3
             for i in range(max_retries):
+                logger.info(f"{self.model}の応答を待っています。")
+                logger.debug(f"LlmConfig詳細： \n{self._config}")
+                logger.debug(f"APIキー: ...{self.api_key[-5:]}")
+
                 try:
                     response = await client.aio.models.generate_content(  # リクエスト
                         model=self.model,
@@ -539,8 +538,6 @@ class GptClient(ConversationalAi):
             from langsmith.wrappers import wrap_openai
             from openai import AsyncOpenAI
 
-            logger.debug(f"LlmConfig詳細： \n{self._config}")
-
             client = wrap_openai(AsyncOpenAI())
             search_tool = (
                 {"type": "web_search", "user_location": {"city": "Tokyo", "type": "approximate"}}
@@ -552,6 +549,7 @@ class GptClient(ConversationalAi):
             for i in range(max_retries):
                 try:
                     logger.info(f"{self.model}の応答を待っています。")
+                    logger.debug(f"LlmConfig詳細： \n{self._config}")
                     logger.debug(f"APIキー: ...{self.api_key[-5:]}")
 
                     response = await client.responses.parse(
