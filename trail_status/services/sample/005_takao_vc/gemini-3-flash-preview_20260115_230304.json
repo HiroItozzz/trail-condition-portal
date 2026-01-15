@@ -1,0 +1,88 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "小仏峠～小仏城山中間地点から日影林道に続くまき道",
+      "mountain_name_raw": "小仏城山",
+      "title": "通行止め",
+      "description": "小仏峠～小仏城山中間地点から日影林道に続くまき道",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": "台風19号（2019年）および台風10号（2024年8月）の影響による通行止め"
+    },
+    {
+      "trail_name": "金毘羅台コース",
+      "mountain_name_raw": "高尾山",
+      "title": "倒木あり通行注意",
+      "description": "倒木あり通行注意",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": ""
+    },
+    {
+      "trail_name": "日影林道",
+      "mountain_name_raw": "小仏城山",
+      "title": "土砂崩れのため通行注意",
+      "description": "土砂崩れのため通行注意",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": ""
+    },
+    {
+      "trail_name": "景信山～小下沢林道方向",
+      "mountain_name_raw": "景信山",
+      "title": "崩落個所あり",
+      "description": "上記個所は林道の為通行止めにはなっておりませんが、崩落個所がいくつかあります。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": "北高尾山稜エリア"
+    },
+    {
+      "trail_name": "小下沢林道中間地点～関場峠",
+      "mountain_name_raw": "景信山",
+      "title": "崩落箇所があるため通行注意",
+      "description": "崩落箇所があるため通行注意",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": "北高尾山稜エリア"
+    },
+    {
+      "trail_name": "松竹～八王子城山",
+      "mountain_name_raw": "八王子城山",
+      "title": "道が荒れている為通行注意",
+      "description": "道が荒れている為通行注意",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "TAKAO",
+      "reference_URL": "",
+      "comment": ""
+    },
+    {
+      "trail_name": "陣馬山・藤野エリア全般",
+      "mountain_name_raw": "陣馬山",
+      "title": "神奈川県側状況確認",
+      "description": "状況は、下記ホームページをご覧ください。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "OTHER",
+      "area": "TAKAO",
+      "reference_URL": "http://www.pref.kanagawa.jp/docs/f4y/02yama/kanagawaparkranger/pr-jinnbatoukaisizennhodou.html",
+      "comment": "藤野観光協会HP: http://info-fujino.com/"
+    }
+  ]
+} 
