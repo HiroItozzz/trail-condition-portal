@@ -103,7 +103,8 @@ class Command(BaseCommand):
                         else:
                             logger.info("NEW-HASHモード: 既存データと再度照合します")
 
-                    db_result = writer.persist_condition_and_usage()
+                    internal_data_list = writer.convert_to_internal_schema()
+                    db_result = writer.persist_condition_and_usage(internal_data_list)
 
                     self.stdout.write(
                         self.style.SUCCESS(

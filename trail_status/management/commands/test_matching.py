@@ -1,13 +1,17 @@
 import json
+import logging
 from pathlib import Path
 
 from django.core.management.base import BaseCommand
+from django.db import transaction
 
 from trail_status.models.source import DataSource
 from trail_status.services.db_writer import DbWriter
 from trail_status.services.llm_client import LlmConfig
 from trail_status.services.pipeline import ResultSingle, SourceSchemaSingle
 from trail_status.services.schema import TrailConditionSchemaInternal
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -26,6 +30,11 @@ class Command(BaseCommand):
             help="使用するサンプルファイルの世代指定 (0が最新、数字が増えるごとに遡行)",
         )
         parser.add_argument("--model", type=str, help="使用するサンプルファイルのAIモデル名（プレフィックス）")
+        parser.add_argument(
+            "--force-db-sync",
+            action="store_true",
+            help="DB同期も実行（照合ロジックのみでなく、実際にDB保存も行う）",
+        )
 
     def handle(self, *args, **options):
         source_id = options.get("source")
@@ -33,15 +42,23 @@ class Command(BaseCommand):
         json_data = options.get("json_data")
         file_gen = options.get("file_gen")
         ai_model = options.get("model")
+        force_sync = options.get("force_db_sync")
+
+        if force_sync:
+            self.stdout.write(self.style.WARNING("FORCE-DB-SYNCモード: 照合結果をDBに保存します。本当に実行しますか？"))
+            choice = input("(y/N): ")
+            if choice != "y":
+                self.stdout.write(self.style.WARNING("実行を中断します。"))
+                return
 
         # 全情報源を処理する場合
         if source_id is None:
-            self._handle_all_sources(file_gen, ai_model)
+            self._handle_all_sources(file_gen, ai_model, force_sync)
         else:
             # 単一情報源を処理
-            self._handle_single_source(source_id, json_file, json_data)
+            self._handle_single_source(source_id, json_file, json_data, file_gen, ai_model)
 
-    def _handle_all_sources(self, file_gen: int, ai_model: str):
+    def _handle_all_sources(self, file_gen: int, ai_model: str, force_sync: bool):
         """全ての情報源について照合テストを実行"""
         sample_base_dir = Path("trail_status/services/sample")
 
@@ -92,9 +109,8 @@ class Command(BaseCommand):
 
             # 照合テストを実行
             try:
-                result = self._test_matching_for_source(source, str(latest_file))
+                result = self._test_matching_for_source(source, str(latest_file), force_sync=force_sync)
                 if result:
-                    duplicate_count = len(result.get("duplicate_warnings", []))
                     all_results.append(
                         {
                             "source": source,
@@ -102,7 +118,6 @@ class Command(BaseCommand):
                             "update_count": result["update_count"],
                             "create_count": result["create_count"],
                             "total_count": result["total_count"],
-                            "duplicate_count": duplicate_count,
                         }
                     )
                     total_update += result["update_count"]
@@ -115,7 +130,7 @@ class Command(BaseCommand):
         # 全体のサマリーを表示
         self._print_all_sources_summary(all_results, total_update, total_create, total_records)
 
-    def _handle_single_source(self, source_id, json_file, json_data):
+    def _handle_single_source(self, source_id, json_file, json_data, file_gen, ai_model):
         """単一情報源について照合テストを実行"""
         # DataSourceを取得
         try:
@@ -136,11 +151,14 @@ class Command(BaseCommand):
                 return
 
             json_files = sorted(sample_dir.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+            if ai_model:
+                json_files = [f for f in json_files if f.stem.startswith(ai_model)]
+
             if not json_files:
                 self.stdout.write(self.style.ERROR(f"サンプルJSONファイルが見つかりません: {sample_dir}"))
                 return
 
-            latest_file = json_files[0]
+            latest_file = json_files[min(file_gen, len(json_files) - 1)]
             self.stdout.write(f"使用サンプルファイル: {latest_file.name}")
 
             json_file = str(latest_file)
@@ -155,13 +173,12 @@ class Command(BaseCommand):
                     result["to_update"],
                     result["to_create"],
                     result["total_count"],
-                    result.get("duplicate_warnings", []),
                 )
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"エラーが発生: {e}"))
             self.stdout.write(self.style.WARNING("処理を中断しました"))
 
-    def _test_matching_for_source(self, source, json_file=None, json_data=None):
+    def _test_matching_for_source(self, source, json_file=None, json_data=None, force_sync=False):
         """指定された情報源とJSONファイルで照合テストを実行"""
         # JSONデータを読み込み & モデル名を抽出
         if json_file:
@@ -186,11 +203,12 @@ class Command(BaseCommand):
             return None
 
         # AI config（ダミー）
-        ai_config = {"temperature": 0}
+        ai_config = {"temperature": 0, "model": model_name}
 
         # TrailConditionSchemaInternalリストを作成
         internal_data_list = [
-            TrailConditionSchemaInternal(**record, url1=source.url1, ai_config=ai_config) for record in ai_conditions
+            TrailConditionSchemaInternal(**record, url1=source.url1, ai_config=ai_config, ai_model=model_name)
+            for record in ai_conditions
         ]
 
         # SourceSchemaSingleを作成
@@ -210,23 +228,19 @@ class Command(BaseCommand):
             success=True,
             content_changed=True,
             config=config,
+            new_hash=source.content_hash,
             message="Test matching only",
         )
 
-        # 重複警告コールバック（リアルタイム表示用）
-        def on_duplicate(dup_info):
-            self.stdout.write(
-                self.style.ERROR(
-                    f"⚠️  重複照合警告: レコードID {dup_info['record_id']}\n"
-                    f"    既存: {dup_info['existing_mountain']}/{dup_info['existing_trail']}\n"
-                    f"    新規: {dup_info['new_mountain']}/{dup_info['new_trail']}\n"
-                    f"    → スキップします"
-                )
-            )
-
         # DbWriterで照合ロジックを実行（DB保存なし）
-        writer = DbWriter(source_schema, result, on_duplicate_warning=on_duplicate)
-        to_update, to_create, duplicate_warnings = writer.reconcile_records(internal_data_list)
+        writer = DbWriter(source_schema, result)
+        to_update, to_create = writer.reconcile_records(internal_data_list)
+        if force_sync:
+            # 強制的にDB保存も実行
+            with transaction.atomic():
+                writer._commit_trail_condition(to_update, to_create)
+            logger.info(f"DB保存完了: {source_schema.name}")
+            self.stdout.write(self.style.SUCCESS(f"DB保存完了: {source_schema.name}"))
 
         return {
             "to_update": to_update,
@@ -234,10 +248,9 @@ class Command(BaseCommand):
             "update_count": len(to_update),
             "create_count": len(to_create),
             "total_count": len(internal_data_list),
-            "duplicate_warnings": duplicate_warnings,
         }
 
-    def _print_matching_results(self, to_update, to_create, total_count, duplicate_warnings):
+    def _print_matching_results(self, to_update, to_create, total_count):
         """照合結果を整形して表示（単一情報源用）"""
         self.stdout.write("\n" + "=" * 60)
         self.stdout.write(self.style.SUCCESS("照合結果サマリー"))
@@ -245,27 +258,11 @@ class Command(BaseCommand):
 
         update_count = len(to_update)
         create_count = len(to_create)
-        duplicate_count = len(duplicate_warnings)
 
         self.stdout.write(f"総レコード数: {total_count}件")
         self.stdout.write(f"既存レコード更新: {update_count}件")
         self.stdout.write(f"新規レコード作成: {create_count}件")
-        if duplicate_count > 0:
-            self.stdout.write(self.style.WARNING(f"重複スキップ: {duplicate_count}件"))
         self.stdout.write("")
-
-        # 重複警告の詳細表示
-        if duplicate_warnings:
-            self.stdout.write(self.style.WARNING("【重複照合警告】"))
-            for dup in duplicate_warnings:
-                self.stdout.write(
-                    self.style.WARNING(
-                        f"  ⚠️  レコードID {dup['record_id']}: "
-                        f"{dup['existing_mountain']}/{dup['existing_trail']} と "
-                        f"{dup['new_mountain']}/{dup['new_trail']} が重複"
-                    )
-                )
-            self.stdout.write(self.style.WARNING("  → プロンプトの見直しを推奨します\n"))
 
         # 更新対象の詳細
         if to_update:
@@ -295,26 +292,15 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("全情報源 照合結果サマリー"))
         self.stdout.write("=" * 70 + "\n")
 
-        total_duplicates = 0
         for result in all_results:
             source = result["source"]
-            duplicate_count = result.get("duplicate_count", 0)
-            total_duplicates += duplicate_count
-
             status = (
                 f"更新: {result['update_count']}件 / 新規: {result['create_count']}件 / 合計: {result['total_count']}件"
             )
-            if duplicate_count > 0:
-                status += self.style.WARNING(f" / 重複: {duplicate_count}件")
-
             self.stdout.write(f"✅ {source.name} ({result['file']})\n   {status}\n")
 
         self.stdout.write("=" * 70)
         summary_text = f"総合計: 更新 {total_update}件 / 新規 {total_create}件 / 全レコード {total_records}件"
-        if total_duplicates > 0:
-            summary_text += f" / 重複スキップ {total_duplicates}件"
         self.stdout.write(self.style.SUCCESS(summary_text))
         self.stdout.write(f"処理した情報源: {len(all_results)}件")
-        if total_duplicates > 0:
-            self.stdout.write(self.style.WARNING("⚠️  重複照合が発生しています。プロンプトの見直しを推奨します。"))
         self.stdout.write("=" * 70)
