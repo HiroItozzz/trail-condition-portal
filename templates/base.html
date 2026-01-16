@@ -66,7 +66,7 @@
 
                 /* 洗練させたサイドバー：透明度50% + ぼかし15px（採用版） */
                 #sidebar {
-                    width: 240px;
+                    width: 246px;
                     height: 100vh;
                     padding: 24px 20px;
                     border-right: 1px #f1f1f1;
@@ -82,13 +82,34 @@
                     isolation: isolate;
                 }
 
+                /* ボディ用スクロールバー */
+                html {
+                    scrollbar-width: thin;
+                }
+
+                html::-webkit-scrollbar {
+                    width: 6px;
+                }
+
+                html::-webkit-scrollbar-thumb {
+                    background: rgba(150, 150, 150, 0.4);
+                    border-radius: 3px;
+                }
+
+                /* サイドバー用スクロールバー */
+                #sidebar {
+                    scrollbar-width: thin;
+                    scrollbar-color: rgba(145, 145, 145, 0.5) rgb(245, 245, 245);
+                }
+
                 #sidebar::before {
                     content: '';
-                    position: fixed;
+                    position: absolute;
                     top: 0;
                     left: 0;
-                    width: 240px;
-                    height: 100vh;
+                    width: 100%;
+                    height: var(--sidebar-height, 100vh);
+                    min-height: 100vh;
                     background: rgba(255, 255, 255, 0.5);
                     backdrop-filter: blur(15px) saturate(180%);
                     -webkit-backdrop-filter: blur(15px) saturate(180%);
@@ -680,12 +701,10 @@
                             }, 50);
                         });
 
-                        // サイドバー::beforeの高さを動的に調整（モバイルのみ）
+                        // サイドバー::beforeの高さを動的に調整
                         function updateSidebarBeforeHeight() {
-                            if (window.innerWidth <= 640) {
-                                const scrollHeight = sidebar.scrollHeight;
-                                sidebar.style.setProperty('--sidebar-height', scrollHeight + 'px');
-                            }
+                            const scrollHeight = sidebar.scrollHeight;
+                            sidebar.style.setProperty('--sidebar-height', scrollHeight + 'px');
                         }
 
                         // 初回実行
