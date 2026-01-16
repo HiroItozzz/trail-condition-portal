@@ -500,24 +500,28 @@
 
                                 $.each(columns, function(i, col) {
                                     if (col.hidden) {
-                                        var item = '<li data-dtr-index="' + col.columnIndex + '">' +
-                                            '<span class="dtr-title">' + col.title + '</span> ' +
-                                            '<span class="dtr-data">' + col.data + '</span>' +
-                                            '</li>';
-                                        if (col.columnIndex === 8) { // 情報源
-                                            sourceColumn = item;
+                                        var item = '';
+                                        if (col.columnIndex === 4 && detailUrl) { // 原文タイトル + もっと見るリンク
+                                            item = '<li data-dtr-index="' + col.columnIndex + '">' +
+                                                '<span class="dtr-title">' + col.title + '</span>' +
+                                                '<div style="display: flex; justify-content: space-between; align-items: flex-start;">' +
+                                                '<span class="dtr-data">' + col.data + '</span>' +
+                                                '<a href="' + detailUrl + '" style="color: #2563eb; font-weight: 500; white-space: nowrap; margin-left: 8px;">もっと見る</a>' +
+                                                '</div></li>';
+                                        } else if (col.columnIndex === 8) { // 情報源
+                                            sourceColumn = '<li data-dtr-index="' + col.columnIndex + '">' +
+                                                '<span class="dtr-title">' + col.title + '</span> ' +
+                                                '<span class="dtr-data">' + col.data + '</span>' +
+                                                '</li>';
                                         } else {
-                                            data += item;
+                                            item = '<li data-dtr-index="' + col.columnIndex + '">' +
+                                                '<span class="dtr-title">' + col.title + '</span> ' +
+                                                '<span class="dtr-data">' + col.data + '</span>' +
+                                                '</li>';
                                         }
+                                        data += item;
                                     }
                                 });
-
-                                // 詳細リンクを追加（情報源の前）
-                                if (detailUrl) {
-                                    data += '<li style="padding-top: 12px;">' +
-                                        '<a href="' + detailUrl + '" style="color: #2563eb; font-weight: 500;">詳細を見る →</a>' +
-                                        '</li>';
-                                }
 
                                 // 情報源を最後に追加
                                 data += sourceColumn;
