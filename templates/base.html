@@ -197,6 +197,89 @@
                     line-height: 1.2;
                 }
 
+                /* DataTablesヘッダー行 */
+                .datatable-header {
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 0.75rem;
+                }
+                .dt-row1 {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                }
+                .dt-row2 {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    margin-left: auto;
+                }
+                @media (max-width: 640px) {
+                    .datatable-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                        gap: 2px;
+                        margin-bottom: 4px;
+                    }
+                    .dt-row1 {
+                        width: 100%;
+                    }
+                    .dt-row2 {
+                        width: 100%;
+                        justify-content: space-between;
+                        margin-left: 0;
+                        gap: 8px;
+                    }
+                    .dt-row2 .dataTables_length {
+                        display: none;
+                    }
+                    #mobile-sort-select {
+                        background: white;
+                        font-size: 12px;
+                        height: 24px;
+                        padding: 0 4px;
+                        min-width: 90px;
+                    }
+                }
+
+                /* DataTables入力欄のスタイル */
+                .dataTables_filter,
+                .dataTables_length {
+                    font-size: 14px !important;
+                }
+                .dataTables_filter input,
+                .dataTables_length select {
+                    background: white !important;
+                    border: 1px solid #ddd !important;
+                    border-radius: 4px !important;
+                    padding: 2px 6px !important;
+                    height: 28px !important;
+                }
+                .dataTables_filter input {
+                    width: 160px !important;
+                }
+                @media (max-width: 640px) {
+                    .dataTables_filter input {
+                        width: 128px !important;
+                    }
+                    .dt-row2 {
+                        font-size: 12px !important;
+                    }
+                    .dt-row2 .resolved-filter label {
+                        font-size: 12px;
+                    }
+                    .dt-row2 .dataTables_length {
+                        font-size: 12px !important;
+                    }
+                    .dt-row2 select {
+                        height: 24px !important;
+                        font-size: 12px !important;
+                    }
+                }
+
                 /* テーブルヘッダーの色を統一 */
                 #trail-table th {
                     font-size: 12px;
@@ -531,9 +614,10 @@
 
                         // 画面サイズに応じた件数設定
                         const isMobile = window.innerWidth <= 768;
-                        const pageLength = isMobile ? 10 : 15;
+                        const pageLength = isMobile ? 15 : 15;
 
-                        $('#trail-table').DataTable({
+                        var table = $('#trail-table').DataTable({
+                            "dom": '<"datatable-header"<"dt-row1"f><"dt-row2"<"resolved-filter">l>>rtip',
                             "language": {
                                 "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/ja.json"
                             },
@@ -616,7 +700,69 @@
                                     "targets": 3,
                                     "className": "text-center"
                                 } // 状況
-                            ]
+                            ],
+                            "initComplete": function() {
+                                // チェックボックスをDOMに挿入
+                                $('.resolved-filter').html(
+                                    '<label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap">' +
+                                    '<input type="checkbox" id="hide-resolved" class="w-4 h-4 rounded" checked>' +
+                                    '<span>解消済除く</span>' +
+                                    '</label>'
+                                );
+                                // モバイル用ソートドロップダウンを追加
+                                if (window.innerWidth <= 768) {
+                                    $('.dt-row2').append(
+                                        '<div class="mobile-sort">' +
+                                        '<select id="mobile-sort-select" class="text-sm border border-gray-300 rounded px-2 py-1">' +
+                                        '<option value="">並び替え</option>' +
+                                        '<option value="6-desc">報告日↓新</option>' +
+                                        '<option value="6-asc">報告日↑古</option>' +
+                                        '<option value="7-desc">解消日↓新</option>' +
+                                        '<option value="7-asc">解消日↑古</option>' +
+                                        '<option value="8-asc">情報源↑</option>' +
+                                        '<option value="8-desc">情報源↓</option>' +
+                                        '</select>' +
+                                        '</div>'
+                                    );
+                                }
+                            }
+                        });
+
+                        // 解消済みフィルター
+                        var hideResolved = true;
+                        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                            if (!hideResolved) return true;
+
+                            var resolvedAt = data[7] || '';
+
+                            // 数字がなければ表示（解消日なし）
+                            if (!/\d/.test(resolvedAt)) return true;
+
+                            // 日付パース
+                            var m = resolvedAt.match(/(\d{2})\/(\d{2})\/(\d{2})/);
+                            if (!m) return true;
+
+                            var resolved = new Date(2000 + +m[1], +m[2] - 1, +m[3]);
+                            var today = new Date();
+                            today.setHours(0,0,0,0);
+
+                            return resolved > today;
+                        });
+
+                        $(document).on('change', '#hide-resolved', function() {
+                            hideResolved = this.checked;
+                            table.draw();
+                        });
+
+                        // モバイル用ソート
+                        $(document).on('change', '#mobile-sort-select', function() {
+                            var val = $(this).val();
+                            if (val) {
+                                var parts = val.split('-');
+                                var col = parseInt(parts[0]);
+                                var dir = parts[1];
+                                table.order([col, dir]).draw();
+                            }
                         });
 
                         // デスクトップで行クリック時に詳細ページへ遷移
