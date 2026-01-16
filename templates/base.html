@@ -387,14 +387,16 @@
                     border: none;
                     font-size: 24px;
                     cursor: pointer;
-                    padding: 8px;
+                    padding: 4px 8px;
                     position: fixed;
-                    top: 16px;
+                    bottom: 20px;
                     left: 16px;
                     z-index: 1000;
-                    background-color: white;
+                    background-color: rgba(255, 255, 255, 0.5);
+                    backdrop-filter: blur(4px);
+                    -webkit-backdrop-filter: blur(4px);
                     border-radius: 4px;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
                 }
 
                 /* レスポンシブデザイン */
@@ -445,7 +447,7 @@
 
                     #content {
                         margin-left: 0;
-                        padding: 60px 16px 16px 16px;
+                        padding: 16px;
                     }
 
                     /* オーバーレイ */
@@ -614,10 +616,11 @@
 
                         // 画面サイズに応じた件数設定
                         const isMobile = window.innerWidth <= 768;
-                        const pageLength = isMobile ? 15 : 15;
+                        const pageLength = isMobile ? 20 : 20;
 
                         var table = $('#trail-table').DataTable({
                             "dom": '<"datatable-header"<"dt-row1"f><"dt-row2"<"resolved-filter">l>>rtip',
+                            "order": [[6, "desc"]],
                             "language": {
                                 "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/ja.json"
                             },
