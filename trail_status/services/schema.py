@@ -26,7 +26,7 @@ class TrailConditionSchemaAi(BaseModel):
     )
     reported_at: date | None = Field(
         default=None,
-        description="報告日（YYYY-MM-DD形式） / 該当項目がない、あるいはわからなければ、None型",
+        description="報告日（YYYY-MM-DD形式） / 日付が具体的に明記されている場合にのみ値を入力",
     )
     resolved_at: date | None = Field(
         default=None,

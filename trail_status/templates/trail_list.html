@@ -55,43 +55,59 @@
          style="width:100%">
     <thead>
       <tr>
-        <th>
-          <span class="hidden md:inline">元サイト更新日</span>
-          <span class="md:hidden">更新日</span>
-        </th>
         <th>山域</th>
+        <th>
+          <span class="hidden md:inline">情報取得日</span>
+          <span class="md:hidden">取得日</span>
+        </th>
         <th>対象</th>
         <th>状況種別</th>
-        <th>原文タイトル・備考</th>
+        <th>原文タイトル</th>
+        <th>詳細</th>
+        <th>報告日</th>
+        <th>解消日</th>
         <th>情報源</th>
       </tr>
     </thead>
     <tbody>
       {% for item in conditions %}
         <tr class="hover:bg-[#f5f5f5]">
+          <td>{{ item.get_area_display }}</td>
           <td class="whitespace-nowrap">
             <span class="hidden md:inline">{{ item.updated_at|date:"Y/m/d"|default:"-" }}</span>
             <span class="md:hidden">{{ item.updated_at|date:"y/m/d"|default:"-" }}</span>
           </td>
-          <td>{{ item.get_area_display }}</td>
           <td>
             <div style="font-weight: bold;  color: #000;">{{ item.mountain_name_raw }}</div>
             <div style="color: #666; font-size: 11px;">{{ item.trail_name }}</div>
           </td>
           <td class="whitespace-nowrap" style="vertical-align: middle;">
-            <span class="px-1 py-1 text-xs rounded font-medium {% if item.status == 'CLOSURE' %}bg-red-100 text-red-700 {% elif item.status == 'HAZARD' %}bg-orange-100 text-orange-700 {% elif item.status == 'SNOW' %}bg-cyan-100 text-cyan-700 {% elif item.status == 'CLEAR' %}bg-green-100 text-green-700 {% elif item.status == 'RESOLVED' %}bg-green-100 text-green-700 {% else %}bg-blue-100 text-blue-700{% endif %}">
+            <span class="px-1 py-1 text-xs rounded font-medium {% if item.status == 'CLOSURE' %}bg-red-100 text-red-700 {% elif item.status == 'HAZARD' %}bg-orange-100 text-orange-700 {% elif item.status == 'SNOW' %}bg-cyan-100 text-cyan-700 {% elif item.status == 'CLEAR' %}bg-green-100 text-green-700 {% elif item.status == 'RESOLVED' %}bg-green-100 text-green-700 {% elif item.status == 'ANIMAL' %}bg-purple-100 text-purple-700 {% elif item.status == 'WATER' %}bg-teal-100 text-teal-700 {% elif item.status == 'WEATHER' %}bg-gray-100 text-gray-700 {% else %}bg-blue-100 text-blue-700{% endif %}">
               {{ item.get_status_display }}
             </span>
           </td>
           <td>
             <div style="font-weight: bold; font-style: italic; color: #000;">{{ item.title }}</div>
-            {% if item.comment %}
-              <div class="mt-1 pl-1"
-                   style="color: #777;
-                          font-size: 11px;
+          </td>
+          <td style="white-space: normal;">
+            {% if item.description %}
+              <div class="pl-1"
+                   style="color: #444;
+                          font-size: 12px;
                           border-left: 2px solid #ddd;
-                          white-space: normal">備考: {{ item.comment }}</div>
+                          display: -webkit-box;
+                          -webkit-line-clamp: 2;
+                          -webkit-box-orient: vertical;
+                          overflow: hidden;">{{ item.description }}</div>
             {% endif %}
+          </td>
+          <td class="whitespace-nowrap">
+            <span class="hidden md:inline">{{ item.reported_at|date:"y/m/d"|default:"-" }}</span>
+            <span class="md:hidden">{{ item.reported_at|date:"y/m/d"|default:"-" }}</span>
+          </td>
+          <td class="whitespace-nowrap">
+            <span class="hidden md:inline">{{ item.resolved_at|date:"y/m/d"|default:"-" }}</span>
+            <span class="md:hidden">{{ item.resolved_at|date:"y/m/d"|default:"-" }}</span>
           </td>
           <td class="whitespace-normal overflow-hidden text-xs">
             <a href="{{ item.url1 }}"

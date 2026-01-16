@@ -180,6 +180,39 @@
               color: #666;
           }
 
+          /* デスクトップのみ: テーブル幅固定（パーセンテージ） */
+          @media (min-width: 641px) {
+              #trail-table {
+                  table-layout: fixed;
+              }
+              #trail-table th:nth-child(1),
+              #trail-table td:nth-child(1) { width: 6%; }   /* 山域 */
+              #trail-table th:nth-child(2),
+              #trail-table td:nth-child(2) { width: 7%; }   /* 取得日 */
+              #trail-table th:nth-child(3),
+              #trail-table td:nth-child(3) { width: 15%; }  /* 対象 */
+              #trail-table th:nth-child(4),
+              #trail-table td:nth-child(4) { width: 65px; }   /* 状況 */
+              #trail-table th:nth-child(5),
+              #trail-table td:nth-child(5) { width: 18%; }  /* 原文タイトル */
+              #trail-table th:nth-child(6),
+              #trail-table td:nth-child(6) { width: 25%; }  /* 詳細 */
+              #trail-table th:nth-child(7),
+              #trail-table td:nth-child(7) { width: 55px; text-align: center; }  /* 報告日 */
+              #trail-table th:nth-child(8),
+              #trail-table td:nth-child(8) { width: 55px; text-align: center; }  /* 解消日 */
+              #trail-table th:nth-child(9),
+              #trail-table td:nth-child(9) { width: 11%; }  /* 情報源 */
+
+              /* 対象の登山道名・原文を省略 */
+              #trail-table td:nth-child(3) div,
+              #trail-table td:nth-child(5) div {
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+              }
+          }
+
           /* 展開された詳細情報のヘッダー*/
           .dtr-title {
               font-size: 12px;
@@ -328,16 +361,16 @@
                   min-width: 100px !important;
               }
 
-              /* 展開された詳細情報の境界線 */
+              /* 展開された詳細情報 */
               .dtr-details li {
-                  border-bottom: 1px solid rgb(104, 115, 130) !important;
-                  /* 色を変更 */
                   padding: 8px 0;
+                  border: none !important;
               }
 
-              /* 最後の項目は境界線なし */
-              .dtr-details li:last-child {
-                  border-bottom: none !important;
+              /* 展開時のテキスト折り返し */
+              .dtr-data {
+                  white-space: normal;
+                  word-break: break-word;
               }
 
               /* テーブル行のカーソル */
@@ -461,24 +494,28 @@
                     },
                     "columnDefs": [{
                             "responsivePriority": 1,
-                            "targets": [0, 1, 2, 3]
-                        }, // 更新日、山域、対象、状況 (最重要4列)
+                            "targets": [0, 2, 3]
+                        }, // 山域、対象、状況 (最重要3列)
+                        {
+                            "responsivePriority": 2,
+                            "targets": [1]
+                        }, // 取得日
                         {
                             "responsivePriority": 10000,
-                            "targets": [4, 5]
-                        }, // 詳細、情報源は+で
-                        {
-                            "width": "60px",
-                            "targets": 0,
-                            "className": "text-center"
-                        }, // 更新日
+                            "targets": [4, 5, 6, 7, 8]
+                        }, // 原文、詳細、報告日、解消日、情報源は折りたたみ
                         {
                             "width": "55px",
-                            "targets": 1,
+                            "targets": 0,
                             "className": "text-center"
                         }, // 山域
                         {
-                            "width": "85px",
+                            "width": "60px",
+                            "targets": 1,
+                            "className": "text-center"
+                        }, // 取得日
+                        {
+                            "width": "65px",
                             "targets": 3,
                             "className": "text-center"
                         } // 状況
