@@ -4,24 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-      {% block title %}登山道状況まとめ - MOUNTAIN{% endblock %}
+      {% block title %}トレイルインフォ - 登山道状況まとめ{% endblock %}
     </title>
     <meta name="description"
           content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
     <!-- OGタグ (SNSシェア用) -->
     <meta property="og:title"
-          content="{% block og_title %}登山道状況まとめ - MOUNTAIN{% endblock %}">
+          content="{% block og_title %}トレイルインフォ - 登山道状況まとめ{% endblock %}">
     <meta property="og:description"
           content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
     <meta property="og:type" content="website">
     <meta property="og:url"
           content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
-    <meta property="og:site_name" content="MOUNTAIN - 登山道状況まとめ">
+    <meta property="og:site_name" content="トレイルインフォ - 登山道状況まとめ">
     <meta property="og:locale" content="ja_JP">
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title"
-          content="{% block twitter_title %}登山道状況まとめ - MOUNTAIN{% endblock %}">
+          content="{% block twitter_title %}トレイルインフォ - 登山道状況まとめ{% endblock %}">
     <meta name="twitter:description"
           content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
     <link rel="icon"
@@ -67,12 +67,13 @@
           /* 洗練させたサイドバー：透明度50% + ぼかし15px（採用版） */
           #sidebar {
               width: 240px;
-              min-height: 100vh;
+              height: 100vh;
               padding: 24px 20px;
               border-right: 1px #f1f1f1;
               overflow-y: auto;
               flex-shrink: 0;
-              position: relative;
+              position: sticky;
+              top: 0;
               background-image: url('{% static "mountain.webp" %}');
               background-size: cover;
               background-position: center top;
@@ -119,6 +120,11 @@
               color: #4b5563;
               text-decoration: none;
               transition: color 0.2s;
+          }
+
+          
+          .logo-link:hover {
+              background-color: rgba(255, 255, 255, 0.4);
           }
 
           .sidebar-link:hover {
@@ -360,13 +366,13 @@
       <div class="overlay" id="overlay"></div>
       <div class="main-content">
         <aside id="sidebar">
-          <div class="px-4 py-6 border-b border-gray-200 mb-4">
-            <h1 class="text-xl font-black tracking-tighter text-blue-900">
-              MOUNTAIN
-              <br>
-              <span class="text-sm font-medium tracking-normal text-gray-500">登山道状況まとめ</span>
+          <a href="{% url 'trail-list' %}" class="logo-link block p-4 no-underline transition-colors rounded-lg">
+            <h1 class="text-xl font-black tracking-tighter text-blue-900" style="width: fit-content;">
+              トレイルインフォ
+              <span class="block text-center text-sm font-medium tracking-normal text-gray-500">登山道状況まとめ</span>
             </h1>
-          </div>
+          </a>
+          <hr>
           <div class="mb-6">
             <a href="{% url 'trail-list' %}"
                class="sidebar-link {% if not current_source and not current_area and not current_status %}active{% endif %}"
@@ -416,9 +422,9 @@
             <div class="mx-auto">
               <div class="flex gap-4 justify-end text-xs text-gray-600"
                    style="text-align: center">
-                <a href="/privacy/" class="hover:text-blue-600 transition-colors">プライバシーポリシー</a>
+                <a href="/site-policy/" class="hover:text-blue-600 transition-colors">サイトポリシー</a>
                 <span class="text-gray-500">安全な登山をお楽しみください 🏔️</span>
-                <span>&copy; 2026 登山道状況まとめ - MOUNTAIN</span>
+                <span>&copy; 2026 トレイルインフォ</span>
               </div>
             </div>
           </footer>
