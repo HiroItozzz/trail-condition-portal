@@ -22,7 +22,7 @@ class TrailConditionSchemaAi(BaseModel):
     title: str = Field(description="登山道状況タイトル（原文そのまま）")
     description: str = Field(
         default="",
-        description="状況詳細説明（原文そのまま / 該当する記述がなければ空文字）",
+        description="状況詳細説明（基本は原文そのままだが、文の区切りでの改行のみ追加可 / 該当する記述がなければ空文字）",
     )
     reported_at: date | None = Field(
         default=None,
