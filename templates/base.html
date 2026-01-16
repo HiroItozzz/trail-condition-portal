@@ -104,7 +104,7 @@
           }
 
           /* サイドバー内の文字要素 */
-          h3 {
+          #sidebar h3 {
               font-size: 12px;
               font-weight: 700;
               color: #9ca3af;
@@ -489,7 +489,41 @@
                     "responsive": {
                         "details": {
                             "type": "column",
-                            "target": "tr"
+                            "target": "tr",
+                            "renderer": function(api, rowIdx, columns) {
+                                // 行から詳細URLを取得
+                                var row = api.row(rowIdx).node();
+                                var detailUrl = $(row).find('td[data-detail-url]').data('detail-url');
+
+                                var data = '';
+                                var sourceColumn = ''; // 情報源カラムを最後に
+
+                                $.each(columns, function(i, col) {
+                                    if (col.hidden) {
+                                        var item = '<li data-dtr-index="' + col.columnIndex + '">' +
+                                            '<span class="dtr-title">' + col.title + '</span> ' +
+                                            '<span class="dtr-data">' + col.data + '</span>' +
+                                            '</li>';
+                                        if (col.columnIndex === 8) { // 情報源
+                                            sourceColumn = item;
+                                        } else {
+                                            data += item;
+                                        }
+                                    }
+                                });
+
+                                // 詳細リンクを追加（情報源の前）
+                                if (detailUrl) {
+                                    data += '<li style="padding-top: 12px;">' +
+                                        '<a href="' + detailUrl + '" style="color: #2563eb; font-weight: 500;">詳細を見る →</a>' +
+                                        '</li>';
+                                }
+
+                                // 情報源を最後に追加
+                                data += sourceColumn;
+
+                                return data ? $('<ul data-dtr-index="' + rowIdx + '"/>').append(data) : false;
+                            }
                         }
                     },
                     "columnDefs": [{
@@ -521,6 +555,26 @@
                         } // 状況
                     ]
                 });
+
+                // デスクトップで行クリック時に詳細ページへ遷移
+                $('#trail-table tbody').on('click', 'tr', function(e) {
+                    // リンククリック時は通常の遷移を許可
+                    if ($(e.target).is('a') || $(e.target).closest('a').length) {
+                        return;
+                    }
+                    // デスクトップ幅のみ（768px以上）
+                    if (window.innerWidth >= 768) {
+                        var detailUrl = $(this).find('td[data-detail-url]').data('detail-url');
+                        if (detailUrl) {
+                            window.location.href = detailUrl;
+                        }
+                    }
+                });
+
+                // デスクトップで行にカーソルポインターを表示
+                if (window.innerWidth >= 768) {
+                    $('#trail-table tbody tr').css('cursor', 'pointer');
+                }
 
                 // ハンバーガーメニュー
                 const hamburger = document.getElementById('hamburger');

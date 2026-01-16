@@ -77,8 +77,9 @@
             <span class="hidden md:inline">{{ item.updated_at|date:"Y/m/d"|default:"-" }}</span>
             <span class="md:hidden">{{ item.updated_at|date:"y/m/d"|default:"-" }}</span>
           </td>
-          <td>
-            <div style="font-weight: bold;  color: #000;">{{ item.mountain_name_raw }}</div>
+          <td data-detail-url="{% url 'condition-detail' item.pk %}">
+            <a href="{% url 'condition-detail' item.pk %}" class="hidden md:inline" style="font-weight: bold; color: #000; text-decoration: none;">{{ item.mountain_name_raw }}</a>
+            <span class="md:hidden" style="font-weight: bold; color: #000;">{{ item.mountain_name_raw }}</span>
             <div style="color: #666; font-size: 11px;">{{ item.trail_name }}</div>
           </td>
           <td class="whitespace-nowrap" style="vertical-align: middle;">
