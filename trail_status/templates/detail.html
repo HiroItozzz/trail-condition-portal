@@ -1,7 +1,15 @@
 {% extends 'base.html' %}
 {% block title %}{{ item.title }} - トレイルインフォ{% endblock %}
 {% block content %}
-  <div class="max-w-4xl mx-auto px-4 py-6 md:py-8">
+  <style>
+    @media (min-width: 768px) {
+      .detail-container { min-width: 500px; }
+    }
+    @media (min-width: 1024px) {
+      .detail-container { min-width: 800px; }
+    }
+  </style>
+  <div class="detail-container max-w-4xl mx-auto px-4 py-6 md:py-8">
     <!-- ヘッダー -->
     <div class="mb-4 md:mb-6">
       <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-2">

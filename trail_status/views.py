@@ -73,7 +73,8 @@ def trail_list(request: HttpRequest) -> HttpResponse:
     return render(request, "trail_list.html", context)
 
 
-def condition_detail(request: HttpRequest, pk: int) -> HttpResponse:
-    item = get_object_or_404(TrailCondition, pk=pk)
+def condition_detail(request: HttpRequest) -> HttpResponse:
+    param= request.GET.get("id")
+    item = get_object_or_404(TrailCondition, pk=param)
     context = {"item": item, **_get_sidebar_context()}
     return render(request, "detail.html", context)

@@ -168,9 +168,11 @@
                     flex: 1;
                     padding: 20px;
                     overflow-y: auto;
+                    overflow-x: auto;
                     display: flex;
                     flex-direction: column;
                     min-height: 100vh;
+                    min-width: 0;
                 }
 
 
@@ -473,7 +475,7 @@
                             <ul style="list-style: none; padding: 0; margin: 0;">
                                 {% for id, name in source_choices %}
                                     <li>
-                                        <a href="?source={{ id|stringformat:'s' }}"
+                                        <a href="{% url 'trail-list' %}?source={{ id|stringformat:'s' }}"
                                            class="sidebar-link {% if current_source == id %}active{% endif %}">{{ name }}</a>
                                     </li>
                                 {% endfor %}
@@ -485,7 +487,7 @@
                             <ul style="list-style: none; padding: 0; margin: 0;">
                                 {% for id, name in area_choices %}
                                     <li>
-                                        <a href="?area={{ id }}"
+                                        <a href="{% url 'trail-list' %}?area={{ id }}"
                                            class="sidebar-link {% if current_area == id %}active{% endif %}">{{ name }}</a>
                                     </li>
                                 {% endfor %}
@@ -497,7 +499,7 @@
                             <ul style="list-style: none; padding: 0; margin: 0;">
                                 {% for id, name in status_choices %}
                                     <li>
-                                        <a href="?status={{ id }}"
+                                        <a href="{% url 'trail-list' %}?status={{ id }}"
                                            class="sidebar-link {% if current_status == id %}active{% endif %}">{{ name }}</a>
                                     </li>
                                 {% endfor %}
