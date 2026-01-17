@@ -23,17 +23,21 @@ import dj_database_url
 # 環境判定
 DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
 IS_PRODUCTION = os.environ.get("IS_PRODUCTION") == "True"
-IS_IDX = os.environ.get("IS_IDX") == "True"
 
 if IS_PRODUCTION and DEBUG:
     raise ValueError("本番環境で DEBUG=True は許可されていません")
+
+IS_IDX = os.environ.get("IS_IDX") == "True"
+if IS_PRODUCTION and IS_IDX:
+    raise ValueError("本番環境で IS_IDX=True は許可されていません")
+
 
 # 設定項目 | チェックのタイミング | 役割（Djangoが何を見ているか）
 # ALLOWED_HOSTS | 通信の入口（HTTPヘッダー） | 「リクエストの宛先は自分（localhost）になっているか？」を確認。
 # CSRF_TRUSTED_ORIGINS | フォーム送信時（Referer/Originヘッダー） | 「リクエストの**送信元（ブラウザのURL）**は信頼できるドメインか？」を確認。
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
-if IS_PRODUCTION and "insecure" in SECRET_KEY:
+if IS_PRODUCTION and "insecure" in SECRET_KEY or not SECRET_KEY:
     raise ValueError("本番環境用のSECRET_KEYを設定してください。")
 
 
@@ -51,6 +55,10 @@ if IS_PRODUCTION:
         "https://trail-info.jp",
         "https://www.trail-info.jp",
     ]
+    CORS_ALLOWED_ORIGINS = [
+        "https://trail-info.jp",
+        "https://www.trail-info.jp",
+    ]
 elif IS_IDX:
     # IDX (HTTPSプロキシ環境) 用の設定
     ALLOWED_HOSTS = [
@@ -60,10 +68,13 @@ elif IS_IDX:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SAMESITE = "None"
-    SESSION_COOKIE_SAMESITE = "None"
+    CSRF_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SAMESITE = "Lax"
     CSRF_TRUSTED_ORIGINS = [
         "https://9000-firebase-trail-condition-1767638653929.cluster-d5vecjrg5rhlkrz6nm4jty7avc.cloudworkstations.dev"
+    ]
+    CORS_ALLOWED_ORIGINS = [
+        "https://9000-firebase-trail-condition-1767638653929.cluster-d5vecjrg5rhlkrz6nm4jty7avc.cloudworkstations.dev",
     ]
 else:
     # ローカル (HTTP) 用の設定
@@ -79,6 +90,10 @@ else:
         "http://localhost:8000",
         "http://127.0.0.1:8000",
     ]
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
 
 
 # データベース設定
@@ -93,14 +108,6 @@ DATABASES = {
 if not DATABASES["default"]:
     raise ValueError("DATABASE_URL 環境変数が設定されていません。")
 
-
-# 開発環境でのみ全てのオリジンを許可する場合（本番環境では絶対にFalse）
-# CORS_ALLOW_ALL_ORIGINS = True
-# フロントエンド（Vite開発サーバー）からのアクセスを許可
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite開発サーバー
-    "http://127.0.0.1:5173",
-]
 
 # Django REST Framework configuration
 REST_FRAMEWORK = {
@@ -152,6 +159,7 @@ INSTALLED_APPS = [
 # ミドルウェア
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",  # CORS対応（CommonMiddlewareの前に配置）
     "django.middleware.common.CommonMiddleware",
@@ -186,6 +194,7 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+STATIC_ROOT = BASE_DIR / "staticfiles" # collectstaticの出力先
 
 # プライマリーキーのデフォルトフィールドタイプ
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
