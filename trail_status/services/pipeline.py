@@ -103,7 +103,7 @@ class AiPipeline:
                 logger.warning(f"テキスト抽出結果が空: {source_data.name}")
                 return ResultSingle(success=False, message="テキスト抽出結果が空でした")
 
-            # 4. AI解析（コンテンツ変更時 or new_hash=Trueのみ）
+            # 4. AI解析（コンテンツ変更時 or new_hash_mode=Trueのみ）
             logger.info(f"AI解析開始: {source_data.name} - モデル: {self.ai_model or 'デフォルト'}")
             config, ai_result, stats = await self._analyze_with_ai(source_data, parsed_text)
             logger.info(
