@@ -206,36 +206,43 @@
                     gap: 8px;
                     margin-bottom: 0.75rem;
                 }
+
                 .dt-row1 {
                     display: flex;
                     align-items: center;
                     gap: 16px;
                 }
+
                 .dt-row2 {
                     display: flex;
                     align-items: center;
                     gap: 16px;
                     margin-left: auto;
                 }
-                @media (max-width: 767px) {
+
+                @media (max-width: 1023px) {
                     .datatable-header {
                         flex-direction: column;
                         align-items: stretch;
                         gap: 2px;
                         margin-bottom: 4px;
                     }
+
                     .dt-row1 {
                         width: 100%;
                     }
+
                     .dt-row2 {
                         width: 100%;
                         justify-content: space-between;
                         margin-left: 0;
                         gap: 8px;
                     }
+
                     .dt-row2 .dataTables_length {
                         display: none;
                     }
+
                     #mobile-sort-select {
                         background: white;
                         font-size: 12px;
@@ -250,6 +257,7 @@
                 .dataTables_length {
                     font-size: 14px !important;
                 }
+
                 .dataTables_filter input,
                 .dataTables_length select {
                     background: white !important;
@@ -258,22 +266,28 @@
                     padding: 2px 6px !important;
                     height: 28px !important;
                 }
+
                 .dataTables_filter input {
                     width: 160px !important;
                 }
-                @media (max-width: 767px) {
+
+                @media (max-width: 1023px) {
                     .dataTables_filter input {
                         width: 128px !important;
                     }
+
                     .dt-row2 {
                         font-size: 12px !important;
                     }
+
                     .dt-row2 .resolved-filter label {
                         font-size: 12px;
                     }
+
                     .dt-row2 .dataTables_length {
                         font-size: 12px !important;
                     }
+
                     .dt-row2 select {
                         height: 24px !important;
                         font-size: 12px !important;
@@ -400,7 +414,7 @@
                 }
 
                 /* レスポンシブデザイン */
-                @media (max-width: 767px) {
+                @media (max-width: 1023px) {
                     .hamburger {
                         display: block;
                     }
@@ -620,7 +634,9 @@
 
                         var table = $('#trail-table').DataTable({
                             "dom": '<"datatable-header"<"dt-row1"f><"dt-row2"<"resolved-filter">l>>rtip',
-                            "order": [[6, "desc"]],
+                            "order": [
+                                [6, "desc"]
+                            ],
                             "language": {
                                 "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/ja.json"
                             },
@@ -670,7 +686,7 @@
                                         // 展開エリア全体をラップし、右上に「もっと見る」を配置
                                         var wrapper = $('<div style="position: relative;"></div>');
                                         if (detailUrl) {
-                                            wrapper.append('<a href="' + detailUrl + '" style="position: absolute; top: 0; right: 0; color: #2563eb; font-weight: 500; font-size: 12px;">もっと見る →</a>');
+                                            wrapper.append('<a href="' + detailUrl + '" style="position: absolute; top: 2px; right: 0; color: #2563eb; font-weight: 500; font-size: 13px;">もっと見る →</a>');
                                         }
                                         wrapper.append($('<ul data-dtr-index="' + rowIdx + '" style="margin: 0; padding: 0 70px 0 0;" />').append(data));
                                         return wrapper;
@@ -748,7 +764,7 @@
 
                             var resolved = new Date(2000 + +m[1], +m[2] - 1, +m[3]);
                             var today = new Date();
-                            today.setHours(0,0,0,0);
+                            today.setHours(0, 0, 0, 0);
 
                             return resolved > today;
                         });
@@ -770,13 +786,14 @@
                         });
 
                         // デスクトップで行クリック時に詳細ページへ遷移
+                        // DataTables折りたたみ閾値（1441px）より大きい場合のみ遷移
                         $('#trail-table tbody').on('click', 'tr', function(e) {
                             // リンククリック時は通常の遷移を許可
                             if ($(e.target).is('a') || $(e.target).closest('a').length) {
                                 return;
                             }
-                            // デスクトップ幅のみ（768px以上）
-                            if (window.innerWidth >= 768) {
+                            // 1442px以上のみ遷移（それ以下はDataTablesのプルダウンに任せる）
+                            if (window.innerWidth >= 1442) {
                                 var detailUrl = $(this).find('td[data-detail-url]').data('detail-url');
                                 if (detailUrl) {
                                     window.location.href = detailUrl;
@@ -785,7 +802,7 @@
                         });
 
                         // デスクトップで行にカーソルポインターを表示
-                        if (window.innerWidth >= 768) {
+                        if (window.innerWidth >= 1442) {
                             $('#trail-table tbody tr').css('cursor', 'pointer');
                         }
 
