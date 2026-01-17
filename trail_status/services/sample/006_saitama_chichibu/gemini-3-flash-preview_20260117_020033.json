@@ -1,0 +1,88 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "川又十文字峠線",
+      "mountain_name_raw": "十文字峠",
+      "title": "【注意】川又十文字峠線／秩父市大滝地内の土砂崩落及び路肩崩落の発生について",
+      "description": "秩父市大滝地内において土砂崩落及び路肩崩落が発生しています。",
+      "reported_at": "2025-05-13",
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "OKUCHICHIBU",
+      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/kawamatajyuumonjitouge2.pdf",
+      "comment": "秩父市大滝地内での土砂崩落・路肩崩落報告"
+    },
+    {
+      "trail_name": "大輪三峰線（三峯神社表参道コース）",
+      "mountain_name_raw": "三峯山",
+      "title": "【注意】大輪三峰線（三峯神社表参道コース）の通行注意について",
+      "description": "大輪三峰線（三峯神社表参道コース）において通行注意となっています。",
+      "reported_at": "2025-03-25",
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "OKUCHICHIBU",
+      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/tyuuikannki2.pdf",
+      "comment": "三峯神社表参道コースの通行注意"
+    },
+    {
+      "trail_name": "大日向霧藻ヶ峰線",
+      "mountain_name_raw": "霧藻ヶ峰",
+      "title": "【注意】大日向霧藻ヶ峰線の一部区間の通行止めについて",
+      "description": "大日向霧藻ヶ峰線の一部区間が通行止めとなっています。",
+      "reported_at": "2025-01-10",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/hptuukoudome2.pdf",
+      "comment": "一部区間通行止め"
+    },
+    {
+      "trail_name": "黒岩尾根線",
+      "mountain_name_raw": "雲取山",
+      "title": "【注意】黒岩尾根線通行止め／秩父市大滝地内の木橋破損について",
+      "description": "秩父市大滝地内の木橋破損のため、黒岩尾根線が通行止めとなっています。",
+      "reported_at": "2024-10-09",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/kuroiwaonesen4.pdf",
+      "comment": "木橋破損による通行止め"
+    },
+    {
+      "trail_name": "秩父多摩甲斐国立公園内登山道",
+      "mountain_name_raw": "秩父多摩甲斐国立公園",
+      "title": "秩父多摩甲斐国立公園内通行不能区間について",
+      "description": "秩父多摩甲斐国立公園（埼玉県内）の登山道における通行不能区間に関する情報です。",
+      "reported_at": "2023-12-01",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/20231201tozandou.pdf",
+      "comment": "公園内全体の通行不能区間まとめ"
+    },
+    {
+      "trail_name": "埼玉県内登山道全般",
+      "mountain_name_raw": "秩父多摩甲斐国立公園",
+      "title": "【注意】冬季における登山道の通行について",
+      "description": "冬季における登山道の通行に関する注意喚起です。",
+      "reported_at": "2026-01-16",
+      "resolved_at": null,
+      "status": "SNOW",
+      "area": "OKUCHICHIBU",
+      "reference_URL": "https://www.pref.saitama.lg.jp/b0504/tozan_winter.html",
+      "comment": "冬季装備・積雪への注意喚起"
+    },
+    {
+      "trail_name": "一般国道140号（秩父市大滝地内）",
+      "mountain_name_raw": "秩父市大滝",
+      "title": "一般国道140号（秩父市大滝地内）通行止めによる大滝トンネル暫定供用について",
+      "description": "一般国道140号（秩父市大滝地内）の通行止めに伴い、大滝トンネルが暫定供用されています。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "OTHER",
+      "area": "OKUCHICHIBU",
+      "reference_URL": "https://www.pref.saitama.lg.jp/a1006/oshirase/kokudou140gounorakuseki.html",
+      "comment": "登山口へのアクセス道路情報。大滝トンネル暫定供用中。"
+    }
+  ]
+} 

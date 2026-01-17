@@ -4,17 +4,15 @@ from decimal import Decimal
 from functools import lru_cache
 from typing import Any
 
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 from rapidfuzz import fuzz
 from sudachipy import Dictionary, SplitMode
 
-from config.settings import DEBUG
-
 from ..models.condition import TrailCondition
 from ..models.llm_usage import LlmUsage
 from ..models.source import DataSource
-from .llm_client import LlmConfig
 from .llm_stats import LlmStats
 from .pipeline import ResultSingle, SourceSchemaSingle
 from .schema import TrailConditionSchemaInternal, TrailConditionSchemaList
@@ -73,11 +71,9 @@ class DbWriter:
         self,
         source_schema_single: SourceSchemaSingle,
         result_by_source: ResultSingle | BaseException,
-        on_duplicate_warning=None,
     ):
         self.source_schema_single = source_schema_single
         self.result = result_by_source
-        self.on_duplicate_warning = on_duplicate_warning  # コールバック関数
 
     @property
     def source_record(self) -> DataSource:
@@ -98,38 +94,7 @@ class DbWriter:
         # コミット
         source.save(update_fields=["content_hash", "last_scraped_at", "last_checked_at"])
 
-    def persist_condition_and_usage(self) -> dict[str, Any]:
-        """登山道状況とLLM使用履歴をDBに保存"""
-
-        internal_data_list = self._convert_to_internal_schema()
-
-        # DB同期とLLM使用履歴記録
-        llm_stats: LlmStats = self.result.stats
-        # 同期するレコードを照合
-        to_update, to_create, duplicate_warnings = self.reconcile_records(internal_data_list)
-
-        # 重複警告があればログ出力
-        if duplicate_warnings:
-            logger.warning(f"重複照合警告が {len(duplicate_warnings)}件 発生しました")
-
-        # 保存
-        with transaction.atomic():
-            updated_count, created_count = self._commit_trail_condition(to_update, to_create)
-            self._commit_llm_usage(llm_stats, len(internal_data_list))
-
-        logger.info(
-            f"DB保存完了: {self.source_schema_single.name} - {len(internal_data_list)}件 (コスト: ${llm_stats.total_fee:.4f})"
-        )
-
-        return {
-            "name": self.source_schema_single.name,
-            "count": len(internal_data_list),
-            "cost": llm_stats.total_fee,
-            "updated": updated_count,
-            "created": created_count,
-        }
-
-    def _convert_to_internal_schema(self):
+    def convert_to_internal_schema(self):
         """AI出力結果とAI設定を保存用スキーマへ統合"""
         # 単一ソースのAI出力を取得
         trail_conditions_list: TrailConditionSchemaList = self.result.extracted_trail_conditions
@@ -155,6 +120,31 @@ class DbWriter:
             for record in trail_conditions_list.trail_condition_records
         ]
         return internal_data_list
+
+    def persist_condition_and_usage(self, internal_data_list: list[TrailConditionSchemaInternal]) -> dict[str, Any]:
+        """登山道状況とLLM使用履歴をDBに保存"""
+
+        # DB同期とLLM使用履歴記録
+        llm_stats: LlmStats = self.result.stats
+        # 同期するレコードを照合
+        to_update, to_create = self.reconcile_records(internal_data_list)
+
+        # 保存
+        with transaction.atomic():
+            updated_count, created_count = self._commit_trail_condition(to_update, to_create)
+            self._commit_llm_usage(llm_stats, len(internal_data_list))
+
+        logger.info(
+            f"DB保存完了: {self.source_schema_single.name} - {len(internal_data_list)}件 (コスト: ${llm_stats.total_fee:.4f})"
+        )
+
+        return {
+            "name": self.source_schema_single.name,
+            "count": len(internal_data_list),
+            "cost": llm_stats.total_fee,
+            "updated": updated_count,
+            "created": created_count,
+        }
 
     def _commit_trail_condition(
         self, to_update: list[TrailCondition], to_create: list[TrailCondition]
@@ -208,7 +198,7 @@ class DbWriter:
 
     def reconcile_records(
         self, ai_record_list: list[TrailConditionSchemaInternal]
-    ) -> tuple[list[TrailCondition], list[TrailCondition], list[dict]]:
+    ) -> tuple[list[TrailCondition], list[TrailCondition]]:
         """
         AIの抽出データ(Pydantic)を既存レコードと照合する。
         3段階のアルゴリズムで同定を行う:
@@ -220,11 +210,10 @@ class DbWriter:
             ai_data_list: AI抽出データリスト
 
         Returns:
-            (更新対象レコードリスト, 新規作成レコードリスト, 重複警告リスト)
+            (更新対象レコードリスト, 新規作成レコードリスト)
         """
         to_update: list[TrailCondition] = []
         to_create: list[TrailCondition] = []
-        duplicate_warnings: list[dict] = []  # 重複警告情報
 
         logger.info(f"\n--- データ照合開始: {self.source_record.name}")
         matches = []
@@ -304,7 +293,7 @@ class DbWriter:
 
             to_create.append(new_record)
             logger.info(f"新規作成リストに追加 - AI出力名: {ai_record.mountain_name_raw}/{ai_record.trail_name}")
-            if DEBUG:
+            if settings.DEBUG:
                 for loser_score, loser_db_record, loser_idx in matches:
                     if ai_idx == loser_idx:
                         d_i = loser_db_record.id
@@ -316,7 +305,7 @@ class DbWriter:
                     logger.info(f"所定の閾値{self.SIMILARITY_THRESHOLD}を超えるレコードは見つかりません")
 
         logger.info(f"--- データ照合終了: {self.source_record.name}")
-        return to_update, to_create, duplicate_warnings
+        return to_update, to_create
 
     def _calculate_similarity(self, existing: TrailCondition, new_data: TrailConditionSchemaInternal) -> float:
         """

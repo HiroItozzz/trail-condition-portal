@@ -1,566 +1,873 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-      {% block title %}登山道状況まとめ - MOUNTAIN{% endblock %}
-    </title>
-    <meta name="description"
-          content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
-    <!-- OGタグ (SNSシェア用) -->
-    <meta property="og:title"
-          content="{% block og_title %}登山道状況まとめ - MOUNTAIN{% endblock %}">
-    <meta property="og:description"
-          content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
-    <meta property="og:type" content="website">
-    <meta property="og:url"
-          content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
-    <meta property="og:site_name" content="MOUNTAIN - 登山道状況まとめ">
-    <meta property="og:locale" content="ja_JP">
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title"
-          content="{% block twitter_title %}登山道状況まとめ - MOUNTAIN{% endblock %}">
-    <meta name="twitter:description"
-          content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
-    <link rel="icon"
-          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏔️</text></svg>">
-      <link rel="stylesheet"
-            href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-      <link rel="stylesheet"
-            href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
-      {% load static %}
-      <link rel="stylesheet" href="{% static 'dist/main.css' %}">
-      <style>
-          /* 全体の基本設定 */
-          body {
-              display: flex;
-              flex-direction: column;
-              min-height: 100vh;
-              margin: 0;
-              font-family: sans-serif;
-              color: #333;
-              background-color: #f8f9fa;
-              background-image: linear-gradient(to bottom,
-                  rgba(240, 244, 248, 0.9) 0%,
-                  rgba(248, 249, 250, 0.85) 40%,
-                  rgba(248, 249, 250, 0.65) 50%,
-                  rgba(248, 249, 250, 0.7) 60%,
-                  rgba(248, 249, 250, 0.7) 70%,
-                  rgba(248, 249, 250, 0.9) 80%,
-                  rgba(248, 249, 250, 0.95) 90%,
-                  rgba(248, 249, 250, 1) 95%,
-                  rgba(248, 249, 250, 1) 100%),
-              url('{% static "mountain_3.webp" %}');
-              background-size: cover;
-              background-position: center top;
-              background-repeat: no-repeat;
-              background-attachment: fixed;
-          }
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>
+            {% block title %}トレイルインフォ - 登山道状況まとめ{% endblock %}
+        </title>
+        <meta name="description"
+              content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
+        <!-- OGタグ (SNSシェア用) -->
+        <meta property="og:title"
+              content="{% block og_title %}トレイルインフォ - 登山道状況まとめ{% endblock %}">
+        <meta property="og:description"
+              content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
+        <meta property="og:type" content="website">
+        <meta property="og:url"
+              content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
+        <meta property="og:site_name" content="トレイルインフォ - 登山道状況まとめ">
+        <meta property="og:locale" content="ja_JP">
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary">
+        <meta name="twitter:title"
+              content="{% block twitter_title %}トレイルインフォ - 登山道状況まとめ{% endblock %}">
+        <meta name="twitter:description"
+              content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
+        <link rel="icon"
+              href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏔️</text></svg>">
+            <link rel="stylesheet"
+                  href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+            <link rel="stylesheet"
+                  href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+            {% load static %}
+            <link rel="stylesheet" href="{% static 'dist/main.css' %}">
+            <style>
+                /* 全体の基本設定 */
+                body {
+                    display: flex;
+                    flex-direction: column;
+                    min-height: 100vh;
+                    margin: 0;
+                    font-family: sans-serif;
+                    color: #333;
+                    background-color: #f8f9fa;
+                    background-image: linear-gradient(to bottom,
+                        rgba(240, 244, 248, 0.9) 0%,
+                        rgba(248, 249, 250, 0.85) 40%,
+                        rgba(248, 249, 250, 0.65) 50%,
+                        rgba(248, 249, 250, 0.7) 60%,
+                        rgba(248, 249, 250, 0.7) 70%,
+                        rgba(248, 249, 250, 0.9) 80%,
+                        rgba(248, 249, 250, 0.95) 90%,
+                        rgba(248, 249, 250, 1) 95%,
+                        rgba(248, 249, 250, 1) 100%),
+                    url('{% static "mountain.webp" %}');
+                    background-size: cover;
+                    background-position: center top;
+                    background-repeat: no-repeat;
+                    background-attachment: fixed;
+                }
 
-          .main-content {
-              display: flex;
-              flex: 1;
-          }
+                .main-content {
+                    display: flex;
+                    flex: 1;
+                }
 
-          /* 洗練させたサイドバー：透明度50% + ぼかし15px（採用版） */
-          #sidebar {
-              width: 240px;
-              min-height: 100vh;
-              padding: 24px 20px;
-              border-right: 1px #f1f1f1;
-              overflow-y: auto;
-              flex-shrink: 0;
-              position: relative;
-              background-image: url('{% static "mountain_3.webp" %}');
-              background-size: cover;
-              background-position: center top;
-              background-attachment: fixed;
-              box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-              isolation: isolate;
-          }
+                /* 洗練させたサイドバー：透明度50% + ぼかし15px（採用版） */
+                #sidebar {
+                    width: 246px;
+                    height: 100vh;
+                    padding: 24px 20px;
+                    border-right: 1px #f1f1f1;
+                    overflow-y: auto;
+                    flex-shrink: 0;
+                    position: sticky;
+                    top: 0;
+                    background-image: url('{% static "mountain.webp" %}');
+                    background-size: cover;
+                    background-position: center top;
+                    background-attachment: fixed;
+                    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+                    isolation: isolate;
+                }
 
-          #sidebar::before {
-              content: '';
-              position: fixed;
-              top: 0;
-              left: 0;
-              width: 240px;
-              height: 100vh;
-              background: rgba(255, 255, 255, 0.5);
-              backdrop-filter: blur(15px) saturate(180%);
-              -webkit-backdrop-filter: blur(15px) saturate(180%);
-              z-index: 0;
-              pointer-events: none;
-              transform: translateZ(0);
-              will-change: backdrop-filter;
-          }
+                /* ボディ用スクロールバー */
+                html {
+                    scrollbar-width: thin;
+                }
 
-          #sidebar>* {
-              position: relative;
-              z-index: 1;
-          }
+                html::-webkit-scrollbar {
+                    width: 6px;
+                }
 
-          /* サイドバー内の文字要素 */
-          h3 {
-              font-size: 12px;
-              font-weight: 700;
-              color: #9ca3af;
-              text-transform: uppercase;
-              letter-spacing: 0.1em;
-              margin: 24px 0 12px;
-          }
+                html::-webkit-scrollbar-thumb {
+                    background: rgba(150, 150, 150, 0.4);
+                    border-radius: 3px;
+                }
 
-          .sidebar-link {
-              display: block;
-              padding: 4px 0;
-              font-size: 14px;
-              color: #4b5563;
-              text-decoration: none;
-              transition: color 0.2s;
-          }
+                /* サイドバー用スクロールバー */
+                #sidebar {
+                    scrollbar-width: thin;
+                    scrollbar-color: rgba(145, 145, 145, 0.5) rgb(245, 245, 245);
+                }
 
-          .sidebar-link:hover {
-              color: #2563eb;
-              text-decoration: underline;
-          }
+                #sidebar::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: var(--sidebar-height, 100vh);
+                    min-height: 100vh;
+                    background: rgba(255, 255, 255, 0.5);
+                    backdrop-filter: blur(15px) saturate(180%);
+                    -webkit-backdrop-filter: blur(15px) saturate(180%);
+                    z-index: 0;
+                    pointer-events: none;
+                    transform: translateZ(0);
+                    will-change: backdrop-filter;
+                }
 
-          .sidebar-link.active {
-              font-weight: bold;
-              color: #2563eb;
-          }
+                #sidebar>* {
+                    position: relative;
+                    z-index: 1;
+                }
 
-          hr {
-              border: 0;
-              border-top: 1px solid #f1f1f1;
-              margin: 16px 0;
-          }
+                /* サイドバー内の文字要素 */
+                #sidebar h3 {
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: #9ca3af;
+                    text-transform: uppercase;
+                    letter-spacing: 0.1em;
+                    margin: 24px 0 12px;
+                }
 
-          #content {
-              flex: 1;
-              padding: 20px;
-              overflow-y: auto;
-              display: flex;
-              flex-direction: column;
-              min-height: 100vh;
-          }
+                .sidebar-link {
+                    display: block;
+                    padding: 4px 0;
+                    font-size: 14px;
+                    color: #4b5563;
+                    text-decoration: none;
+                    transition: color 0.2s;
+                }
 
 
+                .logo-link:hover {
+                    background-color: rgba(255, 255, 255, 0.4);
+                }
 
-          /* 情報ボックスとフッターの透明化 */
-          #content .mb-3 {
-              background: rgba(255, 255, 255, 0.7) !important;
-              backdrop-filter: blur(10px);
-              -webkit-backdrop-filter: blur(10px);
-          }
+                .sidebar-link:hover {
+                    color: #2563eb;
+                    text-decoration: underline;
+                }
 
-          footer {
-              background: rgba(248, 249, 250, 0.2) !important;
-              backdrop-filter: blur(8px) saturate(180%);
-              -webkit-backdrop-filter: blur(8px) saturate(180%);
-              margin-top: auto;
-          }
+                .sidebar-link.active {
+                    font-weight: bold;
+                    color: #2563eb;
+                }
 
-          /* ステータスバッジの高さ調整 */
-          .inline-flex.items-center {
-              padding: 2px 8px !important;
-              line-height: 1.2;
-          }
+                hr {
+                    border: 0;
+                    border-top: 1px solid #f1f1f1;
+                    margin: 16px 0;
+                }
 
-          /* テーブルヘッダーの色を統一 */
-          #trail-table th {
-              font-size: 12px;
-              color: #666;
-          }
-
-          /* 展開された詳細情報のヘッダー*/
-          .dtr-title {
-              font-size: 12px;
-              color: #666;
-          }
-
-          /* テーブルセルの垂直配置 */
-          #trail-table td {
-              vertical-align: middle;
-              padding-top: 6px !important;
-              padding-bottom: 6px !important;
-          }
-
-          /* 原文タイトル・詳細欄の幅を画面サイズに応じて調整 */
-          @media (max-width: 1200px) {
-              #trail-table td>div[style*="border-left: 2px solid #ddd"] {
-                  white-space: normal;
-                  max-width: 180px !important;
-                  /* タブレットサイズ */
-              }
-          }
-
-          /* ハンバーガーボタン */
-          .hamburger {
-              display: none;
-              background: none;
-              border: none;
-              font-size: 24px;
-              cursor: pointer;
-              padding: 8px;
-              position: fixed;
-              top: 16px;
-              left: 16px;
-              z-index: 1000;
-              background-color: white;
-              border-radius: 4px;
-              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          }
-
-          /* レスポンシブデザイン */
-          @media (max-width: 640px) {
-              .hamburger {
-                  display: block;
-              }
-
-              #sidebar {
-                  position: fixed;
-                  top: 0;
-                  left: 0;
-                  width: 250px;
-                  height: 100vh;
-                  overflow-y: auto;
-                  overflow-x: hidden;
-                  transform: translateX(-100%);
-                  transition: transform 0.3s ease;
-                  z-index: 999;
-                  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-                  background-image: url('{% static "mountain_3.webp" %}');
-                  background-size: cover;
-                  background-position: center top;
-                  background-attachment: scroll;
-                  isolation: isolate;
-              }
-
-              #sidebar::before {
-                  content: '';
-                  position: absolute;
-                  top: 0;
-                  left: 0;
-                  width: 100%;
-                  height: var(--sidebar-height, 100vh);
-                  min-height: 100vh;
-                  background: rgba(255, 255, 255, 0.6);
-                  backdrop-filter: blur(15px) saturate(180%);
-                  -webkit-backdrop-filter: blur(15px) saturate(180%);
-                  transform: translateZ(0);
-                  will-change: backdrop-filter;
-                  z-index: 0;
-                  pointer-events: none;
-              }
-
-              #sidebar.open {
-                  transform: translateX(0);
-              }
-
-              #content {
-                  margin-left: 0;
-                  padding: 60px 16px 16px 16px;
-              }
-
-              /* オーバーレイ */
-              .overlay {
-                  display: none;
-                  position: fixed;
-                  top: 0;
-                  left: 0;
-                  width: 100%;
-                  height: 100%;
-                  background-color: rgba(0, 0, 0, 0.5);
-                  z-index: 998;
-              }
-
-              .overlay.show {
-                  display: block;
-              }
+                #content {
+                    flex: 1;
+                    padding: 20px;
+                    overflow-y: auto;
+                    overflow-x: auto;
+                    display: flex;
+                    flex-direction: column;
+                    min-height: 100vh;
+                    min-width: 0;
+                }
 
 
-              #trail-table th {
-                  font-size: 10px;
-                  color: #666;
 
-                  padding: 4px 2px !important;
+                /* 情報ボックスとフッターの透明化 */
+                #content .mb-3 {
+                    background: rgba(255, 255, 255, 0.7) !important;
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                }
 
-              }
+                footer {
+                    background: rgba(248, 249, 250, 0.2) !important;
+                    backdrop-filter: blur(8px) saturate(180%);
+                    -webkit-backdrop-filter: blur(8px) saturate(180%);
+                    margin-top: auto;
+                }
 
-              /* 展開された詳細情報のヘッダー*/
-              .dtr-title {
-                  font-size: 10px;
-                  color: #666;
-                  font-weight: bold;
-              }
+                /* ステータスバッジの高さ調整 */
+                .inline-flex.items-center {
+                    padding: 2px 8px !important;
+                    line-height: 1.2;
+                }
 
-              /* ヘッダー（th）も強制的に狭くする */
-              #trail-table th {
-                  max-width: 50px !important;
-                  /* 最大幅を制限 */
-                  overflow: hidden;
-                  /* はみ出したら隠す */
-                  text-overflow: ellipsis;
-                  /* ... で省略 */
-                  white-space: nowrap;
-                  /* 改行させない */
-              }
+                /* DataTablesヘッダー行 */
+                .datatable-header {
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 0.75rem;
+                }
+                .dt-row1 {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                }
+                .dt-row2 {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    margin-left: auto;
+                }
+                @media (max-width: 640px) {
+                    .datatable-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                        gap: 2px;
+                        margin-bottom: 4px;
+                    }
+                    .dt-row1 {
+                        width: 100%;
+                    }
+                    .dt-row2 {
+                        width: 100%;
+                        justify-content: space-between;
+                        margin-left: 0;
+                        gap: 8px;
+                    }
+                    .dt-row2 .dataTables_length {
+                        display: none;
+                    }
+                    #mobile-sort-select {
+                        background: white;
+                        font-size: 12px;
+                        height: 24px;
+                        padding: 0 4px;
+                        min-width: 90px;
+                    }
+                }
 
-              /* 1列目（更新日）だけ特に狭く */
-              #trail-table th:nth-child(1),
-              #trail-table td:nth-child(1) {
-                  max-width: 54px !important;
-              }
+                /* DataTables入力欄のスタイル */
+                .dataTables_filter,
+                .dataTables_length {
+                    font-size: 14px !important;
+                }
+                .dataTables_filter input,
+                .dataTables_length select {
+                    background: white !important;
+                    border: 1px solid #ddd !important;
+                    border-radius: 4px !important;
+                    padding: 2px 6px !important;
+                    height: 28px !important;
+                }
+                .dataTables_filter input {
+                    width: 160px !important;
+                }
+                @media (max-width: 640px) {
+                    .dataTables_filter input {
+                        width: 128px !important;
+                    }
+                    .dt-row2 {
+                        font-size: 12px !important;
+                    }
+                    .dt-row2 .resolved-filter label {
+                        font-size: 12px;
+                    }
+                    .dt-row2 .dataTables_length {
+                        font-size: 12px !important;
+                    }
+                    .dt-row2 select {
+                        height: 24px !important;
+                        font-size: 12px !important;
+                    }
+                }
 
-              /* 3列目（備考）は畳まれすぎないように */
-              #trail-table th:nth-child(3),
-              #trail-table td:nth-child(3) {
-                  white-space: normal;
-                  max-width: 124px !important;
-                  min-width: 100px !important;
-              }
+                /* テーブルヘッダーの色を統一 */
+                #trail-table th {
+                    font-size: 12px;
+                    color: #666;
+                }
 
-              /* 展開された詳細情報の境界線 */
-              .dtr-details li {
-                  border-bottom: 1px solid rgb(104, 115, 130) !important;
-                  /* 色を変更 */
-                  padding: 8px 0;
-              }
+                /* デスクトップのみ: テーブル幅固定（パーセンテージ） */
+                @media (min-width: 641px) {
+                    #trail-table {
+                        table-layout: fixed;
+                    }
 
-              /* 最後の項目は境界線なし */
-              .dtr-details li:last-child {
-                  border-bottom: none !important;
-              }
+                    #trail-table th:nth-child(1),
+                    #trail-table td:nth-child(1) {
+                        width: 6%;
+                    }
 
-              /* テーブル行のカーソル */
-              #trail-table tbody tr {
-                  cursor: pointer;
-                  transition: background-color 0.2s ease;
-              }
+                    /* 山域 */
+                    #trail-table th:nth-child(2),
+                    #trail-table td:nth-child(2) {
+                        width: 7%;
+                    }
+
+                    /* 取得日 */
+                    #trail-table th:nth-child(3),
+                    #trail-table td:nth-child(3) {
+                        width: 15%;
+                    }
+
+                    /* 対象 */
+                    #trail-table th:nth-child(4),
+                    #trail-table td:nth-child(4) {
+                        width: 65px;
+                    }
+
+                    /* 状況 */
+                    #trail-table th:nth-child(5),
+                    #trail-table td:nth-child(5) {
+                        width: 18%;
+                    }
+
+                    /* 原文タイトル */
+                    #trail-table th:nth-child(6),
+                    #trail-table td:nth-child(6) {
+                        width: 25%;
+                    }
+
+                    /* 詳細 */
+                    #trail-table th:nth-child(7),
+                    #trail-table td:nth-child(7) {
+                        width: 55px;
+                        text-align: center;
+                    }
+
+                    /* 報告日 */
+                    #trail-table th:nth-child(8),
+                    #trail-table td:nth-child(8) {
+                        width: 55px;
+                        text-align: center;
+                    }
+
+                    /* 解消日 */
+                    #trail-table th:nth-child(9),
+                    #trail-table td:nth-child(9) {
+                        width: 11%;
+                    }
+
+                    /* 情報源 */
+
+                    /* 対象の登山道名・原文を省略 */
+                    #trail-table td:nth-child(3) div,
+                    #trail-table td:nth-child(5) div {
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
+                }
+
+                /* 展開された詳細情報のヘッダー*/
+                .dtr-title {
+                    font-size: 12px;
+                    color: #666;
+                }
+
+                /* テーブルセルの垂直配置 */
+                #trail-table td {
+                    vertical-align: middle;
+                    padding-top: 6px !important;
+                    padding-bottom: 6px !important;
+                }
+
+                /* 原文タイトル・詳細欄の幅を画面サイズに応じて調整 */
+                @media (max-width: 1200px) {
+                    #trail-table td>div[style*="border-left: 2px solid #ddd"] {
+                        white-space: normal;
+                        max-width: 180px !important;
+                        /* タブレットサイズ */
+                    }
+                }
+
+                /* ハンバーガーボタン */
+                .hamburger {
+                    display: none;
+                    background: none;
+                    border: none;
+                    font-size: 24px;
+                    cursor: pointer;
+                    padding: 4px 8px;
+                    position: fixed;
+                    bottom: 20px;
+                    left: 16px;
+                    z-index: 1000;
+                    background-color: rgba(255, 255, 255, 0.5);
+                    backdrop-filter: blur(4px);
+                    -webkit-backdrop-filter: blur(4px);
+                    border-radius: 4px;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                }
+
+                /* レスポンシブデザイン */
+                @media (max-width: 640px) {
+                    .hamburger {
+                        display: block;
+                    }
+
+                    #sidebar {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 250px;
+                        height: 100vh;
+                        overflow-y: auto;
+                        overflow-x: hidden;
+                        transform: translateX(-100%);
+                        transition: transform 0.3s ease;
+                        z-index: 999;
+                        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+                        background-image: url('{% static "mountain.webp" %}');
+                        background-size: cover;
+                        background-position: center top;
+                        background-attachment: scroll;
+                        isolation: isolate;
+                    }
+
+                    #sidebar::before {
+                        content: '';
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: var(--sidebar-height, 100vh);
+                        min-height: 100vh;
+                        background: rgba(255, 255, 255, 0.6);
+                        backdrop-filter: blur(15px) saturate(180%);
+                        -webkit-backdrop-filter: blur(15px) saturate(180%);
+                        transform: translateZ(0);
+                        will-change: backdrop-filter;
+                        z-index: 0;
+                        pointer-events: none;
+                    }
+
+                    #sidebar.open {
+                        transform: translateX(0);
+                    }
+
+                    #content {
+                        margin-left: 0;
+                        padding: 16px;
+                    }
+
+                    /* オーバーレイ */
+                    .overlay {
+                        display: none;
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background-color: rgba(0, 0, 0, 0.5);
+                        z-index: 998;
+                    }
+
+                    .overlay.show {
+                        display: block;
+                    }
 
 
-              .inline-flex.items-center {
-                  padding: 2px 8px !important;
-                  line-height: 1.2;
-              }
+                    #trail-table th {
+                        font-size: 10px;
+                        color: #666;
 
-              /* テーブルセルの垂直配置 */
-              #trail-table td {
-                  vertical-align: middle;
-                  padding-top: 8px !important;
-                  padding-bottom: 8px !important;
-              }
-          }
-      </style>
-    </head>
-    <body>
-      <button class="hamburger" id="hamburger">☰</button>
-      <div class="overlay" id="overlay"></div>
-      <div class="main-content">
-        <aside id="sidebar">
-          <div class="px-4 py-6 border-b border-gray-200 mb-4">
-            <h1 class="text-xl font-black tracking-tighter text-blue-900">
-              MOUNTAIN
-              <br>
-              <span class="text-sm font-medium tracking-normal text-gray-500">登山道状況まとめ</span>
-            </h1>
-          </div>
-          <div class="mb-6">
-            <a href="{% url 'trail-list' %}"
-               class="sidebar-link {% if not current_source and not current_area and not current_status %}active{% endif %}"
-               style="font-size: 14px">すべての情報を表示</a>
-          </div>
-          <nav>
-            {% if source_choices %}
-              <h3>サイト別</h3>
-              <ul style="list-style: none; padding: 0; margin: 0;">
-                {% for id, name in source_choices %}
-                  <li>
-                    <a href="?source={{ id|stringformat:'s' }}"
-                       class="sidebar-link {% if current_source == id %}active{% endif %}">{{ name }}</a>
-                  </li>
-                {% endfor %}
-              </ul>
-              <hr>
-            {% endif %}
-            {% if area_choices %}
-              <h3>山域別</h3>
-              <ul style="list-style: none; padding: 0; margin: 0;">
-                {% for id, name in area_choices %}
-                  <li>
-                    <a href="?area={{ id }}"
-                       class="sidebar-link {% if current_area == id %}active{% endif %}">{{ name }}</a>
-                  </li>
-                {% endfor %}
-              </ul>
-              <hr>
-            {% endif %}
-            {% if status_choices %}
-              <h3>状況別</h3>
-              <ul style="list-style: none; padding: 0; margin: 0;">
-                {% for id, name in status_choices %}
-                  <li>
-                    <a href="?status={{ id }}"
-                       class="sidebar-link {% if current_status == id %}active{% endif %}">{{ name }}</a>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% endif %}
-          </nav>
-        </aside>
-        <main id="content">
-          {% block content %}{% endblock %}
-          <footer class="bg-gray-50 border-t border-gray-200 mt-8">
-            <div class="mx-auto">
-              <div class="flex gap-4 justify-end text-xs text-gray-600"
-                   style="text-align: center">
-                <a href="/privacy/" class="hover:text-blue-600 transition-colors">プライバシーポリシー</a>
-                <span class="text-gray-500">安全な登山をお楽しみください 🏔️</span>
-                <span>&copy; 2026 登山道状況まとめ - MOUNTAIN</span>
-              </div>
-            </div>
-          </footer>
-        </div>
-        <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-        <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-        <script>
-            $(document).ready(function() {
-                console.log('jQuery版:', $.fn.jquery);
-                console.log('DataTables有無:', !!$.fn.DataTable);
-                console.log('Responsive有無:', !!$.fn.DataTable.Responsive);
+                        padding: 4px 2px !important;
 
-                // 画面サイズに応じた件数設定
-                const isMobile = window.innerWidth <= 768;
-                const pageLength = isMobile ? 10 : 15;
+                    }
 
-                $('#trail-table').DataTable({
-                    "language": {
-                        "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/ja.json"
-                    },
-                    "pageLength": pageLength,
-                    "lengthMenu": [
-                        [10, 15, 20, 50],
-                        [10, 15, 20, 50]
-                    ],
-                    "autoWidth": false,
-                    "scrollX": false,
-                    "responsive": {
-                        "details": {
-                            "type": "column",
-                            "target": "tr"
+                    /* 展開された詳細情報のヘッダー*/
+                    .dtr-title {
+                        font-size: 10px;
+                        color: #666;
+                        font-weight: bold;
+                    }
+
+                    /* ヘッダー（th）も強制的に狭くする */
+                    #trail-table th {
+                        max-width: 50px !important;
+                        /* 最大幅を制限 */
+                        overflow: hidden;
+                        /* はみ出したら隠す */
+                        text-overflow: ellipsis;
+                        /* ... で省略 */
+                        white-space: nowrap;
+                        /* 改行させない */
+                    }
+
+                    /* 1列目（更新日）だけ特に狭く */
+                    #trail-table th:nth-child(1),
+                    #trail-table td:nth-child(1) {
+                        max-width: 54px !important;
+                    }
+
+                    /* 3列目（備考）は畳まれすぎないように */
+                    #trail-table th:nth-child(3),
+                    #trail-table td:nth-child(3) {
+                        white-space: normal;
+                        max-width: 124px !important;
+                        min-width: 100px !important;
+                    }
+
+                    /* 展開時のテキスト折り返し */
+                    .dtr-data {
+                        white-space: normal;
+                        word-break: break-word;
+                    }
+
+                    /* テーブル行のカーソル */
+                    #trail-table tbody tr {
+                        cursor: pointer;
+                        transition: background-color 0.2s ease;
+                    }
+
+
+                    .inline-flex.items-center {
+                        padding: 2px 8px !important;
+                        line-height: 1.2;
+                    }
+
+                    /* テーブルセルの垂直配置 */
+                    #trail-table td {
+                        vertical-align: middle;
+                        padding-top: 8px !important;
+                        padding-bottom: 8px !important;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <button class="hamburger" id="hamburger">☰</button>
+            <div class="overlay" id="overlay"></div>
+            <div class="main-content">
+                <aside id="sidebar">
+                    <a href="{% url 'trail-list' %}"
+                       class="logo-link block p-4 no-underline transition-colors rounded-lg">
+                        <h1 class="text-xl font-black tracking-tighter text-blue-900"
+                            style="width: fit-content">
+                            トレイルインフォ
+                            <span class="block text-center text-sm font-medium tracking-normal text-gray-500">登山道状況まとめ</span>
+                        </h1>
+                    </a>
+                    <hr>
+                    <div class="mb-6">
+                        <a href="{% url 'trail-list' %}"
+                           class="sidebar-link {% if not current_source and not current_area and not current_status %}active{% endif %}"
+                           style="font-size: 14px">すべての情報を表示</a>
+                    </div>
+                    <nav>
+                        {% if source_choices %}
+                            <h3>サイト別</h3>
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                {% for id, name in source_choices %}
+                                    <li>
+                                        <a href="{% url 'trail-list' %}?source={{ id|stringformat:'s' }}"
+                                           class="sidebar-link {% if current_source == id %}active{% endif %}">{{ name }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            <hr>
+                        {% endif %}
+                        {% if area_choices %}
+                            <h3>山域別</h3>
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                {% for id, name in area_choices %}
+                                    <li>
+                                        <a href="{% url 'trail-list' %}?area={{ id }}"
+                                           class="sidebar-link {% if current_area == id %}active{% endif %}">{{ name }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            <hr>
+                        {% endif %}
+                        {% if status_choices %}
+                            <h3>状況別</h3>
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                {% for id, name in status_choices %}
+                                    <li>
+                                        <a href="{% url 'trail-list' %}?status={{ id }}"
+                                           class="sidebar-link {% if current_status == id %}active{% endif %}">{{ name }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </nav>
+                </aside>
+                <main id="content">
+                    {% block content %}{% endblock %}
+                    <footer class="bg-gray-50 border-t border-gray-200 mt-8">
+                        <div class="mx-auto">
+                            <div class="flex gap-4 justify-end text-xs text-gray-600"
+                                 style="text-align: center">
+                                <a href="/site-policy/" class="hover:text-blue-600 transition-colors">サイトポリシー</a>
+                                <span class="text-gray-500">安全な登山をお楽しみください 🏔️</span>
+                                <span>&copy; 2026 トレイルインフォ</span>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+                <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+                <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+                <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+                <script>
+                    $(document).ready(function() {
+                        console.log('jQuery版:', $.fn.jquery);
+                        console.log('DataTables有無:', !!$.fn.DataTable);
+                        console.log('Responsive有無:', !!$.fn.DataTable.Responsive);
+
+                        // 画面サイズに応じた件数設定
+                        const isMobile = window.innerWidth <= 768;
+                        const pageLength = isMobile ? 20 : 20;
+
+                        var table = $('#trail-table').DataTable({
+                            "dom": '<"datatable-header"<"dt-row1"f><"dt-row2"<"resolved-filter">l>>rtip',
+                            "order": [[6, "desc"]],
+                            "language": {
+                                "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/ja.json"
+                            },
+                            "pageLength": pageLength,
+                            "lengthMenu": [
+                                [10, 15, 20, 50],
+                                [10, 15, 20, 50]
+                            ],
+                            "autoWidth": false,
+                            "scrollX": false,
+                            "responsive": {
+                                "details": {
+                                    "type": "column",
+                                    "target": "tr",
+                                    "renderer": function(api, rowIdx, columns) {
+                                        // 行から詳細URLを取得
+                                        var row = api.row(rowIdx).node();
+                                        var detailUrl = $(row).find('td[data-detail-url]').data('detail-url');
+
+                                        var data = '';
+                                        var sourceColumn = ''; // 情報源カラムを最後に
+
+                                        $.each(columns, function(i, col) {
+                                            if (col.hidden) {
+                                                var item = '';
+                                                var liStyle = 'padding: 2px 0;';
+                                                if (col.columnIndex === 4 && detailUrl) { // 原文タイトル + もっと見るリンク
+                                                    item = '<li data-dtr-index="' + col.columnIndex + '" style="' + liStyle + '">' +
+                                                        '<span class="dtr-title">' + col.title + '</span>' +
+                                                        '<div style="display: flex; justify-content: space-between; align-items: flex-start;">' +
+                                                        '<span class="dtr-data">' + col.data + '</span>' +
+                                                        '<a href="' + detailUrl + '" style="color: #2563eb; font-weight: 500; white-space: nowrap; margin-left: 8px;">もっと見る</a>' +
+                                                        '</div></li>';
+                                                } else if (col.columnIndex === 8) { // 情報源
+                                                    sourceColumn = '<li data-dtr-index="' + col.columnIndex + '" style="' + liStyle + '">' +
+                                                        '<span class="dtr-title">' + col.title + '</span> ' +
+                                                        '<span class="dtr-data">' + col.data + '</span>' +
+                                                        '</li>';
+                                                } else {
+                                                    item = '<li data-dtr-index="' + col.columnIndex + '" style="' + liStyle + '">' +
+                                                        '<span class="dtr-title">' + col.title + '</span> ' +
+                                                        '<span class="dtr-data">' + col.data + '</span>' +
+                                                        '</li>';
+                                                }
+                                                data += item;
+                                            }
+                                        });
+
+                                        // 情報源を最後に追加
+                                        data += sourceColumn;
+
+                                        return data ? $('<ul data-dtr-index="' + rowIdx + '" />').append(data) : false;
+                                    }
+                                }
+                            },
+                            "columnDefs": [{
+                                    "responsivePriority": 1,
+                                    "targets": [0, 2, 3]
+                                }, // 山域、対象、状況 (最重要3列)
+                                {
+                                    "responsivePriority": 2,
+                                    "targets": [1]
+                                }, // 取得日
+                                {
+                                    "responsivePriority": 10000,
+                                    "targets": [4, 5, 6, 7, 8]
+                                }, // 原文、詳細、報告日、解消日、情報源は折りたたみ
+                                {
+                                    "width": "55px",
+                                    "targets": 0,
+                                    "className": "text-center"
+                                }, // 山域
+                                {
+                                    "width": "60px",
+                                    "targets": 1,
+                                    "className": "text-center"
+                                }, // 取得日
+                                {
+                                    "width": "65px",
+                                    "targets": 3,
+                                    "className": "text-center"
+                                } // 状況
+                            ],
+                            "initComplete": function() {
+                                // チェックボックスをDOMに挿入
+                                $('.resolved-filter').html(
+                                    '<label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap">' +
+                                    '<input type="checkbox" id="hide-resolved" class="w-4 h-4 rounded" checked>' +
+                                    '<span>解消済除く</span>' +
+                                    '</label>'
+                                );
+                                // モバイル用ソートドロップダウンを追加
+                                if (window.innerWidth <= 768) {
+                                    $('.dt-row2').append(
+                                        '<div class="mobile-sort">' +
+                                        '<select id="mobile-sort-select" class="text-sm border border-gray-300 rounded px-2 py-1">' +
+                                        '<option value="">並び替え</option>' +
+                                        '<option value="6-desc">報告日↓新</option>' +
+                                        '<option value="6-asc">報告日↑古</option>' +
+                                        '<option value="7-desc">解消日↓新</option>' +
+                                        '<option value="7-asc">解消日↑古</option>' +
+                                        '<option value="8-asc">情報源↑</option>' +
+                                        '<option value="8-desc">情報源↓</option>' +
+                                        '</select>' +
+                                        '</div>'
+                                    );
+                                }
+                            }
+                        });
+
+                        // 解消済みフィルター
+                        var hideResolved = true;
+                        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                            if (!hideResolved) return true;
+
+                            var resolvedAt = data[7] || '';
+
+                            // 数字がなければ表示（解消日なし）
+                            if (!/\d/.test(resolvedAt)) return true;
+
+                            // 日付パース
+                            var m = resolvedAt.match(/(\d{2})\/(\d{2})\/(\d{2})/);
+                            if (!m) return true;
+
+                            var resolved = new Date(2000 + +m[1], +m[2] - 1, +m[3]);
+                            var today = new Date();
+                            today.setHours(0,0,0,0);
+
+                            return resolved > today;
+                        });
+
+                        $(document).on('change', '#hide-resolved', function() {
+                            hideResolved = this.checked;
+                            table.draw();
+                        });
+
+                        // モバイル用ソート
+                        $(document).on('change', '#mobile-sort-select', function() {
+                            var val = $(this).val();
+                            if (val) {
+                                var parts = val.split('-');
+                                var col = parseInt(parts[0]);
+                                var dir = parts[1];
+                                table.order([col, dir]).draw();
+                            }
+                        });
+
+                        // デスクトップで行クリック時に詳細ページへ遷移
+                        $('#trail-table tbody').on('click', 'tr', function(e) {
+                            // リンククリック時は通常の遷移を許可
+                            if ($(e.target).is('a') || $(e.target).closest('a').length) {
+                                return;
+                            }
+                            // デスクトップ幅のみ（768px以上）
+                            if (window.innerWidth >= 768) {
+                                var detailUrl = $(this).find('td[data-detail-url]').data('detail-url');
+                                if (detailUrl) {
+                                    window.location.href = detailUrl;
+                                }
+                            }
+                        });
+
+                        // デスクトップで行にカーソルポインターを表示
+                        if (window.innerWidth >= 768) {
+                            $('#trail-table tbody tr').css('cursor', 'pointer');
                         }
-                    },
-                    "columnDefs": [{
-                            "responsivePriority": 1,
-                            "targets": [0, 1, 2, 3]
-                        }, // 更新日、山域、対象、状況 (最重要4列)
-                        {
-                            "responsivePriority": 10000,
-                            "targets": [4, 5]
-                        }, // 詳細、情報源は+で
-                        {
-                            "width": "60px",
-                            "targets": 0,
-                            "className": "text-center"
-                        }, // 更新日
-                        {
-                            "width": "55px",
-                            "targets": 1,
-                            "className": "text-center"
-                        }, // 山域
-                        {
-                            "width": "85px",
-                            "targets": 3,
-                            "className": "text-center"
-                        } // 状況
-                    ]
-                });
 
-                // ハンバーガーメニュー
-                const hamburger = document.getElementById('hamburger');
-                const sidebar = document.getElementById('sidebar');
-                const overlay = document.getElementById('overlay');
+                        // ハンバーガーメニュー
+                        const hamburger = document.getElementById('hamburger');
+                        const sidebar = document.getElementById('sidebar');
+                        const overlay = document.getElementById('overlay');
 
-                function toggleSidebar() {
-                    sidebar.classList.toggle('open');
-                    overlay.classList.toggle('show');
-                    // サイドバーを開いているときは本文のスクロールを無効化
-                    document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+                        function toggleSidebar() {
+                            sidebar.classList.toggle('open');
+                            overlay.classList.toggle('show');
+                            // サイドバーを開いているときは本文のスクロールを無効化
+                            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
 
-                    // サイドバーを開いた時に強制リペイント
-                    if (sidebar.classList.contains('open')) {
-                        requestAnimationFrame(() => {
-                            const computed = window.getComputedStyle(sidebar, '::before').backdropFilter;
-                            sidebar.style.transform = 'translateZ(0.001px)';
-                            requestAnimationFrame(() => {
-                                sidebar.style.transform = '';
-                            });
+                            // サイドバーを開いた時に強制リペイント
+                            if (sidebar.classList.contains('open')) {
+                                requestAnimationFrame(() => {
+                                    const computed = window.getComputedStyle(sidebar, '::before').backdropFilter;
+                                    sidebar.style.transform = 'translateZ(0.001px)';
+                                    requestAnimationFrame(() => {
+                                        sidebar.style.transform = '';
+                                    });
+                                });
+                            }
+                        }
+
+                        hamburger.addEventListener('click', toggleSidebar);
+                        overlay.addEventListener('click', toggleSidebar);
+
+                        // サイドバーのtransition終了時に強制リペイント
+                        sidebar.addEventListener('transitionend', function(e) {
+                            if (e.propertyName === 'transform' && sidebar.classList.contains('open')) {
+                                // transition終了直後に強制再描画
+                                const computed = window.getComputedStyle(sidebar, '::before').backdropFilter;
+                                void sidebar.offsetHeight; // 強制リフロー
+                            }
                         });
-                    }
-                }
 
-                hamburger.addEventListener('click', toggleSidebar);
-                overlay.addEventListener('click', toggleSidebar);
-
-                // サイドバーのtransition終了時に強制リペイント
-                sidebar.addEventListener('transitionend', function(e) {
-                    if (e.propertyName === 'transform' && sidebar.classList.contains('open')) {
-                        // transition終了直後に強制再描画
-                        const computed = window.getComputedStyle(sidebar, '::before').backdropFilter;
-                        void sidebar.offsetHeight; // 強制リフロー
-                    }
-                });
-
-                // サイドバー内リンククリック時も閉じる
-                sidebar.addEventListener('click', function(e) {
-                    if (e.target.matches('a')) {
-                        setTimeout(() => {
-                            sidebar.classList.remove('open');
-                            overlay.classList.remove('show');
-                            document.body.style.overflow = '';
-                        }, 100);
-                    }
-                });
-
-                // backdrop-filter初期化問題の修正：強制リペイント
-                // DOMContentLoadedで早めに実行
-                document.addEventListener('DOMContentLoaded', function() {
-                    // 複数の方法で強制再描画
-                    setTimeout(() => {
-                        // 方法1: opacity微調整
-                        sidebar.style.opacity = '0.9999';
-                        // 方法2: ::beforeの計算スタイル取得
-                        const computed = window.getComputedStyle(sidebar, '::before').backdropFilter;
-                        // 方法3: 強制リフロー
-                        const forceReflow = sidebar.offsetHeight;
-
-                        requestAnimationFrame(() => {
-                            sidebar.style.opacity = '';
+                        // サイドバー内リンククリック時も閉じる
+                        sidebar.addEventListener('click', function(e) {
+                            if (e.target.matches('a')) {
+                                setTimeout(() => {
+                                    sidebar.classList.remove('open');
+                                    overlay.classList.remove('show');
+                                    document.body.style.overflow = '';
+                                }, 100);
+                            }
                         });
-                    }, 50);
-                });
 
-                // サイドバー::beforeの高さを動的に調整（モバイルのみ）
-                function updateSidebarBeforeHeight() {
-                    if (window.innerWidth <= 640) {
-                        const scrollHeight = sidebar.scrollHeight;
-                        sidebar.style.setProperty('--sidebar-height', scrollHeight + 'px');
-                    }
-                }
+                        // backdrop-filter初期化問題の修正：強制リペイント
+                        // DOMContentLoadedで早めに実行
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // 複数の方法で強制再描画
+                            setTimeout(() => {
+                                // 方法1: opacity微調整
+                                sidebar.style.opacity = '0.9999';
+                                // 方法2: ::beforeの計算スタイル取得
+                                const computed = window.getComputedStyle(sidebar, '::before').backdropFilter;
+                                // 方法3: 強制リフロー
+                                const forceReflow = sidebar.offsetHeight;
 
-                // 初回実行
-                updateSidebarBeforeHeight();
+                                requestAnimationFrame(() => {
+                                    sidebar.style.opacity = '';
+                                });
+                            }, 50);
+                        });
 
-                // サイドバー開閉時とリサイズ時に更新
-                hamburger.addEventListener('click', () => {
-                    setTimeout(updateSidebarBeforeHeight, 350);
-                });
+                        // サイドバー::beforeの高さを動的に調整
+                        function updateSidebarBeforeHeight() {
+                            const scrollHeight = sidebar.scrollHeight;
+                            sidebar.style.setProperty('--sidebar-height', scrollHeight + 'px');
+                        }
 
-                window.addEventListener('resize', updateSidebarBeforeHeight);
-            });
-        </script>
-      </body>
-    </html>
+                        // 初回実行
+                        updateSidebarBeforeHeight();
+
+                        // サイドバー開閉時とリサイズ時に更新
+                        hamburger.addEventListener('click', () => {
+                            setTimeout(updateSidebarBeforeHeight, 350);
+                        });
+
+                        window.addEventListener('resize', updateSidebarBeforeHeight);
+                    });
+                </script>
+            </body>
+        </html>

@@ -1,34 +1,106 @@
 {% extends 'base.html' %}
+{% block title %}{{ item.title }} - トレイルインフォ{% endblock %}
 {% block content %}
-  <div class="detail-container">
-    <header class="detail-header">
-      <div class="header-top">
-        <span class="status-label {{ item.status }}">{{ item.get_status_display }}</span>
-        <span class="area-tag">{{ item.get_area_display|default:"未設定" }}</span>
+  <style>
+    @media (min-width: 768px) {
+      .detail-container { min-width: 500px; }
+    }
+    @media (min-width: 1024px) {
+      .detail-container { min-width: 800px; }
+    }
+  </style>
+  <div class="detail-container max-w-4xl mx-auto px-4 py-6 md:py-8">
+    <!-- ヘッダー -->
+    <div class="mb-4 md:mb-6">
+      <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
+        <span class="px-3 py-1.5 text-sm rounded font-medium {% if item.status == 'CLOSURE' %}bg-red-100 text-red-700{% elif item.status == 'HAZARD' %}bg-orange-100 text-orange-700{% elif item.status == 'SNOW' %}bg-cyan-100 text-cyan-700{% elif item.status == 'CLEAR' %}bg-green-100 text-green-700{% elif item.status == 'RESOLVED' %}bg-green-100 text-green-700{% elif item.status == 'ANIMAL' %}bg-purple-100 text-purple-700{% elif item.status == 'WATER' %}bg-teal-100 text-teal-700{% elif item.status == 'WEATHER' %}bg-gray-100 text-gray-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+          {{ item.get_status_display }}
+        </span>
+        <span class="px-3 py-1.5 text-sm rounded bg-gray-100 text-gray-700">{{ item.get_area_display|default:"未設定" }}</span>
+        {% if item.mountain_group %}
+          <span class="px-3 py-1.5 text-sm rounded bg-gray-50 text-gray-600">{{ item.mountain_group.name }}</span>
+        {% endif %}
       </div>
-      <h1>{{ item.trail_name }}</h1>
-      <p class="mountain-sub">[{{ item.mountain_name_raw }}]</p>
-    </header>
-    <div class="detail-grid">
-      <section class="info-main">
-        <h2 class="detail-title">{{ item.title }}</h2>
-        <div class="detail-content">{{ item.body|linebreaks }}</div>
-      </section>
-      <aside class="info-sidebar">
-        <div class="meta-card">
-          <div class="meta-item">
-            <label>報告日</label>
-            <span>{{ item.reported_at|date:"Y/m/d" }}</span>
-          </div>
-          <div class="meta-item">
-            <label>最終更新</label>
-            <span>{{ item.updated_at|date:"Y/m/d H:i" }}</span>
-          </div>
-        </div>
-      </aside>
+      <h1 class="text-xl md:text-2xl font-bold text-gray-800 mb-1">{{ item.trail_name }}</h1>
+      <p class="text-gray-600">{{ item.mountain_name_raw }}</p>
     </div>
-    <footer class="detail-actions">
-      <a href="{% url 'condition-list' %}" class="back-link">← 一覧へ戻る</a>
-    </footer>
+    <!-- メインコンテンツ -->
+    <div class="bg-white border border-gray-200 rounded-lg p-4 md:p-6 mb-4 md:mb-6">
+      <h3 class="text-sm font-medium text-gray-500 mb-1">状況（原文）</h3>
+      <h2 class="text-lg md:text-lg font-semibold text-gray-800"
+          style="font-style: italic">{{ item.title }}</h2>
+      {% if item.description or item.comment or item.reference_URL %}
+        <div class="mt-4 space-y-4">
+          {% if item.description %}
+            <div>
+              <h3 class="text-sm font-medium text-gray-500 mb-1">詳細説明</h3>
+              <div class="text-gray-700 pl-3 border-l-2 border-gray-300 [&>p]:mb-0">{{ item.description|linebreaks }}</div>
+            </div>
+          {% endif %}
+          {% if item.comment %}
+            <div>
+              <h3 class="text-sm font-medium text-gray-500 mb-1">備考</h3>
+              <div class="text-gray-700 pl-3 border-l-2 border-gray-300 [&>p]:mb-0">{{ item.comment|linebreaks }}</div>
+            </div>
+          {% endif %}
+          {% if item.reference_URL %}
+            <div>
+              <h3 class="text-sm font-medium text-gray-500 mb-1">補足資料</h3>
+              <div class="text-gray-700 pl-3 border-l-2 border-gray-300 overflow-hidden">
+                <a href="{{ item.reference_URL }}"
+                   target="_blank"
+                   class="text-blue-600 hover:underline"
+                   style="word-break: break-all;
+                          overflow-wrap: break-word">
+                  {{ item.reference_URL|truncatechars:50 }}
+                  <small class="text-blue-500">↗</small>
+                </a>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+    <!-- メタ情報 -->
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 md:p-6 mb-4 md:mb-6">
+      <h3 class="text-sm font-medium text-gray-500 mb-2">情報詳細</h3>
+      <dl class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+        <div>
+          <dt class="text-gray-500">報告日</dt>
+          <dd class="text-gray-800 font-medium">
+            {{ item.reported_at|date:"Y/m/d"|default:"-" }}
+          </dd>
+        </div>
+        <div>
+          <dt class="text-gray-500">解消日</dt>
+          <dd class="text-gray-800 font-medium">
+            {{ item.resolved_at|date:"Y/m/d"|default:"-" }}
+          </dd>
+        </div>
+        <div>
+          <dt class="text-gray-500">情報更新日</dt>
+          <dd class="text-gray-800 font-medium">
+            {{ item.updated_at|date:"Y/m/d" }}
+          </dd>
+        </div>
+      </dl>
+    </div>
+    <!-- 情報源 -->
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 md:p-6 mb-4 md:mb-6">
+      <h3 class="text-sm font-medium text-gray-500 mb-2">情報源</h3>
+      <div>
+        <a href="{{ item.url1 }}"
+           target="_blank"
+           class="text-blue-600 hover:underline">
+          {{ item.source.name|default:"情報源" }}
+          <small class="text-blue-500">↗</small>
+        </a>
+      </div>
+    </div>
+    <!-- 戻るリンク -->
+    <div class="mt-8">
+      <a href="{% url 'trail-list' %}"
+         class="inline-flex items-center text-gray-600 hover:text-blue-600 transition-colors">← 一覧へ戻る</a>
+    </div>
   </div>
 {% endblock %}
