@@ -29,7 +29,7 @@
 # Django
 DJANGO_SECRET_KEY=<ランダムな文字列（50文字以上推奨）>
 DJANGO_DEBUG=False
-ALLOWED_HOSTS=your-domain.com,www.your-domain.com
+ALLOWED_HOSTS=
 
 # Database
 DATABASE_URL=postgresql://user:password@db:5432/dbname

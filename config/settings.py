@@ -8,6 +8,9 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
+
+デプロイチェックリスト：
+https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 """
 
 import os
@@ -15,51 +18,59 @@ from pathlib import Path
 
 import dj_database_url
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-# ベースディレクトリ
-BASE_DIR = Path(__file__).resolve().parent.parent
+# ======================================================
 
+# 環境判定
+DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
+IS_PRODUCTION = os.environ.get("IS_PRODUCTION") == "True"
+IS_IDX = os.environ.get("IS_IDX") == "True"
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-# セキュリティキー（本番では環境変数から）
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-b^^&7&(v)4=pcrntfyx+933&avmr4+)s7uulnjdo#78nixmhcs")
-
-# SECURITY WARNING: don't run with debug turned on in production!
-# デバッグモード（開発中はTrue）
-DEBUG = os.environ.get("DJANGO_DEBUG", False) in ["True", "true"]
-
+if IS_PRODUCTION and DEBUG:
+    raise ValueError("本番環境で DEBUG=True は許可されていません")
 
 # 設定項目 | チェックのタイミング | 役割（Djangoが何を見ているか）
 # ALLOWED_HOSTS | 通信の入口（HTTPヘッダー） | 「リクエストの宛先は自分（localhost）になっているか？」を確認。
 # CSRF_TRUSTED_ORIGINS | フォーム送信時（Referer/Originヘッダー） | 「リクエストの**送信元（ブラウザのURL）**は信頼できるドメインか？」を確認。
 
-# 許可するホスト
-ALLOWED_HOSTS = [
-    ".localhost",
-    "127.0.0.1",
-    "[::1]",
-    ".cloudworkstations.dev",
-    ".idx.google.com",
-]
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+if IS_PRODUCTION and "insecure" in SECRET_KEY:
+    raise ValueError("本番環境用のSECRET_KEYを設定してください。")
 
-IS_IDX = os.environ.get("IS_IDX") in ["true", "True", "t"]
-if IS_IDX:
+
+if IS_PRODUCTION:
+    # 本番環境用の設定
+    ALLOWED_HOSTS = [
+        "trail-info.jp",
+        "www.trail-info.jp",
+    ]
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SAMESITE = "Lax"
+    CSRF_TRUSTED_ORIGINS = [
+        "https://trail-info.jp",
+        "https://www.trail-info.jp",
+    ]
+elif IS_IDX:
     # IDX (HTTPSプロキシ環境) 用の設定
+    ALLOWED_HOSTS = [
+        ".localhost",
+        "127.0.0.1",
+    ]
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SAMESITE = "None"
     SESSION_COOKIE_SAMESITE = "None"
     CSRF_TRUSTED_ORIGINS = [
-        "https://9000-firebase-trail-condition-1767638653929.cluster-d5vecjrg5rhlkrz6nm4jty7avc.cloudworkstations.dev",
-        "https://*.cloudworkstations.dev",
-        "https://*.idx.google.com",
+        "https://9000-firebase-trail-condition-1767638653929.cluster-d5vecjrg5rhlkrz6nm4jty7avc.cloudworkstations.dev"
     ]
 else:
     # ローカル (HTTP) 用の設定
+    ALLOWED_HOSTS = [
+        ".localhost",
+        "127.0.0.1",
+    ]
     CSRF_COOKIE_SECURE = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SAMESITE = "Lax"
@@ -68,6 +79,59 @@ else:
         "http://localhost:8000",
         "http://127.0.0.1:8000",
     ]
+
+
+# データベース設定
+# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+# env("DATABASE_URL") を使用
+DATABASES = {
+    "default": dj_database_url.config(
+        conn_max_age=600,
+        conn_health_checks=True,
+    ),
+}
+if not DATABASES["default"]:
+    raise ValueError("DATABASE_URL 環境変数が設定されていません。")
+
+
+# 開発環境でのみ全てのオリジンを許可する場合（本番環境では絶対にFalse）
+# CORS_ALLOW_ALL_ORIGINS = True
+# フロントエンド（Vite開発サーバー）からのアクセスを許可
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Vite開発サーバー
+    "http://127.0.0.1:5173",
+]
+
+# Django REST Framework configuration
+REST_FRAMEWORK = {
+    # ページネーション設定
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,  # 1ページあたり20件
+    # デフォルトの認証（今は不要だが将来のため）
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",  # ← Browsable API用
+        "rest_framework.authentication.BasicAuthentication",  # ← APIクライアント用
+    ],
+    # デフォルトの権限（誰でも読み取り可能）
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",
+    ],
+    # レンダラー（JSON + ブラウザブルAPI）
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",  # 開発用UI
+    ],
+    # 日時フォーマット
+    "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",
+    "DATE_FORMAT": "%Y-%m-%d",
+}
+
+
+# ======================================================
+
+
+# ベースディレクトリ
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # インストールするアプリ
 INSTALLED_APPS = [
@@ -116,26 +180,23 @@ TEMPLATES = [
     },
 ]
 
-# WSGIアプリケーション
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/6.0/howto/static-files/
+STATIC_URL = "static/"
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
+# プライマリーキーのデフォルトフィールドタイプ
+# https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# WSGIアプリケーションパス設定
 WSGI_APPLICATION = "config.wsgi.application"
-
-
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-# データベース設定
-# env("DATABASE_URL") があればそれを使用し、
-# 万が一設定されていなければエラーにする（あるいはフォールバックを指定する）
-DATABASES = {
-    "default": dj_database_url.config(
-        conn_max_age=600,
-        conn_health_checks=True,
-    ),
-}
 
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -151,28 +212,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/6.0/topics/i18n/
-
-LANGUAGE_CODE = "ja"
-
-TIME_ZONE = "Asia/Tokyo"
-
-USE_I18N = True
-
-USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
-
-STATIC_URL = "static/"
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+# Slack Webhook URL（通知機能用）
+# 環境変数 SLACK_WEBHOOK_URL から読み込み
+# 設定されていなければ None（通知は送信されない）
+SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL", None)
 
 # Logging configuration
 LOGGING = {
@@ -215,47 +258,8 @@ LOGGING = {
     },
 }
 
-# Django REST Framework configuration
-REST_FRAMEWORK = {
-    # ページネーション設定
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 20,  # 1ページあたり20件
-    # デフォルトの認証（今は不要だが将来のため）
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",  # ← Browsable API用
-        "rest_framework.authentication.BasicAuthentication",  # ← APIクライアント用
-    ],
-    # デフォルトの権限（誰でも読み取り可能）
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
-    ],
-    # レンダラー（JSON + ブラウザブルAPI）
-    "DEFAULT_RENDERER_CLASSES": [
-        "rest_framework.renderers.JSONRenderer",
-        "rest_framework.renderers.BrowsableAPIRenderer",  # 開発用UI
-    ],
-    # 日時フォーマット
-    "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",
-    "DATE_FORMAT": "%Y-%m-%d",
-}
-
-# CORS configuration
-# フロントエンド（Vite開発サーバー）からのアクセスを許可
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite開発サーバー
-    "http://127.0.0.1:5173",
-]
-
-# 開発環境でのみ全てのオリジンを許可する場合（本番環境では絶対にFalse）
-# CORS_ALLOW_ALL_ORIGINS = True
-
-
-STATIC_URL = "static/"
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
-
-# Slack Webhook URL（通知機能用）
-# 環境変数 SLACK_WEBHOOK_URL から読み込み
-# 設定されていなければ None（通知は送信されない）
-SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL", None)
+# https://docs.djangoproject.com/en/6.0/topics/i18n/
+LANGUAGE_CODE = "ja"
+TIME_ZONE = "Asia/Tokyo"
+USE_I18N = True
+USE_TZ = True
