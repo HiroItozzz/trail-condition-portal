@@ -37,7 +37,7 @@ if IS_PRODUCTION and IS_IDX:
 # CSRF_TRUSTED_ORIGINS | フォーム送信時（Referer/Originヘッダー） | 「リクエストの**送信元（ブラウザのURL）**は信頼できるドメインか？」を確認。
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
-if IS_PRODUCTION and "insecure" in SECRET_KEY or not SECRET_KEY:
+if IS_PRODUCTION and ("insecure" in SECRET_KEY or not SECRET_KEY):
     raise ValueError("本番環境用のSECRET_KEYを設定してください。")
 
 
@@ -47,6 +47,9 @@ if IS_PRODUCTION:
         "trail-info.jp",
         "www.trail-info.jp",
     ]
+    # この設定により、Cloudflare が付与する X-Forwarded-Proto: https ヘッダーを見て「実際は HTTPS だ」と判断できます。これがないと: request.is_secure() が常に False / CSRF 検証が失敗する可能性 / リダイレクトURLが http:// になる
+
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SAMESITE = "Lax"
@@ -111,24 +114,23 @@ if not DATABASES["default"]:
 
 # Django REST Framework configuration
 REST_FRAMEWORK = {
-    # ページネーション設定
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 20,  # 1ページあたり20件
-    # デフォルトの認証（今は不要だが将来のため）
+    "PAGE_SIZE": 20,
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",  # ← Browsable API用
-        "rest_framework.authentication.BasicAuthentication",  # ← APIクライアント用
+        "rest_framework.authentication.SessionAuthentication",
     ],
-    # デフォルトの権限（誰でも読み取り可能）
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],
-    # レンダラー（JSON + ブラウザブルAPI）
-    "DEFAULT_RENDERER_CLASSES": [
-        "rest_framework.renderers.JSONRenderer",
-        "rest_framework.renderers.BrowsableAPIRenderer",  # 開発用UI
-    ],
-    # 日時フォーマット
+    # 本番ではJSONのみ、開発ではBrowsable APIも有効
+    "DEFAULT_RENDERER_CLASSES": (
+        ["rest_framework.renderers.JSONRenderer"]
+        if IS_PRODUCTION
+        else [
+            "rest_framework.renderers.JSONRenderer",
+            "rest_framework.renderers.BrowsableAPIRenderer",
+        ]
+    ),
     "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",
     "DATE_FORMAT": "%Y-%m-%d",
 }
@@ -194,7 +196,17 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
-STATIC_ROOT = BASE_DIR / "staticfiles" # collectstaticの出力先
+STATIC_ROOT = BASE_DIR / "staticfiles"  # collectstaticの出力先
+
+# WhiteNoise: 静的ファイルの圧縮とキャッシュ最適化
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # プライマリーキーのデフォルトフィールドタイプ
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
@@ -261,7 +273,7 @@ LOGGING = {
         },
         "trail_status": {
             "handlers": ["console", "file"],
-            "level": "DEBUG",
+            "level": "INFO" if IS_PRODUCTION else "DEBUG",
             "propagate": False,
         },
     },

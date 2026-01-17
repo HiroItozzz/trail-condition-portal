@@ -77,8 +77,8 @@
         <tr class="hover:bg-[#f5f5f5]">
           <td style="white-space: normal;">{{ item.get_area_display }}</td>
           <td class="whitespace-nowrap">
-            <span class="hidden md:inline">{{ item.updated_at|date:"Y/m/d"|default:"-" }}</span>
-            <span class="md:hidden">{{ item.updated_at|date:"y/m/d"|default:"-" }}</span>
+            <span class="date-full">{{ item.updated_at|date:"Y/m/d"|default:"-" }}</span>
+            <span class="date-short">{{ item.updated_at|date:"y/m/d"|default:"-" }}</span>
           </td>
           <td data-detail-url="{% url 'condition-detail' %}?id={{item.id}}">
             <a href="{% url 'condition-detail' %}?id={{item.id}}" class="hidden md:inline" style="font-weight: bold; color: #000; text-decoration: none;">{{ item.mountain_name_raw }}</a>

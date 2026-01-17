@@ -218,6 +218,8 @@
                     align-items: center;
                     gap: 16px;
                     margin-left: auto;
+                    flex: 1;
+                    justify-content: flex-end;
                 }
 
                 @media (max-width: 1023px) {
@@ -243,12 +245,33 @@
                         display: none;
                     }
 
-                    #mobile-sort-select {
+                    #sort-select {
                         background: white;
                         font-size: 12px;
                         height: 24px;
                         padding: 0 4px;
                         min-width: 90px;
+                    }
+                }
+
+                /* デスクトップ用スタイル（1024px以上） */
+                @media (min-width: 1024px) {
+                    .dt-row2 {
+                        justify-content: flex-start;
+                    }
+
+                    #sort-select {
+                        background: white;
+                        font-size: 13px;
+                        height: 26px;
+                        padding: 2px 6px;
+                        min-width: 100px;
+                    }
+
+                    /* X件表示を右側に配置 */
+                    .dt-row2 .dataTables_length {
+                        display: block;
+                        margin-left: auto;
                     }
                 }
 
@@ -300,33 +323,81 @@
                     color: #666;
                 }
 
+                /* 情報取得日の表示切替: 1280px以上でYYYY/MM/DD、それ以下でyy/m/d */
+                .date-full { display: none; }
+                .date-short { display: inline; }
+                @media (min-width: 1280px) {
+                    .date-full { display: inline; }
+                    .date-short { display: none; }
+                }
+
+                /* タブレット範囲のみ（1024px〜1279px）: 固定幅で安定させる */
+                @media (min-width: 1024px) and (max-width: 1279px) {
+                    /* 山域: 固定幅 */
+                    #trail-table th:nth-child(1),
+                    #trail-table td:nth-child(1) {
+                        width: 50px !important;
+                        min-width: 50px !important;
+                        max-width: 50px !important;
+                    }
+
+                    /* 情報取得日: 固定幅 */
+                    #trail-table th:nth-child(2),
+                    #trail-table td:nth-child(2) {
+                        width: 54px !important;
+                        min-width: 54px !important;
+                        max-width: 54px !important;
+                    }
+
+                    /* 対象: 残り幅を使用 */
+                    #trail-table th:nth-child(3),
+                    #trail-table td:nth-child(3) {
+                        width: auto !important;
+                        min-width: 120px !important;
+                    }
+
+                    /* 状況種別（バッジ）: 固定幅 */
+                    #trail-table th:nth-child(4),
+                    #trail-table td:nth-child(4) {
+                        width: 65px !important;
+                        min-width: 65px !important;
+                        max-width: 65px !important;
+                    }
+                }
+
                 /* デスクトップのみ: テーブル幅固定（パーセンテージ） */
                 @media (min-width: 641px) {
                     #trail-table {
                         table-layout: fixed;
                     }
 
+                    /* 山域 */
                     #trail-table th:nth-child(1),
                     #trail-table td:nth-child(1) {
                         width: 6%;
                     }
 
-                    /* 山域 */
+                    /* 情報取得日: 1280px以上では7%、それ未満は別メディアクエリで54px固定 */
                     #trail-table th:nth-child(2),
                     #trail-table td:nth-child(2) {
                         width: 7%;
                     }
 
-                    /* 取得日 */
+                    /* 対象 */
                     #trail-table th:nth-child(3),
                     #trail-table td:nth-child(3) {
                         width: 15%;
+                        min-width: 120px;
+                        white-space: normal;
+                        word-break: break-word;
                     }
 
-                    /* 対象 */
+                    /* 状況種別（バッジ） */
                     #trail-table th:nth-child(4),
                     #trail-table td:nth-child(4) {
-                        width: 65px;
+                        width: 65px !important;
+                        min-width: 65px !important;
+                        max-width: 65px !important;
                     }
 
                     /* 状況 */
@@ -341,27 +412,25 @@
                         width: 25%;
                     }
 
-                    /* 詳細 */
+                    /* 報告日 */
                     #trail-table th:nth-child(7),
                     #trail-table td:nth-child(7) {
-                        width: 55px;
-                        text-align: center;
-                    }
-
-                    /* 報告日 */
-                    #trail-table th:nth-child(8),
-                    #trail-table td:nth-child(8) {
-                        width: 55px;
+                        width: 50px;
                         text-align: center;
                     }
 
                     /* 解消日 */
+                    #trail-table th:nth-child(8),
+                    #trail-table td:nth-child(8) {
+                        width: 50px;
+                        text-align: center;
+                    }
+
+                    /* 情報源 */
                     #trail-table th:nth-child(9),
                     #trail-table td:nth-child(9) {
                         width: 11%;
                     }
-
-                    /* 情報源 */
 
                     /* 対象の登山道名・原文を省略 */
                     #trail-table td:nth-child(3) div,
@@ -369,6 +438,14 @@
                         overflow: hidden;
                         text-overflow: ellipsis;
                         white-space: nowrap;
+                    }
+                }
+
+                /* 1280px以上: 情報源の折り返し有効 */
+                @media (min-width: 1280px) {
+                    #trail-table td:nth-child(9) {
+                        white-space: normal;
+                        word-break: break-word;
                     }
                 }
 
@@ -386,11 +463,11 @@
                 }
 
                 /* 原文タイトル・詳細欄の幅を画面サイズに応じて調整 */
-                @media (max-width: 1200px) {
+                /* 1024px以上のみmax-width制限を適用 */
+                @media (min-width: 1024px) and (max-width: 1200px) {
                     #trail-table td>div[style*="border-left: 2px solid #ddd"] {
                         white-space: normal;
                         max-width: 180px !important;
-                        /* タブレットサイズ */
                     }
                 }
 
@@ -630,7 +707,7 @@
 
                         // 画面サイズに応じた件数設定
                         const isMobile = window.innerWidth <= 768;
-                        const pageLength = isMobile ? 20 : 20;
+                        const pageLength = isMobile ? 20 : 15;
 
                         var table = $('#trail-table').DataTable({
                             "dom": '<"datatable-header"<"dt-row1"f><"dt-row2"<"resolved-filter">l>>rtip',
@@ -696,15 +773,19 @@
                             "columnDefs": [{
                                     "responsivePriority": 1,
                                     "targets": [0, 2, 3]
-                                }, // 山域、対象、状況 (最重要3列)
+                                }, // 山域、対象、状況種別 (最重要3列)
                                 {
                                     "responsivePriority": 2,
                                     "targets": [1]
                                 }, // 取得日
                                 {
                                     "responsivePriority": 10000,
-                                    "targets": [4, 5, 6, 7, 8]
-                                }, // 原文、詳細、報告日、解消日、情報源は折りたたみ
+                                    "targets": [4, 5, 6, 8]
+                                }, // 状況、詳細、報告日、情報源は折りたたみ
+                                {
+                                    "responsivePriority": 10001,
+                                    "targets": [7]
+                                }, // 解消日は最初に折りたたみ
                                 {
                                     "width": "55px",
                                     "targets": 0,
@@ -729,22 +810,20 @@
                                     '<span>解消済除く</span>' +
                                     '</label>'
                                 );
-                                // モバイル用ソートドロップダウンを追加
-                                if (window.innerWidth <= 768) {
-                                    $('.dt-row2').append(
-                                        '<div class="mobile-sort">' +
-                                        '<select id="mobile-sort-select" class="text-sm border border-gray-300 rounded px-2 py-1">' +
-                                        '<option value="">並び替え</option>' +
-                                        '<option value="6-desc">報告日↓新</option>' +
-                                        '<option value="6-asc">報告日↑古</option>' +
-                                        '<option value="7-desc">解消日↓新</option>' +
-                                        '<option value="7-asc">解消日↑古</option>' +
-                                        '<option value="8-asc">情報源↑</option>' +
-                                        '<option value="8-desc">情報源↓</option>' +
-                                        '</select>' +
-                                        '</div>'
-                                    );
-                                }
+                                // ソートドロップダウンを追加（全画面サイズ共通）
+                                $('.dt-row2').append(
+                                    '<div class="sort-dropdown">' +
+                                    '<select id="sort-select" class="text-sm border border-gray-300 rounded px-2 py-1">' +
+                                    '<option value="">並び替え</option>' +
+                                    '<option value="6-desc">報告日↓新</option>' +
+                                    '<option value="6-asc">報告日↑古</option>' +
+                                    '<option value="7-desc">解消日↓新</option>' +
+                                    '<option value="7-asc">解消日↑古</option>' +
+                                    '<option value="8-asc">情報源↑</option>' +
+                                    '<option value="8-desc">情報源↓</option>' +
+                                    '</select>' +
+                                    '</div>'
+                                );
                             }
                         });
 
@@ -774,8 +853,8 @@
                             table.draw();
                         });
 
-                        // モバイル用ソート
-                        $(document).on('change', '#mobile-sort-select', function() {
+                        // ソートドロップダウン
+                        $(document).on('change', '#sort-select', function() {
                             var val = $(this).val();
                             if (val) {
                                 var parts = val.split('-');
