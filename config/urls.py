@@ -27,6 +27,7 @@ urlpatterns = [
     path("", include("trail_status.urls")),
     path("api/", include("api.urls")),
     path("admin/", admin.site.urls),
+    path("scheduler/", include("scheduler.urls")),
     
     # SEO関連
     path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),

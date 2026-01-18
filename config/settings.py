@@ -150,7 +150,7 @@ INSTALLED_APPS = [
     "corsheaders",  # CORS対応
     "rest_framework",  # Django REST Framework
     "trail_status",
-    "api",
+    "scheduler",
 ]
 
 # ミドルウェア
