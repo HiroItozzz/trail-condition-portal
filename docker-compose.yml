@@ -15,7 +15,7 @@ services:
       # pycacheを生成しない設定
       - PYTHONDONTWRITEBITECODE=1
     env_file:
-    - .env.local
+      - .env.local
     depends_on:
       - db
 

@@ -252,27 +252,32 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "console",
         },
-        "file": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": BASE_DIR / "logs" / "django.log",
-            "maxBytes": 5 * 1024 * 1024,  # 5MB
-            "backupCount": 5,
-            "formatter": "verbose",
-        },
     },
     "loggers": {
         "django": {
-            "handlers": ["console"] if IS_PRODUCTION else ["console", "file"],
+            "handlers": ["console"],
             "level": "INFO",
             "propagate": False,
         },
         "trail_status": {
-            "handlers": ["console"] if IS_PRODUCTION else ["console", "file"],
-            "level": "INFO" if IS_PRODUCTION else "DEBUG",
+            "handlers": ["console"],
+            "level": "INFO",
             "propagate": False,
         },
     },
 }
+
+if not IS_PRODUCTION:
+    LOGGING["handlers"]["file"] = {
+        "class": "logging.handlers.RotatingFileHandler",
+        "filename": BASE_DIR / "logs" / "django.log",
+        "maxBytes": 5 * 1024 * 1024,  # 5MB
+        "backupCount": 5,
+        "formatter": "verbose",
+    }
+    LOGGING["loggers"]["django"]["handlers"].append("file")
+    LOGGING["loggers"]["trail_status"]["handlers"].append("file")
+    LOGGING["loggers"]["trail_status"]["level"] = "DEBUG"
 
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 LANGUAGE_CODE = "ja"

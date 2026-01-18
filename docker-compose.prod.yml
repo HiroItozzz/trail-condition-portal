@@ -13,5 +13,5 @@ services:
     environment:
       - PYTHONDONTWRITEBITECODE=1
     env_file:
-    - .env.production
+      - .env.production
     restart: unless-stopped
