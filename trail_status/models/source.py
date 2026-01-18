@@ -17,7 +17,7 @@ class OrganizationType(models.TextChoices):
 class DataSource(models.Model):
     """情報源となる機関"""
 
-    name = models.CharField("機関名", max_length=200)
+    name = models.CharField("機関名", unique=True, max_length=200)
     organization_type = models.CharField(
         "機関種別", max_length=50, choices=OrganizationType.choices, default=OrganizationType.ASSOCIATION
     )

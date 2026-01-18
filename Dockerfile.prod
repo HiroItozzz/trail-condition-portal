@@ -1,0 +1,19 @@
+FROM python:3.13-slim
+
+ENV PYTHONDONTWRITEBITECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /code
+
+# uvをインストール
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# pyproject.tomlとuv.lockをコピー
+COPY pyproject.toml uv.lock* ./
+
+# システム環境に直接インストール
+RUN uv sync --no-dev --frozen
+
+COPY . .
+
+CMD ["sh", "-c", "uv run manage.py migrate && uv run manage.py collectstatic --noinput && uv run gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers 2 --timeout 120"]

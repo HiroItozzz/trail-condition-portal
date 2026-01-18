@@ -1,26 +1,55 @@
+# Python
 .venv/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
 *.egg-info/
 .installed.cfg
 *.egg
 .Python
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
 
+# Environment
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+
+# Git
 .git/
 .gitignore
+
+# Docker
 .dockerignore
-README.md
 Dockerfile*
 docker-compose*
+
+# IDE
 .vscode/
 .idea/
+.idx/
 *.swp
 *.swo
 *~
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Build outputs
+staticfiles/
+frontend/node_modules/
+
+# Documentation
+documents/
+*.md
+.claude/
+
+# Tests (optional: remove if you want tests in image)
+**/tests/

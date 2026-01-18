@@ -9,6 +9,7 @@
 5. [デプロイ手順](#デプロイ手順)
 6. [トラブルシューティング](#トラブルシューティング)
 7. [nginx への移行（将来的に必要な場合）](#nginx-への移行将来的に必要な場合)
+8. [Cloud Run デプロイ](#cloud-run-デプロイ)
 
 ---
 
@@ -17,7 +18,7 @@
 ### ✅ チェックリスト
 
 - [X] ドメイン取得済み
-- [ ] 環境変数の準備（`.env.production` 作成）
+- [X] 環境変数の準備（`.env.production` 作成）
 - [ ] データベースのバックアップ
 - [X] デプロイ先の選定（AWS/GCP/VPS/PaaS）
 
@@ -29,7 +30,7 @@
 # Django
 DJANGO_SECRET_KEY=<ランダムな文字列（50文字以上推奨）>
 DJANGO_DEBUG=False
-ALLOWED_HOSTS=your-domain.com,www.your-domain.com
+ALLOWED_HOSTS=
 
 # Database
 DATABASE_URL=postgresql://user:password@db:5432/dbname
@@ -733,5 +734,329 @@ MIDDLEWARE = [
 
 ---
 
+## Cloud Run デプロイ
+
+### 概要
+
+Cloud Run はサーバーレスコンテナ実行環境。リクエストがないとコンテナがスリープするため、**django-apscheduler は使えない**。
+
+```
+[ユーザー] → [Cloud Run] → [Cloud SQL]
+                 ↑
+[Cloud Scheduler] ─── 定期実行トリガー
+```
+
+### 1. ヘルスチェックエンドポイント
+
+Cloud Run がコンテナの状態を確認するために必要。
+
+```python
+# config/urls.py
+from django.http import HttpResponse
+
+def health_check(request):
+    return HttpResponse("ok")
+
+urlpatterns = [
+    path("health/", health_check),
+    # ...
+]
+```
+
+### 2. Cloud Scheduler 用エンドポイント
+
+APScheduler の代わりに、Cloud Scheduler から HTTP で叩く方式を使用。
+
+```python
+# api/views.py
+from django.conf import settings
+from django.core.management import call_command
+from django.http import JsonResponse, HttpResponseForbidden
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+@require_POST
+def trigger_sync(request):
+    """Cloud Scheduler から呼び出される定期実行エンドポイント"""
+    # トークン検証（Cloud Scheduler に設定したトークンと照合）
+    token = request.headers.get("X-Scheduler-Token")
+    if token != settings.SCHEDULER_SECRET_TOKEN:
+        return HttpResponseForbidden("Invalid token")
+
+    # trail_sync コマンドを実行
+    call_command("trail_sync")
+    return JsonResponse({"status": "completed"})
+```
+
+```python
+# config/urls.py
+from api.views import trigger_sync
+
+urlpatterns = [
+    path("api/trigger-sync/", trigger_sync, name="trigger_sync"),
+    # ...
+]
+```
+
+```python
+# config/settings.py
+SCHEDULER_SECRET_TOKEN = os.environ.get("SCHEDULER_SECRET_TOKEN")
+```
+
+### 3. Dockerfile.prod（Cloud Run 用）
+
+```dockerfile
+FROM python:3.13-slim
+
+WORKDIR /code
+
+# uv インストール
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# 依存関係
+COPY pyproject.toml uv.lock ./
+RUN uv sync --no-dev --frozen
+
+# アプリケーションコード
+COPY . .
+
+# 静的ファイル収集（SECRET_KEY が必要なので環境変数で渡すか、ダミー値を使用）
+# ビルド時に実行する場合:
+# ARG DJANGO_SECRET_KEY=build-time-dummy-key
+# RUN DJANGO_SECRET_KEY=$DJANGO_SECRET_KEY uv run manage.py collectstatic --noinput
+
+# Cloud Run は $PORT 環境変数でポートを指定（デフォルト 8080）
+CMD ["sh", "-c", "uv run manage.py migrate && uv run manage.py collectstatic --noinput && uv run gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers 2 --timeout 120"]
+```
+
+**ポイント:**
+- `${PORT:-8080}`: Cloud Run が渡す `PORT` 環境変数を使用
+- `--workers 2`: Cloud Run はメモリ制限があるため少なめに
+
+### 4. Cloud SQL 接続
+
+Cloud Run から Cloud SQL への接続は Unix socket 経由。
+
+```python
+# config/settings.py
+import os
+
+# Cloud SQL 接続（Unix socket）
+if os.environ.get("CLOUD_SQL_CONNECTION_NAME"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "HOST": f'/cloudsql/{os.environ["CLOUD_SQL_CONNECTION_NAME"]}',
+            "NAME": os.environ.get("DB_NAME"),
+            "USER": os.environ.get("DB_USER"),
+            "PASSWORD": os.environ.get("DB_PASSWORD"),
+        }
+    }
+else:
+    # 通常の接続（DATABASE_URL）
+    DATABASES = {
+        "default": dj_database_url.config(
+            conn_max_age=600,
+            conn_health_checks=True,
+        ),
+    }
+```
+
+### 5. ALLOWED_HOSTS の設定
+
+Cloud Run のドメインを追加:
+
+```python
+if IS_PRODUCTION:
+    ALLOWED_HOSTS = [
+        "trail-info.jp",
+        "www.trail-info.jp",
+        ".run.app",  # Cloud Run のデフォルトドメイン
+    ]
+```
+
+### 6. Cloud Run 環境変数
+
+Cloud Run コンソールまたは `gcloud` で設定:
+
+```bash
+# 必須
+IS_PRODUCTION=True
+DJANGO_SECRET_KEY=<生成した秘密鍵>
+CLOUD_SQL_CONNECTION_NAME=project:region:instance
+DB_NAME=trail_condition
+DB_USER=trail_user
+DB_PASSWORD=<パスワード>
+DEEPSEEK_API_KEY=sk-...
+GEMINI_API_KEY=...
+
+# Cloud Scheduler 用
+SCHEDULER_SECRET_TOKEN=<ランダムなトークン>
+
+# オプション
+SLACK_WEBHOOK_URL=https://hooks.slack.com/...
+```
+
+### 7. Cloud Scheduler 設定
+
+```bash
+# Cloud Scheduler ジョブ作成
+gcloud scheduler jobs create http trail-sync-job \
+  --location=asia-northeast1 \
+  --schedule="0 6 * * *" \
+  --uri="https://your-service-xxxxx.run.app/api/trigger-sync/" \
+  --http-method=POST \
+  --headers="X-Scheduler-Token=<SCHEDULER_SECRET_TOKEN>"
+```
+
+または OIDC 認証を使用（推奨）:
+
+```bash
+gcloud scheduler jobs create http trail-sync-job \
+  --location=asia-northeast1 \
+  --schedule="0 6 * * *" \
+  --uri="https://your-service-xxxxx.run.app/api/trigger-sync/" \
+  --http-method=POST \
+  --oidc-service-account-email=scheduler-sa@project.iam.gserviceaccount.com \
+  --oidc-token-audience="https://your-service-xxxxx.run.app"
+```
+
+### 8. デプロイコマンド
+
+```bash
+# イメージをビルドして Artifact Registry にプッシュ
+gcloud builds submit --tag asia-northeast1-docker.pkg.dev/PROJECT_ID/repo/trail-condition:latest
+
+# Cloud Run にデプロイ
+gcloud run deploy trail-condition \
+  --image=asia-northeast1-docker.pkg.dev/PROJECT_ID/repo/trail-condition:latest \
+  --region=asia-northeast1 \
+  --platform=managed \
+  --allow-unauthenticated \
+  --add-cloudsql-instances=PROJECT_ID:asia-northeast1:INSTANCE_NAME \
+  --set-env-vars="IS_PRODUCTION=True,CLOUD_SQL_CONNECTION_NAME=PROJECT_ID:asia-northeast1:INSTANCE_NAME" \
+  --set-secrets="DJANGO_SECRET_KEY=django-secret-key:latest,DB_PASSWORD=db-password:latest"
+```
+
+### Cloud Run vs VPS/Docker Compose
+
+| 項目 | Cloud Run | VPS + Docker Compose |
+|------|-----------|---------------------|
+| スケジューラー | Cloud Scheduler（HTTP経由） | django-apscheduler |
+| データベース | Cloud SQL（Unix socket） | PostgreSQL コンテナ |
+| コスト | 従量課金（リクエスト数） | 固定（月額） |
+| スケーリング | 自動 | 手動 |
+| 管理 | マネージド | 自己管理 |
+
+### 9. GitHub 連携（自動デプロイ）
+
+手動デプロイより GitHub 連携が推奨。main ブランチへの push で自動デプロイ。
+
+#### ブランチ戦略
+
+```
+main ────────────────────────────── 本番デプロイ対象
+  ↑
+develop ─────────────────────────── 開発用（普段はここで作業）
+  ↑
+feature/xxx ─────────────────────── 機能開発
+```
+
+#### cloudbuild.yaml
+
+リポジトリのルートに配置:
+
+```yaml
+steps:
+  # イメージをビルド
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-condition/app:$COMMIT_SHA'
+      - '-f'
+      - 'Dockerfile.prod'
+      - '.'
+
+  # Artifact Registry にプッシュ
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-condition/app:$COMMIT_SHA'
+
+  # Cloud Run にデプロイ
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'trail-condition'
+      - '--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-condition/app:$COMMIT_SHA'
+      - '--region=asia-northeast1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+
+images:
+  - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-condition/app:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+```
+
+#### Cloud Build トリガー設定
+
+1. GCP コンソール → Cloud Build → トリガー
+2. 「トリガーを作成」
+3. 設定:
+   - **名前**: `deploy-to-cloud-run`
+   - **イベント**: ブランチに push する
+   - **ソース**: GitHub リポジトリを接続
+   - **ブランチ**: `^main$`（正規表現）
+   - **構成**: Cloud Build 構成ファイル（`cloudbuild.yaml`）
+
+#### 必要な IAM 権限
+
+Cloud Build サービスアカウントに以下を付与:
+- `Cloud Run 管理者`
+- `サービス アカウント ユーザー`
+- `Artifact Registry 書き込み`
+
+```bash
+# サービスアカウントに権限を付与
+PROJECT_ID=$(gcloud config get-value project)
+PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+  --role="roles/run.admin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountUser"
+```
+
+#### 注意点
+
+- **main ブランチの整理は不要**: `.dockerignore` で不要ファイルは除外される
+- ドキュメント、テストはリポジトリに残してOK
+- 環境変数・シークレットは Cloud Run の設定で管理
+
+### Cloud Run デプロイチェックリスト
+
+- [x] Dockerfile.prod 作成
+- [x] cloudbuild.yaml 作成
+- [x] Cloud Build トリガー設定
+- [x] Cloud SQL インスタンス作成
+- [x] Secret Manager にシークレット登録
+- [x] Cloud Run 環境変数設定
+- [x] Cloud Scheduler ジョブ作成
+- [x] ヘルスチェックエンドポイント実装
+- [x] trigger-sync エンドポイント実装
+- [x] ALLOWED_HOSTS に .run.app 追加
+- [x] settings.py に Cloud SQL 接続設定追加
+
+---
+
 **作成日**: 2026-01-16
-**最終更新**: 2026-01-16
+**最終更新**: 2026-01-18
