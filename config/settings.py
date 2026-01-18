@@ -265,12 +265,12 @@ LOGGING = {
     },
     "loggers": {
         "django": {
-            "handlers": ["console", "file"],
+            "handlers": ["console"] if IS_PRODUCTION else ["console", "file"],
             "level": "INFO",
             "propagate": False,
         },
         "trail_status": {
-            "handlers": ["console", "file"],
+            "handlers": ["console"] if IS_PRODUCTION else ["console", "file"],
             "level": "INFO" if IS_PRODUCTION else "DEBUG",
             "propagate": False,
         },
