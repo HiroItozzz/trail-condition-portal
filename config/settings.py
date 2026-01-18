@@ -43,10 +43,7 @@ if IS_PRODUCTION and ("insecure" in SECRET_KEY or not SECRET_KEY):
 
 if IS_PRODUCTION:
     # 本番環境用の設定
-    ALLOWED_HOSTS = [
-        "trail-info.jp",
-        "www.trail-info.jp",
-    ]
+    ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "trail-info.jp,www.trail-info.jp").split(",")
     # この設定により、Cloudflare が付与する X-Forwarded-Proto: https ヘッダーを見て「実際は HTTPS だ」と判断できます。これがないと: request.is_secure() が常に False / CSRF 検証が失敗する可能性 / リダイレクトURLが http:// になる
 
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
