@@ -1,5 +1,8 @@
 FROM python:3.13-slim
 
+ENV PYTHONDONTWRITEBITECODE=1
+ENV PYTHONUNBUFFERED=1
+
 WORKDIR /code
 
 # uvをインストール
@@ -13,4 +16,4 @@ RUN uv sync --no-dev --frozen
 
 COPY . .
 
-CMD ["uv", "run", "gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120"]
+CMD uv run gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 4 --timeout 120
