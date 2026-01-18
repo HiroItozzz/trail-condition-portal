@@ -2,12 +2,12 @@ FROM node:24-slim AS builder
 
 WORKDIR /code/frontend
 
-# 依存関係のインストール
 COPY ./frontend/package*.json ./
 RUN npm ci
 
-# ソースをコピーしてビルド (Vite -> dist/ 等に出力される)
 COPY ./frontend/ .
+COPY ./templates ./base_templates
+COPY ./trail_status/templates ./trail_status_templates
 RUN npx vite build
 
 
@@ -18,13 +18,10 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /code
 
-# uvをインストール
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# pyproject.tomlとuv.lockをコピー
 COPY pyproject.toml uv.lock* ./
 
-# システム環境に直接インストール
 RUN uv sync --no-dev --frozen
 
 COPY . .
