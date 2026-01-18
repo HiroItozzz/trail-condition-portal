@@ -154,8 +154,6 @@ INSTALLED_APPS = [
     "rest_framework",  # Django REST Framework
     "trail_status",
     "api",
-    "django_apscheduler",
-    "scheduler",
 ]
 
 # ミドルウェア

@@ -15,13 +15,11 @@ services:
       # pycacheを生成しない設定
       - PYTHONDONTWRITEBITECODE=1
     env_file:
-    - .env
+    - .env.local
     depends_on:
       - db
 
   frontend:
-#    profiles:
-#      - ignore
     image: node:24-slim
     working_dir: /code
     command: sh -c "npm install && npx vite build --watch"
@@ -34,14 +32,14 @@ services:
       - ./templates:/code/base_templates:ro
       - ./trail_status/templates:/code/trail_status_templates:ro
     env_file:
-      - .env
+      - .env.local
     depends_on:
       - web
 
   db:
     image: postgres:18-alpine
     env_file:
-      - .env
+      - .env.local
     ports:
       - "5432:5432"
     volumes:

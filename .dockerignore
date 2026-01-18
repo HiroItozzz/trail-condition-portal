@@ -29,6 +29,7 @@ docker-compose*
 # IDE
 .vscode/
 .idea/
+.idx/
 *.swp
 *.swo
 *~
@@ -48,6 +49,7 @@ frontend/node_modules/
 # Documentation
 documents/
 *.md
+.claude/
 
 # Tests (optional: remove if you want tests in image)
 **/tests/
