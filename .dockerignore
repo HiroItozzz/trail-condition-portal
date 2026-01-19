@@ -11,6 +11,7 @@ __pycache__/
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
+.python-version
 
 # Environment
 .env
@@ -50,6 +51,7 @@ frontend/node_modules/
 documents/
 *.md
 .claude/
+sample/
 
 # Tests (optional: remove if you want tests in image)
 **/tests/

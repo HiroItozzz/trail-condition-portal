@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.13.11-slim
 
 WORKDIR /code
 
@@ -13,4 +13,4 @@ RUN uv sync --frozen --extra batch
 
 COPY . .
 
-CMD ["uv", "run", "manage.py", "runserver", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "--frozen" , "manage.py", "runserver", "0.0.0.0", "--port", "8000"]
