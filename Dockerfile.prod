@@ -13,19 +13,22 @@ RUN npx vite build
 
 FROM python:3.13-slim
 
-ENV PYTHONDONTWRITEBITECODE=1
+ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /code
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-
 COPY pyproject.toml uv.lock* ./
-
-RUN uv sync --no-dev --frozen
+RUN uv sync --frozen --no-dev
 
 COPY . .
-
 COPY --from=builder /code/frontend/dist ./static/dist
 
-CMD ["sh", "-c", "uv run manage.py migrate && uv run manage.py collectstatic --noinput && uv run gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers 2 --timeout 120"]
+# collectstatic用のダミー設定
+ENV DATABASE_URL=sqlite:///dummy.db
+ENV IS_PRODUCTION=True
+ENV IS_DEBUG=False
+RUN uv run --frozen --no-dev manage.py collectstatic --noinput
+
+CMD ["sh", "-c", "uv run --frozen --no-dev gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers 2 --timeout 120"]

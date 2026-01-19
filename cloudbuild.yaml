@@ -3,20 +3,37 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/app:$COMMIT_SHA'
+      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA'
       - '-f'
       - 'Dockerfile.prod'
       - '.'
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/app:$COMMIT_SHA'
+      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA'
+
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'jobs'
+      - 'deploy'
+      - 'trail-info-migrate'
+      - '--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA'
       - '--region=asia-northeast1'
-      - '--platform=managed'
-      - '--allow-unauthenticated'
+      - '--command=uv'
+      - '--args=run,--frozen,--no-dev,manage.py,migrate'
+
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'jobs'
+      - 'execute'
+      - 'trail-info-migrate'
+      - '--region=asia-northeast1'
+      - '--wait'
 
 images:
-  - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/app:$COMMIT_SHA'
+  - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA'
 
 options:
   logging: CLOUD_LOGGING_ONLY
