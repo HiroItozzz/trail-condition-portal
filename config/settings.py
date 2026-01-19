@@ -36,8 +36,8 @@ if IS_PRODUCTION and IS_IDX:
 # ALLOWED_HOSTS | 通信の入口（HTTPヘッダー） | 「リクエストの宛先は自分（localhost）になっているか？」を確認。
 # CSRF_TRUSTED_ORIGINS | フォーム送信時（Referer/Originヘッダー） | 「リクエストの**送信元（ブラウザのURL）**は信頼できるドメインか？」を確認。
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
-if IS_PRODUCTION and ("insecure" in SECRET_KEY or not SECRET_KEY):
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY","dummy_secret_key_for_development_purposes_only_change_me")
+if IS_PRODUCTION and (not SECRET_KEY or "insecure" in SECRET_KEY):
     raise ValueError("本番環境用のSECRET_KEYを設定してください。")
 
 

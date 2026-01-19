@@ -11,7 +11,7 @@ services:
     ports:
       - "${PORT:-8000}:8000"
     environment:
-      - PYTHONDONTWRITEBITECODE=1
+      - PYTHONDONTWRITEBYTECODE=1
     env_file:
       - .env.production
     restart: unless-stopped
