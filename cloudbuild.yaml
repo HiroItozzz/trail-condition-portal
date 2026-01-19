@@ -1,39 +1,75 @@
 steps:
-  - name: 'gcr.io/cloud-builders/docker'
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build-server"
     args:
-      - 'build'
-      - '-t'
-      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA'
-      - '-f'
-      - 'Dockerfile.prod'
-      - '.'
-  - name: 'gcr.io/cloud-builders/docker'
+      - "build"
+      - "--target=server"
+      - "-t"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
+      - "-f"
+      - "Dockerfile.prod"
+      - "."
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push-server"
     args:
-      - 'push'
-      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA'
+      - "push"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
 
-  - name: 'gcr.io/cloud-builders/gcloud'
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build-batch"
     args:
-      - 'run'
-      - 'jobs'
-      - 'deploy'
-      - 'trail-info-migrate'
-      - '--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA'
-      - '--region=asia-northeast1'
-      - '--command=uv'
-      - '--args=run,--frozen,--no-dev,manage.py,migrate'
+      - "build"
+      - "--target=batch"
+      - "-t"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA"
+      - "-f"
+      - "Dockerfile.prod"
+      - "."
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push-batch"
+    args:
+      - "push"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA"
 
-  - name: 'gcr.io/cloud-builders/gcloud'
+  - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
+    id: "deploy-migrate-job"
+    entrypoint: "gcloud"
     args:
-      - 'run'
-      - 'jobs'
-      - 'execute'
-      - 'trail-info-migrate'
-      - '--region=asia-northeast1'
-      - '--wait'
+      - "run"
+      - "jobs"
+      - "deploy"
+      - "trail-info-$BRANCH_NAME-migrate"
+      - "--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
+      - "--region=asia-northeast1"
+      - "--command=uv"
+      - "--args=run,--frozen,--no-dev,manage.py,migrate"
+  - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
+    id: "execute-migrate"
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "jobs"
+      - "execute"
+      - "trail-info-$BRANCH_NAME-migrate"
+      - "--region=asia-northeast1"
+      - "--wait"
+      - "--task-timeout=20m"
+
+  - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
+    id: "deploy-sync-job"
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "jobs"
+      - "deploy"
+      - "trail-info-$BRANCH_NAME-run-sync"
+      - "--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA"
+      - "--region=asia-northeast1"
+      - "--command=uv"
+      - "--args=run,--frozen,--no-dev,manage.py,trail_sync"
 
 images:
-  - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA'
+  - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
 
 options:
   logging: CLOUD_LOGGING_ONLY
