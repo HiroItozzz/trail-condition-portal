@@ -11,21 +11,20 @@ COPY ./trail_status/templates ./trail_status_templates
 RUN npx vite build
 
 
-FROM python:3.13-slim
-
+FROM python:3.13-slim AS python-base
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV UV_COMPILE_BYTECODE=1
-
 WORKDIR /code
-
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+
+FROM python-base AS server
 COPY pyproject.toml uv.lock* ./
 RUN uv sync --frozen --no-dev
 
 COPY . .
 COPY --from=builder /code/frontend/dist ./static/dist
-
 # collectstatic用のダミー設定
 ENV DATABASE_URL=sqlite:///dummy.db
 ENV IS_PRODUCTION=True
@@ -33,3 +32,11 @@ ENV IS_DEBUG=False
 RUN uv run --frozen --no-dev manage.py collectstatic --noinput
 
 CMD ["sh", "-c", "uv run --frozen --no-dev gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers 2 --timeout 120"]
+
+
+FROM python-base AS batch
+COPY pyproject.toml uv.lock* ./
+RUN uv sync --frozen --no-dev --extra batch
+
+COPY . .
+CMD ["uv", "run", "--frozen", "--no-dev", "manage.py", "help"]
