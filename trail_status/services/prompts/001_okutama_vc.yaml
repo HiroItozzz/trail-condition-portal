@@ -1,14 +1,9 @@
-prompt: |
-  ## 奥多摩ビジターセンター特化指示
-
-  ### サイト特性
-  - 「NEW」マーカーで最新情報強調
-
+prompt: 
 # AI設定
 config:
   model:
   # バリデーションエラー多発のため
-  temperature: 0.0
+  temperature: 0.2
 
   thinking_budget: 15000
 
