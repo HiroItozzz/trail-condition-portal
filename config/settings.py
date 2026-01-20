@@ -267,7 +267,7 @@ LOGGING = {
     },
 }
 
-if not IS_PRODUCTION:
+if not IS_PRODUCTION and DEBUG:
     LOGGING["handlers"]["file"] = {
         "class": "logging.handlers.RotatingFileHandler",
         "filename": BASE_DIR / "logs" / "django.log",
