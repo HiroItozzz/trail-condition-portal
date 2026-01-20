@@ -1,6 +1,6 @@
 FROM node:24-slim AS builder
 
-WORKDIR /code/frontend
+WORKDIR /frontend
 
 COPY ./frontend/package*.json ./
 RUN npm ci
@@ -24,7 +24,7 @@ COPY pyproject.toml uv.lock* ./
 RUN uv sync --frozen --no-dev
 
 COPY . .
-COPY --from=builder /code/frontend/dist ./static/dist
+COPY --from=builder /frontend/dist ./static/dist
 # collectstatic用のダミー設定
 ENV DATABASE_URL=sqlite:///dummy.db
 ENV IS_PRODUCTION=True
