@@ -9,8 +9,9 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock* ./
 
 # システム環境に直接インストール
+ENV UV_PROJECT_ENVIRONMENT=/usr/local
 RUN uv sync --frozen --extra batch
 
 COPY . .
 
-CMD ["uv", "run", "--frozen" , "manage.py", "runserver", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "manage.py", "runserver", "0.0.0.0", "--port", "8000"]

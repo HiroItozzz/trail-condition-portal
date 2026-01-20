@@ -148,7 +148,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",  # メッセージフレームワーク
     "django.contrib.staticfiles",  # 静的ファイルの管理フレームワーク
     "corsheaders",  # CORS対応
-    "rest_framework",  # Django REST Framework
+    # "rest_framework",  # Django REST Framework
     "trail_status",
     "scheduler",
 ]
