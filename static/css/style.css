@@ -560,6 +560,11 @@ footer {
     word-break: break-word;
   }
 
+  /* 展開時のulパディングをリセット */
+  tr.child ul {
+    padding-right: 0 !important;
+  }
+
   /* テーブル行のカーソル */
   #trail-table tbody tr {
     cursor: pointer;

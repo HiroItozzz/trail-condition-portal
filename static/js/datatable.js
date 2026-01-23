@@ -59,13 +59,11 @@ var table = $("#trail-table").DataTable({
           wrapper.append(
             '<a href="' +
               detailUrl +
-              '" style="position: absolute; top: 2px; right: 0; color: #2563eb; font-weight: 500; font-size: 13px;">もっと見る →</a>',
+              '" style="position: absolute; top: 1px; right: 0; color: #2563eb; font-weight: 500; font-size: 13px;">もっと見る →</a>',
           );
         }
-        
-        wrapper.append(
-          $('<ul style="margin:0;padding:0 70px 0 0;"></ul>').append(data),
-        );
+
+        wrapper.append($('<ul style="margin:0;padding:0;"></ul>').append(data));
 
         return wrapper;
       },
@@ -89,7 +87,6 @@ var table = $("#trail-table").DataTable({
         "<span>解消済除く</span>" +
         "</label>",
     );
-    
     // ソートドロップダウン
     $(".dt-row2").append(
       '<div class="sort-dropdown">' +
@@ -104,5 +101,5 @@ var table = $("#trail-table").DataTable({
         "</select>" +
         "</div>",
     );
-  }
+  },
 });

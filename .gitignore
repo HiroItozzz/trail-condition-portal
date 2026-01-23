@@ -23,6 +23,4 @@ outputs/
 logs/*
 !logs/.gitkeep
 
-
-*.md
-!README.md
+documents/
