@@ -7,6 +7,8 @@ steps:
       - "--target=server"
       - "-t"
       - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
+      - "-t"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:latest"
       - "-f"
       - "Dockerfile.prod"
       - "."
@@ -18,6 +20,8 @@ steps:
       - "--target=batch"
       - "-t"
       - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA"
+      - "-t"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:latest"
       - "-f"
       - "Dockerfile.prod"
       - "."
@@ -27,13 +31,15 @@ steps:
     waitFor: ["build-server"]
     args:
       - "push"
-      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
+      - "--all-tags"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME"
   - name: "gcr.io/cloud-builders/docker"
     id: "push-batch"
     waitFor: ["build-batch"]
     args:
       - "push"
-      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA"
+      - "--all-tags"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch"
 
   - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
     id: "deploy-migrate-job"
@@ -77,6 +83,7 @@ steps:
       - "--task-timeout=20m"
 images:
   - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
+  - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:latest"
 
 options:
   logging: CLOUD_LOGGING_ONLY
