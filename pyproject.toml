@@ -1,9 +1,11 @@
 [project]
 name = "trail-condition-portal"
 version = "0.1.0"
-description = "Add your description here"
+description = "登山道危険情報の自動収集・統合表示サービス"
 readme = "README.md"
 requires-python = ">=3.13.7"
+authors = [{ name = "HiroItozzz" }]
+license = { text = "All rights reserved" }
 dependencies = [
     "dj-database-url>=3.0.1",
     "django>=6.0",
