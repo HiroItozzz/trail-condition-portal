@@ -25,7 +25,6 @@ from django.conf.urls.static import static
 urlpatterns = [
     # メインコンテンツをトップに
     path("", include("trail_status.urls")),
-    path("api/", include("api.urls")),
     path("admin/", admin.site.urls),
     path("scheduler/", include("scheduler.urls")),
     
