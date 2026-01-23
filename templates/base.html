@@ -58,57 +58,59 @@
       <div class="overlay" id="overlay"></div>
       <div class="main-content">
         <aside id="sidebar">
-          <a href="{% url 'trail-list' %}"
-             class="logo-link block p-4 no-underline transition-colors rounded-lg">
-            <h1 class="text-xl font-black tracking-tighter text-blue-900"
-                style="width: fit-content">
-              トレイルインフォ
-              <span class="block text-center text-sm font-medium tracking-normal text-gray-500">登山道状況まとめ</span>
-            </h1>
-          </a>
-          <hr>
-          <div class="mb-6">
+          <div class="sidebar-scroll">
             <a href="{% url 'trail-list' %}"
-               class="sidebar-link {% if not current_source and not current_area and not current_status %}active{% endif %}"
-               style="font-size: 14px">すべての情報を表示</a>
+               class="logo-link block p-4 no-underline transition-colors rounded-lg">
+              <h1 class="text-xl font-black tracking-tighter text-blue-900"
+                  style="width: fit-content">
+                トレイルインフォ
+                <span class="block text-center text-sm font-medium tracking-normal text-gray-500">登山道状況まとめ</span>
+              </h1>
+            </a>
+            <hr>
+            <div class="mb-6">
+              <a href="{% url 'trail-list' %}"
+                 class="sidebar-link {% if not current_source and not current_area and not current_status %}active{% endif %}"
+                 style="font-size: 14px">すべての情報を表示</a>
+            </div>
+            <nav>
+              {% if source_choices %}
+                <h3>サイト別</h3>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                  {% for id, name in source_choices %}
+                    <li>
+                      <a href="{% url 'trail-list' %}?source={{ id|stringformat:'s' }}"
+                         class="sidebar-link {% if current_source == id %}active{% endif %}">{{ name }}</a>
+                    </li>
+                  {% endfor %}
+                </ul>
+                <hr>
+              {% endif %}
+              {% if area_choices %}
+                <h3>山域別</h3>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                  {% for id, name in area_choices %}
+                    <li>
+                      <a href="{% url 'trail-list' %}?area={{ id }}"
+                         class="sidebar-link {% if current_area == id %}active{% endif %}">{{ name }}</a>
+                    </li>
+                  {% endfor %}
+                </ul>
+                <hr>
+              {% endif %}
+              {% if status_choices %}
+                <h3>状況別</h3>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                  {% for id, name in status_choices %}
+                    <li>
+                      <a href="{% url 'trail-list' %}?status={{ id }}"
+                         class="sidebar-link {% if current_status == id %}active{% endif %}">{{ name }}</a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </nav>
           </div>
-          <nav>
-            {% if source_choices %}
-              <h3>サイト別</h3>
-              <ul style="list-style: none; padding: 0; margin: 0;">
-                {% for id, name in source_choices %}
-                  <li>
-                    <a href="{% url 'trail-list' %}?source={{ id|stringformat:'s' }}"
-                       class="sidebar-link {% if current_source == id %}active{% endif %}">{{ name }}</a>
-                  </li>
-                {% endfor %}
-              </ul>
-              <hr>
-            {% endif %}
-            {% if area_choices %}
-              <h3>山域別</h3>
-              <ul style="list-style: none; padding: 0; margin: 0;">
-                {% for id, name in area_choices %}
-                  <li>
-                    <a href="{% url 'trail-list' %}?area={{ id }}"
-                       class="sidebar-link {% if current_area == id %}active{% endif %}">{{ name }}</a>
-                  </li>
-                {% endfor %}
-              </ul>
-              <hr>
-            {% endif %}
-            {% if status_choices %}
-              <h3>状況別</h3>
-              <ul style="list-style: none; padding: 0; margin: 0;">
-                {% for id, name in status_choices %}
-                  <li>
-                    <a href="{% url 'trail-list' %}?status={{ id }}"
-                       class="sidebar-link {% if current_status == id %}active{% endif %}">{{ name }}</a>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% endif %}
-          </nav>
         </aside>
         <main id="content">
           {% block content %}{% endblock %}
