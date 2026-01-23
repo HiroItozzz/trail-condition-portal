@@ -56,7 +56,7 @@ def trail_list(request: HttpRequest) -> HttpResponse:
         .annotate(latest_date=Max("updated_at"))
         .order_by("-latest_date")
     )
-    latest_checked_at = DataSource.objects.aggregate(Max("last_scraped_at"))["last_scraped_at__max"]
+    last_checked_at = DataSource.objects.aggregate(Max("last_checked_at"))["last_checked_at__max"]
 
     seven_days_ago = timezone.now().date() - timedelta(days=7)
 
@@ -66,7 +66,7 @@ def trail_list(request: HttpRequest) -> HttpResponse:
         "current_area": area_filter,
         "current_status": status_filter,
         "updated_sources": updated_sources,
-        "latest_checked_at": latest_checked_at,
+        "last_checked_at": last_checked_at,
         "seven_days_ago": seven_days_ago,
         **_get_sidebar_context(),
     }
