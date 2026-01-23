@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-  <div class="mb-3 bg-[#f8f8f8] border border-[#ddd] rounded"
+  <div class="mb-3 info-box bg-[#f8f8f8] border border-[#ddd] rounded"
        style="padding: 4px 12px">
     <div class="flex flex-col md:flex-row justify-start items-start md:items-center gap-7 pb-2 border-b border-[#ddd]">
       <div class="text-[13px] whitespace-nowrap">
@@ -80,8 +80,12 @@
             <span class="date-full">{{ item.updated_at|date:"Y/m/d"|default:"-" }}</span>
             <span class="date-short">{{ item.updated_at|date:"y/m/d"|default:"-" }}</span>
           </td>
-          <td data-detail-url="{% url 'condition-detail' %}?id={{item.id}}">
-            <a href="{% url 'condition-detail' %}?id={{item.id}}" class="hidden md:inline" style="font-weight: bold; color: #000; text-decoration: none;">{{ item.mountain_name_raw }}</a>
+          <td data-detail-url="{% url 'condition-detail' %}?id={{ item.id }}">
+            <a href="{% url 'condition-detail' %}?id={{ item.id }}"
+               class="hidden md:inline"
+               style="font-weight: bold;
+                      color: #000;
+                      text-decoration: none">{{ item.mountain_name_raw }}</a>
             <span class="md:hidden" style="font-weight: bold; color: #000;">{{ item.mountain_name_raw }}</span>
             <div style="color: #666; font-size: 11px;">{{ item.trail_name }}</div>
           </td>
@@ -91,7 +95,10 @@
             </span>
           </td>
           <td>
-            <div class="text-sm" style="font-weight: bold; font-style: italic; color: #000;">{{ item.title }}</div>
+            <div class="text-sm"
+                 style="font-weight: bold;
+                        font-style: italic;
+                        color: #000">{{ item.title }}</div>
           </td>
           <td style="white-space: normal;">
             {% if item.description %}
@@ -102,7 +109,7 @@
                           display: -webkit-box;
                           -webkit-line-clamp: 2;
                           -webkit-box-orient: vertical;
-                          overflow: hidden;">{{ item.description }}</div>
+                          overflow: hidden">{{ item.description }}</div>
             {% endif %}
           </td>
           <td class="whitespace-nowrap">

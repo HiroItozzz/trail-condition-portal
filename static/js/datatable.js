@@ -59,10 +59,10 @@ var table = $("#trail-table").DataTable({
           wrapper.append(
             '<a href="' +
               detailUrl +
-              '" style="position:absolute;top:2px;right:0;">もっと見る →</a>',
+              '" style="position: absolute; top: 2px; right: 0; color: #2563eb; font-weight: 500; font-size: 13px;">もっと見る →</a>',
           );
         }
-
+        
         wrapper.append(
           $('<ul style="margin:0;padding:0 70px 0 0;"></ul>').append(data),
         );
@@ -71,4 +71,38 @@ var table = $("#trail-table").DataTable({
       },
     },
   },
+  columnDefs: [
+    { responsivePriority: 1, targets: [0, 2, 3] },
+    { responsivePriority: 2, targets: [1] },
+    { responsivePriority: 10000, targets: [4, 5, 6, 8] },
+    { responsivePriority: 10001, targets: [7] },
+    { width: "55px", targets: 0, className: "text-center" },
+    { width: "60px", targets: 1, className: "text-center" },
+    { width: "65px", targets: 3, className: "text-center" },
+  ],
+  // ↓↓↓ ここを追加 ↓↓↓
+  initComplete: function () {
+    // チェックボックス
+    $(".resolved-filter").html(
+      '<label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap">' +
+        '<input type="checkbox" id="hide-resolved" class="w-4 h-4 rounded" checked>' +
+        "<span>解消済除く</span>" +
+        "</label>",
+    );
+    
+    // ソートドロップダウン
+    $(".dt-row2").append(
+      '<div class="sort-dropdown">' +
+        '<select id="sort-select" class="text-sm border border-gray-300 rounded px-2 py-1">' +
+        '<option value="">並び替え</option>' +
+        '<option value="6-desc">報告日↓新</option>' +
+        '<option value="6-asc">報告日↑古</option>' +
+        '<option value="7-desc">解消日↓新</option>' +
+        '<option value="7-asc">解消日↑古</option>' +
+        '<option value="8-asc">情報源↑</option>' +
+        '<option value="8-desc">情報源↓</option>' +
+        "</select>" +
+        "</div>",
+    );
+  }
 });
