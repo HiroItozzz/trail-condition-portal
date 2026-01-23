@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}このサイトについて - トレイルインフォ{% endblock %}
+{% block content %}
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">このサイトについて</h1>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">🏔️ トレイルインフォとは</h2>
+      <p class="mb-4 leading-relaxed">
+        トレイルインフォは、自治体・省庁・ビジターセンターといった各機関が公開している登山道の危険情報を集約し、
+        一覧で確認できるようにしたサービスです。
+      </p>
+      <p class="leading-relaxed">
+        複数のサイトに散らばっている通行止め・落石・積雪などの情報を、ひとつの画面でまとめてチェックできます。
+      </p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">🔄 データの更新について</h2>
+      <ul class="list-disc ml-6 space-y-2">
+        <li><strong>更新頻度：</strong>1日1回、各情報源サイトをチェックしています</li>
+        <li><strong>情報源：</strong>自治体、省庁ほか登山道状況を調査・報告している各公式サイト</li>
+        <li><strong>処理方法：</strong>AIが自動で情報を抽出・分類しています</li>
+      </ul>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">📋 表示項目の見方</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm border-collapse">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="border px-4 py-2 text-left">項目名</th>
+              <th class="border px-4 py-2 text-left">説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="border px-4 py-2 font-medium">山域</td>
+              <td class="border px-4 py-2">情報が関係する山域・エリア</td>
+            </tr>
+            <tr>
+              <td class="border px-4 py-2 font-medium">情報取得日</td>
+              <td class="border px-4 py-2">当サイトがこの情報を取得・更新した日付</td>
+            </tr>
+            <tr>
+              <td class="border px-4 py-2 font-medium">対象</td>
+              <td class="border px-4 py-2">対象となる山名・登山道名</td>
+            </tr>
+            <tr>
+              <td class="border px-4 py-2 font-medium">状況種別</td>
+              <td class="border px-4 py-2">通行止め、危険箇所、積雪、野生動物などの分類</td>
+            </tr>
+            <tr>
+              <td class="border px-4 py-2 font-medium">状況</td>
+              <td class="border px-4 py-2">状況の概要</td>
+            </tr>
+            <tr>
+              <td class="border px-4 py-2 font-medium">詳細</td>
+              <td class="border px-4 py-2">状況の詳細説明</td>
+            </tr>
+            <tr>
+              <td class="border px-4 py-2 font-medium">報告日</td>
+              <td class="border px-4 py-2">情報源で報告・公開された日付</td>
+            </tr>
+            <tr>
+              <td class="border px-4 py-2 font-medium">解消日</td>
+              <td class="border px-4 py-2">問題が解消された日付（わかる場合）</td>
+            </tr>
+            <tr>
+              <td class="border px-4 py-2 font-medium">情報源</td>
+              <td class="border px-4 py-2">情報の出典元（クリックで元サイトへ）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">⚠️ ご利用にあたって</h2>
+      <div class="mb-4">
+        <ul class="list-disc ml-6 space-y-1">
+          <li>本サイトの情報は参考情報です。登山前は必ず情報源の公式サイトで最新情報をご確認ください。</li>
+          <li>AIによる自動処理のため、誤りが含まれる可能性があります。</li>
+          <li>情報の更新には時間差が生じることがあります。</li>
+        </ul>
+      </div>
+      <p>
+        詳しい免責事項は<a href="{% url 'site-policy' %}" class="text-blue-600 hover:underline">サイトポリシー</a>をご確認ください。
+      </p>
+    </section>
+
+    <div class="mt-8 text-sm text-gray-600">
+      <a href="{% url 'trail-list' %}" class="text-blue-600 hover:underline">&larr; トップページに戻る</a>
+    </div>
+  </div>
+{% endblock %}
