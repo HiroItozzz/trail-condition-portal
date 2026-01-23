@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import shutil
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from pathlib import Path
@@ -164,6 +165,7 @@ class LlmConfig(BaseModel):
     @staticmethod
     def _load_site_config(filename: str) -> dict:
         """個別プロンプトファイルをファイル名から安全に読み込み辞書で返却
+            ファイルがなければ作成をする
 
         Args:
             filename (str): YAMLファイル名（例：001_okutama_vc.yaml）
@@ -176,6 +178,11 @@ class LlmConfig(BaseModel):
 
         if not prompt_path.exists():
             logger.warning(f"サイト別プロンプトファイルが見つかりません: {prompt_path}")
+            try:
+                shutil.copy(prompts_dir / "example.yaml", prompt_path)
+                logger.warning(f"プロンプトファイルを作成しました。ファイル名: {filename}")
+            except Exception:
+                logger.error("サイト別プロンプトファイルの作成に失敗。example.yamlを確認してください")
             return {}
 
         config_dict = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
@@ -245,7 +252,7 @@ class ConversationalAi(ABC):
             logger.warning(f"{self.model}が構造化出力に失敗。")
             self.temperature += 0.1
             logger.warning(f"Temperatureを0.1上げてリトライします。更新後のTemperature: {self.temperature}")
-            if self.temperature == 0.0:    
+            if self.temperature == 0.0:
                 logger.warning(
                     "Temperature=0は毎回同じ出力（＝構造化失敗）となります。設定を0.1以上にすることを検討してください"
                 )

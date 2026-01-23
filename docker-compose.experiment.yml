@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prod
+      target: batch
     working_dir: /code
     command: >
       sh -c "uv run manage.py migrate &&
@@ -13,5 +14,5 @@ services:
     environment:
       - PYTHONDONTWRITEBYTECODE=1
     env_file:
-      - .env.production
+      - .env.experiment
     restart: unless-stopped

@@ -17,12 +17,22 @@ ENV PYTHONUNBUFFERED=1
 ENV UV_COMPILE_BYTECODE=1
 WORKDIR /code
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-
-
-FROM python-base AS server
 COPY pyproject.toml uv.lock* ./
+
+# ========== Stage 3: Server Dependencies ==========
+FROM python-base AS server-deps
 RUN uv sync --frozen --no-dev
 
+
+# ========== Stage 4: Batch Dependencies ==========
+FROM python-base AS batch-deps
+RUN uv sync --frozen --no-dev --extra batch
+
+FROM python-base AS server
+RUN uv sync --frozen --no-dev
+
+# ========== Stage 5: Server (本番用) ==========
+COPY --from=server-deps /code/.venv /code/.venv
 COPY . .
 COPY --from=builder /frontend/dist ./static/dist
 # collectstatic用のダミー設定
@@ -30,13 +40,15 @@ ENV DATABASE_URL=sqlite:///dummy.db
 ENV IS_PRODUCTION=True
 ENV IS_DEBUG=False
 RUN uv run --frozen --no-dev manage.py collectstatic --noinput
+# 本番用の環境変数をリセット
+ENV DATABASE_URL= \
+    IS_PRODUCTION= \
+    IS_DEBUG=
 
 CMD ["sh", "-c", "uv run --frozen --no-dev gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers 2 --timeout 120"]
 
-
+# ========== Stage 6: Batch (バッチジョブ用) ==========
 FROM python-base AS batch
-COPY pyproject.toml uv.lock* ./
-RUN uv sync --frozen --no-dev --extra batch
-
+COPY --from=batch-deps /code/.venv /code/.venv
 COPY . .
 CMD ["uv", "run", "--frozen", "--no-dev", "manage.py", "help"]

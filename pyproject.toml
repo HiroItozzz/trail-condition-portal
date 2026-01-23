@@ -8,7 +8,6 @@ dependencies = [
     "dj-database-url>=3.0.1",
     "django>=6.0",
     "django-cors-headers>=4.9.0",
-    "djangorestframework>=3.15.2",
     "gunicorn>=23.0.0",
     "psycopg[binary]>=3.3.2",
     "pydantic>=2.12.5",
@@ -29,14 +28,6 @@ batch = [
     "trafilatura>=2.0.0",
 ]
 
-[tool.ruff]
-line-length = 120
-target-version = "py313"
-
-[tool.ruff.format]
-docstring-code-format = true
-docstring-code-line-length = 80
-
 [dependency-groups]
 dev = [
     "django-stubs>=5.2.8",
@@ -48,6 +39,13 @@ dev = [
     "ruff>=0.14.10",
 ]
 
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 80
 
 [tool.mypy]
 plugins = [
