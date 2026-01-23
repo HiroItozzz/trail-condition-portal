@@ -16,9 +16,9 @@ body {
 #sidebar {
   width: 246px;
   height: 100vh;
-  padding: 24px 20px;
+  /* paddingは内部の.sidebar-scrollに移動 */
   border-right: 1px #f1f1f1;
-  overflow-y: auto;
+  overflow: hidden; /* ここを変更: auto -> hidden */
   flex-shrink: 0;
   position: sticky;
   top: 0;
@@ -27,6 +27,8 @@ body {
   background-attachment: fixed;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
   isolation: isolate;
+  display: flex; /* 追加: 内部要素をフルサイズにするため */
+  flex-direction: column; /* 追加 */
 }
 
 .main-content {
@@ -49,7 +51,11 @@ html::-webkit-scrollbar-thumb {
 }
 
 /* サイドバー用スクロールバー */
-#sidebar {
+/* #sidebar から .sidebar-scroll に適用先を変更 */
+.sidebar-scroll {
+  overflow-y: auto;
+  flex: 1; /* 親のsidebarいっぱいに広げる */
+  padding: 24px 20px; /* #sidebarから移動 */
   scrollbar-width: thin;
   scrollbar-color: rgba(145, 145, 145, 0.5) rgb(245, 245, 245);
 }
@@ -60,8 +66,7 @@ html::-webkit-scrollbar-thumb {
   top: 0;
   left: 0;
   width: 100%;
-  height: var(--sidebar-height, 100vh);
-  min-height: 100vh;
+  height: 100%; /* 高さ固定 */
   background: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
@@ -460,7 +465,7 @@ footer {
     left: 0;
     width: 250px;
     height: 100vh;
-    overflow-y: auto;
+    overflow: hidden; /* autoからhiddenへ変更 */
     overflow-x: hidden;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
@@ -470,6 +475,9 @@ footer {
     background-position: center top;
     background-attachment: scroll;
     isolation: isolate;
+    display: flex; /* 追加 */
+    flex-direction: column; /* 追加 */
+    padding: 0; /* paddingをリセット */
   }
 
   #sidebar::before {
@@ -478,7 +486,7 @@ footer {
     top: 0;
     left: 0;
     width: 100%;
-    height: var(--sidebar-height, 100vh);
+    height: 100%;
     min-height: 100vh;
     background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(15px) saturate(180%);

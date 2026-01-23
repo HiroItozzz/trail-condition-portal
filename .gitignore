@@ -23,4 +23,5 @@ outputs/
 logs/*
 !logs/.gitkeep
 
+my_docs/
 documents/

@@ -87,12 +87,10 @@ var table = $("#trail-table").DataTable({
         "<span>解消済除く</span>" +
         "</label>",
     );
-
     // ソートドロップダウン
     $(".dt-row2").append(
       '<div class="sort-dropdown">' +
         '<select id="sort-select" class="text-sm border border-gray-300 rounded px-2 py-1">' +
-        '<option value="">並び替え</option>' +
         '<option value="6-desc">報告日↓新</option>' +
         '<option value="6-asc">報告日↑古</option>' +
         '<option value="7-desc">解消日↓新</option>' +
