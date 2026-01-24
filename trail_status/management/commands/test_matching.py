@@ -56,7 +56,7 @@ class Command(BaseCommand):
             self._handle_all_sources(file_gen, ai_model, force_sync)
         else:
             # 単一情報源を処理
-            self._handle_single_source(source_id, json_file, json_data, file_gen, ai_model)
+            self._handle_single_source(source_id, json_file, json_data, file_gen, ai_model, force_sync)
 
     def _handle_all_sources(self, file_gen: int, ai_model: str, force_sync: bool):
         """全ての情報源について照合テストを実行"""
@@ -130,7 +130,7 @@ class Command(BaseCommand):
         # 全体のサマリーを表示
         self._print_all_sources_summary(all_results, total_update, total_create, total_records)
 
-    def _handle_single_source(self, source_id, json_file, json_data, file_gen, ai_model):
+    def _handle_single_source(self, source_id, json_file, json_data, file_gen, ai_model, force_sync):
         """単一情報源について照合テストを実行"""
         # DataSourceを取得
         try:
@@ -166,7 +166,7 @@ class Command(BaseCommand):
 
         # 照合テストを実行
         try:
-            result = self._test_matching_for_source(source, json_file, json_data)
+            result = self._test_matching_for_source(source, json_file, json_data, force_sync=force_sync)
             if result:
                 # 単一情報源用の詳細表示
                 self._print_matching_results(

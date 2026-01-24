@@ -28,10 +28,8 @@ RUN uv sync --frozen --no-dev
 FROM python-base AS batch-deps
 RUN uv sync --frozen --no-dev --extra batch
 
-FROM python-base AS server
-RUN uv sync --frozen --no-dev
-
 # ========== Stage 5: Server (本番用) ==========
+FROM python-base AS server
 COPY --from=server-deps /code/.venv /code/.venv
 COPY . .
 COPY --from=builder /frontend/dist ./static/dist
