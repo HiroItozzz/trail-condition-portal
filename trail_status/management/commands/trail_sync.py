@@ -122,6 +122,17 @@ class Command(BaseCommand):
                             total_count=db_result["count"],
                             cost=db_result["cost"],
                         )
+                else:
+                    # 失敗時のSlack通知
+                    notifier = SlackNotifier()
+                    if isinstance(result_by_source, ResultSingle):
+                        error_message = result_by_source.message
+                    else:
+                        error_message = f"予期せぬエラー: {result_by_source}"
+                    notifier.send_error_notification(
+                        source_name=source_data.name,
+                        error_message=error_message,
+                    )
 
         # 結果サマリーを表示
         summary = self.generate_summary(all_source_results)

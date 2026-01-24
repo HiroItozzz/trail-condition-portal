@@ -444,7 +444,9 @@ class GeminiClient(ConversationalAi):
                 tuple[TrailConditionSchemaList, TokenStats]
             """
             # api_key引数なしでも、環境変数"GEMNI_API_KEY"の値を勝手に参照するが、可読性のため代入
-            client = wrap_gemini(genai.Client())
+            client = wrap_gemini(
+                genai.Client(http_options=types.HttpOptions(timeout=120 * 1000))  # 2分
+            )
 
             # 検索許可設定
             search_tool = types.Tool(google_search=types.GoogleSearch()) if self.websearch else None
