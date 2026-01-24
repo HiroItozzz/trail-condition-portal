@@ -1,14 +1,24 @@
 import logging
 from datetime import timedelta
 
-from django.db.models import Max, Count
-from django.http import HttpRequest, HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.db.models import Count, Max
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.generic.base import RedirectView
 
 from .models.condition import AreaName, DataSource, StatusType, TrailCondition
 
 logger = logging.getLogger(__name__)
+
+
+class ArticleCounterRedirectView(RedirectView):
+    permanent = False
+    query_string = True
+    pattern_name = "condition-detail"
+
+    def get_redirect_url(self, *args, **kwargs):
+        return super().get_redirect_url(*args, **kwargs)
 
 
 def _get_sidebar_context() -> dict:
@@ -16,15 +26,15 @@ def _get_sidebar_context() -> dict:
     base_conditions = TrailCondition.objects.filter(disabled=False)
 
     # 山域別の件数
-    area_counts = dict(base_conditions.values('area').annotate(count=Count('id')).values_list('area', 'count'))
+    area_counts = dict(base_conditions.values("area").annotate(count=Count("id")).values_list("area", "count"))
     area_choices = [(id, name) for id, name in AreaName.choices if area_counts.get(id, 0) > 0]
 
     # 状況別の件数
-    status_counts = dict(base_conditions.values('status').annotate(count=Count('id')).values_list('status', 'count'))
+    status_counts = dict(base_conditions.values("status").annotate(count=Count("id")).values_list("status", "count"))
     status_choices = [(id, name) for id, name in StatusType.choices if status_counts.get(id, 0) > 0]
 
     # サイト別の件数
-    source_counts = dict(base_conditions.values('source').annotate(count=Count('id')).values_list('source', 'count'))
+    source_counts = dict(base_conditions.values("source").annotate(count=Count("id")).values_list("source", "count"))
     source_choices = [(id, name) for id, name in DataSource.objects.get_choices() if source_counts.get(id, 0) > 0]
 
     return {
@@ -73,8 +83,16 @@ def trail_list(request: HttpRequest) -> HttpResponse:
     return render(request, "trail_list.html", context)
 
 
-def condition_detail(request: HttpRequest) -> HttpResponse:
-    param= request.GET.get("id")
-    item = get_object_or_404(TrailCondition, pk=param)
+def trail_detail(request: HttpRequest, pk: int) -> HttpResponse:
+    item = get_object_or_404(TrailCondition, pk=pk)
     context = {"item": item, **_get_sidebar_context()}
-    return render(request, "detail.html", context)
+    return render(request, "detail.html", context=context)
+
+# クエリパラメータからパスパラメータへのリダイレクト
+def trail_redirect(request: HttpRequest) -> HttpResponseRedirect:
+    trail_id = request.GET.get("id")
+    if trail_id:
+        return redirect("trail-detail", pk=trail_id)
+    return redirect("trail-list")
+
+

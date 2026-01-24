@@ -7,9 +7,11 @@ urlpatterns = [
     # 一覧画面: /
     path("", views.trail_list, name="trail-list"),
     # 詳細画面: /trail/1/ や /trail/2/ など
-    path("trails", views.condition_detail, name="condition-detail"),
+    path("trails/<int:pk>/", views.trail_detail, name="trail-detail"),
     # このサイトについて
     path("about/", TemplateView.as_view(template_name="about.html"), name="about"),
     # サイトポリシー
     path("site-policy/", TemplateView.as_view(template_name="site-policy.html"), name="site-policy"),
+    # リダイレクト
+    path("trails", views.trail_redirect, name="trail-redirect")
 ]
