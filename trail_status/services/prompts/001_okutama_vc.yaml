@@ -5,7 +5,7 @@ config:
   # バリデーションエラー多発のため
   temperature: 0.2
 
-  thinking_budget: 15000
+  thinking_budget: 12000
 
   # テンプレートと併用で精度向上
   use_template: true
