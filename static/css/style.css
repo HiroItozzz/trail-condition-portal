@@ -249,6 +249,12 @@ footer {
   width: 160px !important;
 }
 
+/* チェックボックスを横並びに */
+.resolved-filter {
+  display: flex;
+  align-items: center;
+}
+
 @media (max-width: 1023px) {
   .dataTables_filter input {
     width: 128px !important;

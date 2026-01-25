@@ -1,4 +1,5 @@
 var hideResolved = true;
+var recentOnly = true;
 
 $.fn.dataTable.ext.search.push(function (settings, data) {
   if (!hideResolved) return true;
@@ -16,8 +17,32 @@ $.fn.dataTable.ext.search.push(function (settings, data) {
   return resolved > today;
 });
 
+$.fn.dataTable.ext.search.push(function (settings, data) {
+  if (recentOnly) return true; // チェックONなら全部表示
+
+  // チェックOFFなら最近の更新を除外（古いもののみ表示）
+  var updatedAt = data[1] || "";
+  if (!/\d/.test(updatedAt)) return true;
+
+  var m = updatedAt.match(/(\d{2,4})\/(\d{1,2})\/(\d{1,2})/);
+  if (!m) return true;
+
+  var year = m[1].length === 2 ? 2000 + +m[1] : +m[1];
+  var updated = new Date(year, +m[2] - 1, +m[3]);
+  var sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  return updated < sevenDaysAgo; // 7日より古いもののみ表示
+});
+
 $(document).on("change", "#hide-resolved", function () {
   hideResolved = this.checked;
+  table.draw();
+});
+
+$(document).on("change", "#recent-only", function () {
+  recentOnly = this.checked;
   table.draw();
 });
 
