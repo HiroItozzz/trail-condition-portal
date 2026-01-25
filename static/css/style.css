@@ -367,12 +367,14 @@ footer {
   #trail-table th:nth-child(5),
   #trail-table td:nth-child(5) {
     width: 18%;
+    min-width: 150px;
   }
 
-  /* 原文タイトル */
+  /* 詳細 */
   #trail-table th:nth-child(6),
   #trail-table td:nth-child(6) {
     width: 25%;
+    min-width: 180px;
   }
 
   /* 報告日 */
