@@ -43,7 +43,7 @@ ENV DATABASE_URL= \
     IS_PRODUCTION= \
     IS_DEBUG=
 
-CMD ["sh", "-c", "uv run --frozen --no-dev gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers 2 --threads 2 --timeout 120"]
+CMD ["sh", "-c", "uv run --frozen --no-dev gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers 3 --threads 2 --timeout 120"]
 
 # ========== Stage 6: Batch (バッチジョブ用) ==========
 FROM python-base AS batch
