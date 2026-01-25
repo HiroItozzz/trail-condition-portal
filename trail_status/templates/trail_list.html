@@ -2,7 +2,7 @@
 {% block content %}
   <div class="mb-3 info-box bg-[#f8f8f8] border border-[#ddd] rounded"
        style="padding: 4px 12px">
-    <div class="flex flex-col md:flex-row justify-start items-start md:items-center gap-7 pb-2 border-b border-[#ddd]">
+    <div class="flex flex-col md:flex-row justify-start items-start md:items-center gap-2 md:gap-7 pb-2 border-b border-[#ddd]">
       <div class="text-[13px] whitespace-nowrap">
         <strong style="color: #666;">最新の内容更新日：</strong>
         <span style="font-weight: bold;">{{ updated_sources.0.latest_date|date:"Y/m/d" }}</span>
@@ -13,29 +13,33 @@
         </div>
         <div class="flex flex-wrap items-center gap-1">
           <!--一週間以内の情報源を表示-->
-          {% for item in updated_sources %}
-            {% if item.latest_date.date >= seven_days_ago %}
-              <div class="flex items-center text-[14px]">
-                <span class="text-xs" style="color: #888; margin-left: 2px;">({{ item.latest_date|date:"m/d" }})</span>
-                <br class="md:hidden">
-                <a href="{{ item.source__url1 }}"
-                   target="_blank"
-                   rel="noopener"
-                   style="color: #2563eb;
-                          background-color: #f0f4f8;
-                          padding: 2px 6px;
-                          border-radius: 4px;
-                          font-weight: 600;
-                          text-decoration: underline">{{ item.source__name }}</a>
-              </div>
-            {% endif %}
-          {% endfor %}
+          {% if updated_sources.0.latest_date.date >= seven_days_ago %}
+            {% for item in updated_sources %}
+              {% if item.latest_date.date >= seven_days_ago %}
+                <div class="flex items-center text-[14px]">
+                  <span class="text-xs" style="color: #888; margin-left: 2px;">({{ item.latest_date|date:"m/d" }})</span>
+                  <br class="md:hidden">
+                  <a href="{{ item.source__url1 }}"
+                     target="_blank"
+                     rel="noopener"
+                     style="color: #2563eb;
+                            background-color: #f0f4f8;
+                            padding: 2px 6px;
+                            border-radius: 4px;
+                            font-weight: 600;
+                            text-decoration: underline">{{ item.source__name }}</a>
+                </div>
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            <span class="text-[13px] font-bold";>全サイト更新なし</span>
+          {% endif %}
         </div>
       </div>
     </div>
     <div class="text-[12px]" style="color: #666;">
       <strong>各サイト最終チェック日：</strong>
-      <span style="color: #333;">{{ last_checked_at|date:"Y/m/d" }}</span>
+      <span style="font-weight: bold">{{ last_checked_at|date:"Y/m/d" }}</span>
     </div>
   </div>
   <style>
