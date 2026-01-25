@@ -2,7 +2,7 @@
 {% block content %}
   <div class="mb-3 info-box bg-[#f8f8f8] border border-[#ddd] rounded"
        style="padding: 4px 12px">
-    <div class="flex flex-col md:flex-row justify-start items-start md:items-center gap-7 pb-2 border-b border-[#ddd]">
+    <div class="flex flex-col md:flex-row justify-start items-start md:items-center gap-2 md:gap-7 pb-2 border-b border-[#ddd]">
       <div class="text-[13px] whitespace-nowrap">
         <strong style="color: #666;">最新の内容更新日：</strong>
         <span style="font-weight: bold;">{{ updated_sources.0.latest_date|date:"Y/m/d" }}</span>
@@ -13,29 +13,33 @@
         </div>
         <div class="flex flex-wrap items-center gap-1">
           <!--一週間以内の情報源を表示-->
-          {% for item in updated_sources %}
-            {% if item.latest_date.date >= seven_days_ago %}
-              <div class="flex items-center text-[14px]">
-                <span class="text-xs" style="color: #888; margin-left: 2px;">({{ item.latest_date|date:"m/d" }})</span>
-                <br class="md:hidden">
-                <a href="{{ item.source__url1 }}"
-                   target="_blank"
-                   rel="noopener"
-                   style="color: #2563eb;
-                          background-color: #f0f4f8;
-                          padding: 2px 6px;
-                          border-radius: 4px;
-                          font-weight: 600;
-                          text-decoration: underline">{{ item.source__name }}</a>
-              </div>
-            {% endif %}
-          {% endfor %}
+          {% if updated_sources.0.latest_date.date >= seven_days_ago %}
+            {% for item in updated_sources %}
+              {% if item.latest_date.date >= seven_days_ago %}
+                <div class="flex items-center text-[14px]">
+                  <span class="text-xs" style="color: #888; margin-left: 2px;">({{ item.latest_date|date:"m/d" }})</span>
+                  <br class="md:hidden">
+                  <a href="{{ item.source__url1 }}"
+                     target="_blank"
+                     rel="noopener"
+                     style="color: #2563eb;
+                            background-color: #f0f4f8;
+                            padding: 2px 6px;
+                            border-radius: 4px;
+                            font-weight: 600;
+                            text-decoration: underline">{{ item.source__name }}</a>
+                </div>
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            <span class="text-[13px] font-bold";>全サイト更新なし</span>
+          {% endif %}
         </div>
       </div>
     </div>
     <div class="text-[12px]" style="color: #666;">
       <strong>各サイト最終チェック日：</strong>
-      <span style="color: #333;">{{ last_checked_at|date:"Y/m/d" }}</span>
+      <span style="font-weight: bold">{{ last_checked_at|date:"Y/m/d" }}</span>
     </div>
   </div>
   <style>
@@ -90,7 +94,7 @@
             <div style="color: #666; font-size: 11px;">{{ item.trail_name }}</div>
           </td>
           <td class="whitespace-nowrap"
-              style="vertical-align: middle;"
+              style="vertical-align: middle"
               data-order="{% if item.status == 'CLOSURE' %}1{% elif item.status == 'HAZARD' %}2{% elif item.status == 'CLEAR' %}3{% elif item.status == 'ANIMAL' %}4{% elif item.status == 'WEATHER' %}5{% elif item.status == 'FACILITY' %}6{% elif item.status == 'WATER' %}7{% elif item.status == 'SNOW' %}8{% else %}9{% endif %}">
             <span class="px-1 py-1 text-xs rounded font-medium {% if item.status == 'CLOSURE' %}bg-red-100 text-red-700 {% elif item.status == 'HAZARD' %}bg-orange-100 text-orange-700 {% elif item.status == 'SNOW' %}bg-cyan-100 text-cyan-700 {% elif item.status == 'CLEAR' %}bg-green-100 text-green-700 {% elif item.status == 'RESOLVED' %}bg-green-100 text-green-700 {% elif item.status == 'ANIMAL' %}bg-purple-100 text-purple-700 {% elif item.status == 'WATER' %}bg-teal-100 text-teal-700 {% elif item.status == 'WEATHER' %}bg-gray-100 text-gray-700 {% else %}bg-blue-100 text-blue-700{% endif %}">
               {{ item.get_status_display }}
