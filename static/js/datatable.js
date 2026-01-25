@@ -98,8 +98,8 @@ var table = $("#trail-table").DataTable({
         "<span>最近の取得のみ</span>" +
         "</label>"+
       '<label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap" style="margin-left: 4px;">' +
-        '<input type="checkbox" id="hide-resolved" class="w-4 h-4 rounded" checked>' +
-        "<span>解消済除く</span>" +
+        '<input type="checkbox" id="include-resolved" class="w-4 h-4 rounded">' +
+        "<span>解消済含む</span>" +
         "</label>",
     );
     // ソートドロップダウン

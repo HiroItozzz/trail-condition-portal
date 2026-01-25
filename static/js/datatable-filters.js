@@ -1,8 +1,8 @@
-var hideResolved = true;
+var includeResolved = false;
 var recentOnly = false;
 
 $.fn.dataTable.ext.search.push(function (settings, data) {
-  if (!hideResolved) return true;
+  if (includeResolved) return true;
 
   var resolvedAt = data[7] || "";
   if (!/\d/.test(resolvedAt)) return true;
@@ -35,8 +35,8 @@ $.fn.dataTable.ext.search.push(function (settings, data) {
   return updated >= sevenDaysAgo;
 });
 
-$(document).on("change", "#hide-resolved", function () {
-  hideResolved = this.checked;
+$(document).on("change", "#include-resolved", function () {
+  includeResolved = this.checked;
   table.draw();
 });
 
