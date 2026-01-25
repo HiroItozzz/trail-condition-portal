@@ -13,7 +13,7 @@ class DataFetcher:
     def __init__(self, url: str):
         self.url = url
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+            "User-Agent": "trail-condition-portal/1.0 (trail-info.jp; +https://github.com/HiroItozzz/trail-condition-portal)"
         }
 
     @retry(
