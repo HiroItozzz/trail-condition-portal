@@ -95,6 +95,8 @@ var table = $("#trail-table").DataTable({
         '<option value="6-asc">報告日↑古</option>' +
         '<option value="7-desc">解消日↓新</option>' +
         '<option value="7-asc">解消日↑古</option>' +
+        '<option value="2-asc">山名↑</option>' +
+        '<option value="2-desc">山名↓</option>' +
         '<option value="8-asc">情報源↑</option>' +
         '<option value="8-desc">情報源↓</option>' +
         "</select>" +
