@@ -461,6 +461,10 @@ footer {
     display: block;
   }
 
+  .sidebar-scroll {
+    padding-bottom: 80px;
+  }
+
   #sidebar {
     position: fixed;
     top: 0;
