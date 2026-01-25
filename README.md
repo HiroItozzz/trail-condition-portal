@@ -43,6 +43,9 @@
 | Text Matching | RapidFuzz, SudachiPy |
 | Infrastructure | Cloud Run, Supabase, Cloudflare, Docker |
 
+## 実装の背景
+**https://zenn.dev/d3c0b/articles/ffba1788c2168e**
+
 ## 参考文献
 
 - [trafilatura](https://trafilatura.readthedocs.io/) - Web content extraction

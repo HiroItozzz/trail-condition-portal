@@ -19,10 +19,21 @@ var table = $("#trail-table").DataTable({
   autoWidth: false,
   scrollX: false,
   responsive: {
+    // サイドバー（約250px）を考慮したブレークポイント
+    breakpoints: [
+      { name: "desktop", width: Infinity },
+      { name: "tablet-l", width: 1280 }, // デフォルト1024 + サイドバー256
+      { name: "tablet-p", width: 1024 }, // デフォルト768 + サイドバー256
+      { name: "mobile-l", width: 480 },
+      { name: "mobile-p", width: 320 },
+    ],
     details: {
       type: "column",
       target: "tr",
       renderer: function (api, rowIdx, columns) {
+        // 1024px以上では展開しない（詳細ページへリンク）
+        if (window.innerWidth >= 1024) return false;
+
         var row = api.row(rowIdx).node();
         var detailUrl = $(row).find("td[data-detail-url]").data("detail-url");
 
@@ -95,6 +106,8 @@ var table = $("#trail-table").DataTable({
         '<option value="6-asc">報告日↑古</option>' +
         '<option value="7-desc">解消日↓新</option>' +
         '<option value="7-asc">解消日↑古</option>' +
+        '<option value="2-asc">山名↑</option>' +
+        '<option value="2-desc">山名↓</option>' +
         '<option value="8-asc">情報源↑</option>' +
         '<option value="8-desc">情報源↓</option>' +
         "</select>" +

@@ -312,11 +312,11 @@ footer {
     max-width: 54px !important;
   }
 
-  /* 対象: 残り幅を使用 */
+  /* 対象: 固定幅を確保 */
   #trail-table th:nth-child(3),
   #trail-table td:nth-child(3) {
-    width: auto !important;
-    min-width: 120px !important;
+    width: 150px !important;
+    min-width: 150px !important;
   }
 
   /* 状況種別（バッジ）: 固定幅 */
@@ -367,12 +367,14 @@ footer {
   #trail-table th:nth-child(5),
   #trail-table td:nth-child(5) {
     width: 18%;
+    min-width: 150px;
   }
 
-  /* 原文タイトル */
+  /* 詳細 */
   #trail-table th:nth-child(6),
   #trail-table td:nth-child(6) {
     width: 25%;
+    min-width: 180px;
   }
 
   /* 報告日 */

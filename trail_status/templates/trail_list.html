@@ -89,7 +89,9 @@
             <span class="md:hidden" style="font-weight: bold; color: #000;">{{ item.mountain_name_raw }}</span>
             <div style="color: #666; font-size: 11px;">{{ item.trail_name }}</div>
           </td>
-          <td class="whitespace-nowrap" style="vertical-align: middle;">
+          <td class="whitespace-nowrap"
+              style="vertical-align: middle;"
+              data-order="{% if item.status == 'CLOSURE' %}1{% elif item.status == 'HAZARD' %}2{% elif item.status == 'CLEAR' %}3{% elif item.status == 'ANIMAL' %}4{% elif item.status == 'WEATHER' %}5{% elif item.status == 'FACILITY' %}6{% elif item.status == 'WATER' %}7{% elif item.status == 'SNOW' %}8{% else %}9{% endif %}">
             <span class="px-1 py-1 text-xs rounded font-medium {% if item.status == 'CLOSURE' %}bg-red-100 text-red-700 {% elif item.status == 'HAZARD' %}bg-orange-100 text-orange-700 {% elif item.status == 'SNOW' %}bg-cyan-100 text-cyan-700 {% elif item.status == 'CLEAR' %}bg-green-100 text-green-700 {% elif item.status == 'RESOLVED' %}bg-green-100 text-green-700 {% elif item.status == 'ANIMAL' %}bg-purple-100 text-purple-700 {% elif item.status == 'WATER' %}bg-teal-100 text-teal-700 {% elif item.status == 'WEATHER' %}bg-gray-100 text-gray-700 {% else %}bg-blue-100 text-blue-700{% endif %}">
               {{ item.get_status_display }}
             </span>
