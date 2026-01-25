@@ -81,18 +81,6 @@
                  style="font-size: 14px">すべての情報を表示</a>
             </div>
             <nav>
-              {% if source_choices %}
-                <h3>サイト別</h3>
-                <ul style="list-style: none; padding: 0; margin: 0;">
-                  {% for id, name in source_choices %}
-                    <li>
-                      <a href="{% url 'trail-list' %}?source={{ id|stringformat:'s' }}"
-                         class="sidebar-link {% if current_source == id %}active{% endif %}">{{ name }}</a>
-                    </li>
-                  {% endfor %}
-                </ul>
-                <hr>
-              {% endif %}
               {% if area_choices %}
                 <h3>山域別</h3>
                 <ul style="list-style: none; padding: 0; margin: 0;">
@@ -100,6 +88,18 @@
                     <li>
                       <a href="{% url 'trail-list' %}?area={{ id }}"
                          class="sidebar-link {% if current_area == id %}active{% endif %}">{{ name }}</a>
+                    </li>
+                  {% endfor %}
+                </ul>
+                <hr>
+              {% endif %}
+              {% if source_choices %}
+                <h3>サイト別</h3>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                  {% for id, name in source_choices %}
+                    <li>
+                      <a href="{% url 'trail-list' %}?source={{ id|stringformat:'s' }}"
+                         class="sidebar-link {% if current_source == id %}active{% endif %}">{{ name }}</a>
                     </li>
                   {% endfor %}
                 </ul>
