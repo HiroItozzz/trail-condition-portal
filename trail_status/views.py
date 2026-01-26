@@ -54,7 +54,7 @@ def _get_sidebar_context() -> dict:
 
 
 def trail_list(request: HttpRequest) -> HttpResponse:
-    conditions = TrailCondition.objects.filter(disabled=False)
+    conditions = TrailCondition.objects.filter(disabled=False).select_related("source")
 
     # クエリパラメータによる絞り込み
     source_filter = request.GET.get("source")
@@ -68,8 +68,10 @@ def trail_list(request: HttpRequest) -> HttpResponse:
     if status_filter:
         conditions = conditions.filter(status=status_filter)
 
-    # 更新日時（updated_at）の降順で並べ替え
-    conditions = conditions.order_by("-updated_at")
+    # 報告日の降順で並べ替え（updated_atは表示用のみ）
+    conditions = conditions.order_by("-reported_at", "-created_at")
+
+    # 最新の更新情報（updated_at or created_atで判定）
     updated_sources = (
         TrailCondition.objects.values("source__name", "source__url1")
         .annotate(latest_date=Max("updated_at"))

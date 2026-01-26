@@ -93,10 +93,10 @@ var table = $("#trail-table").DataTable({
   initComplete: function () {
     // チェックボックス
     $(".resolved-filter").html(
-        '<label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap" >' +
-        '<input type="checkbox" id="recent-only" class="w-4 h-4 rounded">' +
-        "<span>最近の取得のみ</span>" +
-        "</label>"+
+      '<label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap">' +
+        '<input type="checkbox" id="include-new-sources" class="w-4 h-4 rounded" checked>' +
+        "<span>新規情報源を含む</span>" +
+        "</label>" +
       '<label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap" style="margin-left: 4px;">' +
         '<input type="checkbox" id="include-resolved" class="w-4 h-4 rounded">' +
         "<span>解消済含む</span>" +

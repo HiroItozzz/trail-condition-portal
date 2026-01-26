@@ -78,11 +78,14 @@
     </thead>
     <tbody>
       {% for item in conditions %}
-        <tr class="hover:bg-[#f5f5f5]">
+        <tr class="hover:bg-[#f5f5f5]"
+            data-source-created="{{ item.source.created_at.timestamp }}"
+            data-record-created="{{ item.created_at.timestamp }}"
+            data-record-updated="{{ item.updated_at.timestamp }}">
           <td style="white-space: normal;">{{ item.get_area_display }}</td>
           <td class="whitespace-nowrap">
-            <span class="date-full">{{ item.updated_at|date:"Y/m/d"|default:"-" }}</span>
-            <span class="date-short">{{ item.updated_at|date:"y/m/d"|default:"-" }}</span>
+            <span class="date-full">{{ item.updated_at|date:"Y/m/d" }}</span>
+            <span class="date-short">{{ item.updated_at|date:"y/m/d" }}</span>
           </td>
           <td data-detail-url="{% url 'trail-detail' item.id %}" data-order="{{ item.mountain_name_raw }}">
             <a href="{% url 'trail-detail' item.id %}"

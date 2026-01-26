@@ -1,5 +1,5 @@
 var includeResolved = false;
-var recentOnly = false;
+var includeNewSources = true; // デフォルトON: 新規情報源を含む
 
 $.fn.dataTable.ext.search.push(function (settings, data) {
   if (includeResolved) return true;
@@ -17,22 +17,24 @@ $.fn.dataTable.ext.search.push(function (settings, data) {
   return resolved > today;
 });
 
-$.fn.dataTable.ext.search.push(function (settings, data) {
-  if (!recentOnly) return true;
+// 新規情報源フィルタ
+$.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+  if (includeNewSources) return true; // チェックON: 全て表示
 
-  var updatedAt = data[1] || "";
-  if (!/\d/.test(updatedAt)) return false;
+  // チェックOFF: 新規情報源の初回一括取得を非表示
+  var row = table.row(dataIndex).node();
+  var sourceCreated = parseFloat($(row).data('source-created'));
+  var recordCreated = parseFloat($(row).data('record-created'));
+  var recordUpdated = parseFloat($(row).data('record-updated'));
 
-  var m = updatedAt.match(/(\d{2,4})\/(\d{1,2})\/(\d{1,2})/);
-  if (!m) return false;
+  // updated_at == created_at かつ情報源作成から1時間以内 → 初回一括取得
+  var isInitialBatch = Math.abs(recordUpdated - recordCreated) < 1; // 1秒以内
+  var timeDiffHours = (recordCreated - sourceCreated) / 3600;
 
-  var year = m[1].length === 2 ? 2000 + +m[1] : +m[1];
-  var updated = new Date(year, +m[2] - 1, +m[3]);
-  var sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  sevenDaysAgo.setHours(0, 0, 0, 0);
-
-  return updated >= sevenDaysAgo;
+  if (isInitialBatch && timeDiffHours >= 0 && timeDiffHours <= 1) {
+    return false; // 非表示
+  }
+  return true;
 });
 
 $(document).on("change", "#include-resolved", function () {
@@ -40,8 +42,8 @@ $(document).on("change", "#include-resolved", function () {
   table.draw();
 });
 
-$(document).on("change", "#recent-only", function () {
-  recentOnly = this.checked;
+$(document).on("change", "#include-new-sources", function () {
+  includeNewSources = this.checked;
   table.draw();
 });
 
