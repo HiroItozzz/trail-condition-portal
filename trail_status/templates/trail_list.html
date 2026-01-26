@@ -79,9 +79,7 @@
     <tbody>
       {% for item in conditions %}
         <tr class="hover:bg-[#f5f5f5]"
-            data-source-created="{{ item.source.created_at.timestamp }}"
-            data-record-created="{{ item.created_at.timestamp }}"
-            data-record-updated="{{ item.updated_at.timestamp }}">
+            data-source-created="{{ item.source.created_at.timestamp }}">
           <td style="white-space: normal;">{{ item.get_area_display }}</td>
           <td class="whitespace-nowrap">
             <span class="date-full">{{ item.updated_at|date:"Y/m/d" }}</span>

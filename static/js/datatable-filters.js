@@ -21,17 +21,12 @@ $.fn.dataTable.ext.search.push(function (settings, data) {
 $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
   if (includeNewSources) return true; // チェックON: 全て表示
 
-  // チェックOFF: 新規情報源の初回一括取得を非表示
+  // チェックOFF: 7日以内に作成された情報源のレコードを非表示
   var row = table.row(dataIndex).node();
   var sourceCreated = parseFloat($(row).data('source-created'));
-  var recordCreated = parseFloat($(row).data('record-created'));
-  var recordUpdated = parseFloat($(row).data('record-updated'));
+  var sevenDaysAgo = (Date.now() / 1000) - (7 * 24 * 3600);
 
-  // updated_at == created_at かつ情報源作成から1時間以内 → 初回一括取得
-  var isInitialBatch = Math.abs(recordUpdated - recordCreated) < 1; // 1秒以内
-  var timeDiffHours = (recordCreated - sourceCreated) / 3600;
-
-  if (isInitialBatch && timeDiffHours >= 0 && timeDiffHours <= 1) {
+  if (sourceCreated > sevenDaysAgo) {
     return false; // 非表示
   }
   return true;
