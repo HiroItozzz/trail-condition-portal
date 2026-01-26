@@ -1,0 +1,128 @@
+[
+{
+  "model": "trail_status.datasource",
+  "pk": 1,
+  "fields": {
+    "name": "東京都奥多摩ビジターセンター",
+    "organization_type": "ASSOCIATION",
+    "prefecture_code": "13",
+    "prompt_key": "okutama_vc",
+    "url1": "https://www.ces-net.jp/okutamavc/info/52",
+    "url2": "",
+    "data_format": "WEB",
+    "content_hash": "13c06b183b4080df0b6757a4fd72e1e6909186b7687b8e2791522d803e9f3f08",
+    "last_scraped_at": null,
+    "last_checked_at": "2026-01-25T17:30:47.462Z",
+    "created_at": "2026-01-18T02:33:54.898Z",
+    "updated_at": "2026-01-18T13:38:14.106Z"
+  }
+},
+{
+  "model": "trail_status.datasource",
+  "pk": 2,
+  "fields": {
+    "name": "東京都御岳ビジターセンター",
+    "organization_type": "ASSOCIATION",
+    "prefecture_code": "13",
+    "prompt_key": "mitake_vc",
+    "url1": "https://mitakevc.ces-net.jp/trailinformation.html",
+    "url2": "",
+    "data_format": "WEB",
+    "content_hash": "e68d30890b86bf7d75930040b0f1afbc317c70a5dd5d6e739d73254344702e36",
+    "last_scraped_at": null,
+    "last_checked_at": "2026-01-25T17:30:47.507Z",
+    "created_at": "2026-01-18T02:35:06.520Z",
+    "updated_at": "2026-01-18T13:38:32.802Z"
+  }
+},
+{
+  "model": "trail_status.datasource",
+  "pk": 3,
+  "fields": {
+    "name": "神奈川県庁（丹沢大山エリア）",
+    "organization_type": "MUNICIPALITY",
+    "prefecture_code": "14",
+    "prompt_key": "kanagawa_tanzawa",
+    "url1": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/003.html",
+    "url2": "",
+    "data_format": "WEB",
+    "content_hash": "4ea36620d4ba9773229b057657984ce32b8977cc376db9fb73b749455fcde5ad",
+    "last_scraped_at": null,
+    "last_checked_at": "2026-01-25T17:30:47.518Z",
+    "created_at": "2026-01-18T02:35:55.241Z",
+    "updated_at": "2026-01-18T13:38:46.116Z"
+  }
+},
+{
+  "model": "trail_status.datasource",
+  "pk": 4,
+  "fields": {
+    "name": "神奈川県庁（陣馬・相模湖エリア）",
+    "organization_type": "MUNICIPALITY",
+    "prefecture_code": "14",
+    "prompt_key": "kanagawa_jinba",
+    "url1": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/005.html",
+    "url2": "",
+    "data_format": "WEB",
+    "content_hash": "45587134a50efa1fdcd07f584a7837eb5da21281312a5ac84e8c8be0da3a6ff4",
+    "last_scraped_at": null,
+    "last_checked_at": "2026-01-25T17:30:47.529Z",
+    "created_at": "2026-01-18T02:36:17.544Z",
+    "updated_at": "2026-01-18T13:39:00.120Z"
+  }
+},
+{
+  "model": "trail_status.datasource",
+  "pk": 5,
+  "fields": {
+    "name": "東京都高尾ビジターセンター",
+    "organization_type": "ASSOCIATION",
+    "prefecture_code": "13",
+    "prompt_key": "takao_vc",
+    "url1": "https://takaovc.ces-net.jp/?p=7762",
+    "url2": "",
+    "data_format": "WEB",
+    "content_hash": "b559a8d36ed31d7227c4a9f4074742f31df9c34d86165f16cdec81a237023539",
+    "last_scraped_at": null,
+    "last_checked_at": "2026-01-25T17:30:47.541Z",
+    "created_at": "2026-01-18T02:36:51.156Z",
+    "updated_at": "2026-01-18T13:39:15.185Z"
+  }
+},
+{
+  "model": "trail_status.datasource",
+  "pk": 6,
+  "fields": {
+    "name": "埼玉県秩父環境管理事務所",
+    "organization_type": "MUNICIPALITY",
+    "prefecture_code": "11",
+    "prompt_key": "saitama_chichibu",
+    "url1": "https://www.pref.saitama.lg.jp/soshiki/b0504/tozanjoho/index.html",
+    "url2": "",
+    "data_format": "WEB",
+    "content_hash": "5eea2ec05353affbceb97b9e9967fcfcb21256f48ef6b987bff73607d088632d",
+    "last_scraped_at": null,
+    "last_checked_at": "2026-01-25T17:30:47.551Z",
+    "created_at": "2026-01-18T02:37:32.087Z",
+    "updated_at": "2026-01-18T13:39:29.050Z"
+  }
+},
+{
+  "model": "trail_status.datasource",
+  "pk": 7,
+  "fields": {
+    "name": "小菅村総合情報サイト こ、こすげぇー",
+    "organization_type": "MUNICIPALITY",
+    "prefecture_code": "19",
+    "prompt_key": "yamanashi_kosuge",
+    "url1": "https://ko-kosuge.jp/road-closure/",
+    "url2": "",
+    "data_format": "WEB",
+    "content_hash": "",
+    "last_scraped_at": null,
+    "last_checked_at": null,
+    "created_at": "2026-01-26T03:22:52.848Z",
+    "updated_at": "2026-01-26T03:22:52.848Z"
+  }
+}
+]

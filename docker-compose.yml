@@ -37,6 +37,8 @@ services:
       - web
 
   db:
+    #profiles:
+    #  - ignore
     image: postgres:18-alpine
     env_file:
       - .env.local
