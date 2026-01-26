@@ -4,15 +4,15 @@
        style="padding: 4px 12px">
     <div class="flex flex-col md:flex-row justify-start items-start md:items-center gap-2 md:gap-7 pb-2 border-b border-[#ddd]">
       <div class="text-[13px] whitespace-nowrap">
-        <strong style="color: #666;">最新の内容更新日：</strong>
-        <span style="font-weight: bold;">{{ updated_sources.0.latest_date|date:"Y/m/d" }}</span>
+        <strong style="color: #666;">最新の内容取得日：</strong>
+        <span style="font-weight: bold;">{{ latest_update_date|date:"Y/m/d" }}</span>
       </div>
       <div class="flex items-center gap-0.5">
         <div class="text-[13px] whitespace-nowrap" style="color: #666;">
           <strong>1週間以内の更新：</strong>
         </div>
         <div class="flex flex-wrap items-center gap-1">
-          <!--一週間以内の情報源を表示-->
+          <!--一週間以内の情報源を表示（新規追加情報源は除く）-->
           {% if updated_sources.0.latest_date.date >= seven_days_ago %}
             {% for item in updated_sources %}
               {% if item.latest_date.date >= seven_days_ago %}
@@ -32,7 +32,7 @@
               {% endif %}
             {% endfor %}
           {% else %}
-            <span class="text-[13px] font-bold";>全サイト更新なし</span>
+            <span class="text-[13px] font-bold italic" style="color: #666;">全サイト更新なし</span>
           {% endif %}
         </div>
       </div>
@@ -102,7 +102,8 @@
             <span class="date-full">{{ item.updated_at|date:"Y/m/d" }}</span>
             <span class="date-short">{{ item.updated_at|date:"y/m/d" }}</span>
           </td>
-          <td data-detail-url="{% url 'trail-detail' item.id %}" data-order="{{ item.mountain_name_raw }}">
+          <td data-detail-url="{% url 'trail-detail' item.id %}"
+              data-order="{{ item.mountain_name_raw }}">
             <a href="{% url 'trail-detail' item.id %}"
                class="hidden md:inline"
                style="font-weight: bold;
