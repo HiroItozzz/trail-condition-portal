@@ -73,7 +73,8 @@ def trail_list(request: HttpRequest) -> HttpResponse:
 
     # 最新の更新情報（updated_at or created_atで判定）
     updated_sources = (
-        TrailCondition.objects.values("source__name", "source__url1")
+        TrailCondition.objects.filter(source__isnull=False)
+        .values("source__name", "source__url1")
         .annotate(latest_date=Max("updated_at"))
         .order_by("-latest_date")
     )
