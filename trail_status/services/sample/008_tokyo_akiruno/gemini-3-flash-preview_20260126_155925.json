@@ -1,0 +1,88 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "星竹林道",
+      "mountain_name_raw": "金比羅山",
+      "title": "全線通行止め",
+      "description": "林道工事の実施に伴い、全線通行止めとなります。\n昼夜間問わず、土曜日、日曜日、祝日も含めて通行止めです。",
+      "reported_at": null,
+      "resolved_at": "2026-03-31",
+      "status": "CLOSURE",
+      "area": "OKUTAMA",
+      "reference_URL": "",
+      "comment": "林道工事のため。令和8年3月下旬頃まで通行止め予定。"
+    },
+    {
+      "trail_name": "御岳林道",
+      "mountain_name_raw": "大岳山",
+      "title": "全線通行止め",
+      "description": "御岳林道について、道路崩壊のため、当面の間、全線通行止めとなります。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUTAMA",
+      "reference_URL": "",
+      "comment": "道路崩壊のため当面の間通行止め。"
+    },
+    {
+      "trail_name": "関東ふれあいの道（杉の木陰のみち）",
+      "mountain_name_raw": "馬頭刈山",
+      "title": "一部通行止め",
+      "description": "関東ふれあいの道（杉の木陰のみち）について、落石の危険があるため、当面の間、一部通行止めとなります。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUTAMA",
+      "reference_URL": "",
+      "comment": "落石の危険があるため当面の間一部通行止め。"
+    },
+    {
+      "trail_name": "小和田・戸倉散策道",
+      "mountain_name_raw": "臼杵山",
+      "title": "一部通行止め",
+      "description": "間伐事業または落石の恐れがあるため、一部通行止めとなります。\n昼夜間問わず、土曜日、日曜日、祝日も含めて通行止めです。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUTAMA",
+      "reference_URL": "",
+      "comment": "間伐事業または落石の恐れによる規制。"
+    },
+    {
+      "trail_name": "入山峠から入山トンネルまで（盆堀林道）",
+      "mountain_name_raw": "市道山",
+      "title": "全面通行止め",
+      "description": "間伐事業のあるため、全面通行止めとなります。\n昼夜間問わず、土曜日、日曜日、祝日も含めて通行止めです。",
+      "reported_at": null,
+      "resolved_at": "2026-09-25",
+      "status": "CLOSURE",
+      "area": "OKUTAMA",
+      "reference_URL": "",
+      "comment": "間伐事業のため。令和8年9月25日まで。"
+    },
+    {
+      "trail_name": "入山峠からトッキリ場まで",
+      "mountain_name_raw": "刈寄山",
+      "title": "全面通行止め",
+      "description": "間伐事業のあるため、全面通行止めとなります。\n昼夜間問わず、土曜日、日曜日、祝日も含めて通行止めです。",
+      "reported_at": null,
+      "resolved_at": "2027-08-13",
+      "status": "CLOSURE",
+      "area": "OKUTAMA",
+      "reference_URL": "",
+      "comment": "間伐事業のため。令和9年8月13日まで。"
+    },
+    {
+      "trail_name": "網代橋",
+      "mountain_name_raw": "網代城山",
+      "title": "全面通行止め",
+      "description": "令和元年東日本台風の影響により、橋への損傷が認められたため、全面通行止めとなっています。",
+      "reported_at": "2019-10-12",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUTAMA",
+      "reference_URL": "",
+      "comment": "2019年（令和元年）東日本台風による橋梁損傷のため当面の間通行止め。"
+    }
+  ]
+} 
