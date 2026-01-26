@@ -52,6 +52,7 @@ documents/
 *.md
 .claude/
 sample/
+backups/
 
 # Tests (optional: remove if you want tests in image)
 **/tests/

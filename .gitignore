@@ -22,6 +22,6 @@ outputs/
 
 logs/*
 !logs/.gitkeep
-
+backups/
 my_docs/
 documents/

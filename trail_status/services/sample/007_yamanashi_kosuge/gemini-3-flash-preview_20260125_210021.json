@@ -1,0 +1,52 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "村道松姫峠線",
+      "mountain_name_raw": "松姫峠",
+      "title": "村道松姫峠線【通行止め】",
+      "description": "小菅村小永田集落から松姫峠に登る村道松姫峠線は土砂崩れ発生のため2024年6月より当面の間、全面通行止めとなっています。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "DAIBOSATSU",
+      "reference_URL": "http://www.vill.kosuge.yamanashi.jp/living/shinko/news/20240607135113.html",
+      "comment": "土砂崩れ発生のため。小永田集落から松姫峠の区間。"
+    },
+    {
+      "trail_name": "都有林道小菅線",
+      "mountain_name_raw": "大菩薩峠",
+      "title": "都有林道小菅線 2025.9.8通行止め解除となりました",
+      "description": "台風15号の接近に伴い、2025年9月4日(木)13:00～当面の間全面通行止めといたします。\n都有林道小菅線は白糸の滝駐車場から先の道です。\n●雄滝へのアクセスや、大菩薩峠赤沢登山口方面への通り抜けはできませんのでご注意ください。\n●林道内は引き続き崩落の危険があり、立入禁止となりますので「大菩薩峠からフルコンバ経由での下山」もできませんのでご注意ください",
+      "reported_at": "2025-09-04",
+      "resolved_at": "2025-09-08",
+      "status": "CLEAR",
+      "area": "DAIBOSATSU",
+      "reference_URL": "http://www.vill.kosuge.yamanashi.jp/living/shinko/news/20250904135404.html",
+      "comment": "白糸の滝駐車場から先の道。雄滝、大菩薩峠赤沢登山口方面、フルコンバ経由の下山道に関連。"
+    },
+    {
+      "trail_name": "白糸の滝遊歩道",
+      "mountain_name_raw": "大菩薩峠",
+      "title": "白糸の滝遊歩道【通行止め】 2025.10.1通行行止め解除となりました",
+      "description": "白糸の滝の遊歩道は倒木や土砂崩れの影響で通行止めとなっています。\n利用者の皆様にはご迷惑をおかけしますがご理解とご協力をお願いいたします。",
+      "reported_at": null,
+      "resolved_at": "2025-10-01",
+      "status": "CLEAR",
+      "area": "DAIBOSATSU",
+      "reference_URL": "http://www.vill.kosuge.yamanashi.jp/living/shinko/20240905175649.html",
+      "comment": "倒木や土砂崩れの影響により通行止めとなっていたが解除。"
+    },
+    {
+      "trail_name": "県道上野原丹波山線",
+      "mountain_name_raw": "三頭山",
+      "title": "県道上野原丹波山線【一部通行止め】 通行止め解除となりました",
+      "description": "雨量規制に伴い、県道上野原丹波山線小菅村ハイマゼから上野原市西原飯尾までの間が、本日正午12時から道路全面通行止めとなります。\n●上野原市から小菅村への入村はできませんので、ご注意ください。",
+      "reported_at": "2025-10-06",
+      "resolved_at": null,
+      "status": "CLEAR",
+      "area": "OKUTAMA",
+      "reference_URL": "",
+      "comment": "雨量規制による通行止め。小菅村ハイマゼから上野原市西原飯尾の間。最終更新日の記述に基づきreported_atを特定。"
+    }
+  ]
+} 

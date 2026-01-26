@@ -92,12 +92,25 @@ var table = $("#trail-table").DataTable({
   // ↓↓↓ ここを追加 ↓↓↓
   initComplete: function () {
     // チェックボックス
-    $(".resolved-filter").html(
-      '<label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap">' +
-        '<input type="checkbox" id="hide-resolved" class="w-4 h-4 rounded" checked>' +
+    var hasRecentSources = $("#trail-table").data("has-recent-sources") === true;
+    var filtersHtml = "";
+
+    // 新規情報源がある場合のみ表示
+    if (hasRecentSources) {
+      filtersHtml +=
+        '<label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap">' +
+        '<input type="checkbox" id="include-new-sources" class="w-4 h-4 rounded" checked>' +
+        "<span>新規情報源を含む</span>" +
+        "</label>";
+    }
+
+    filtersHtml +=
+      '<label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap" style="margin-left: 4px;">' +
+        '<input type="checkbox" id="exclude-resolved" class="w-4 h-4 rounded" checked>' +
         "<span>解消済除く</span>" +
-        "</label>",
-    );
+        "</label>";
+
+    $(".resolved-filter").html(filtersHtml);
     // ソートドロップダウン
     $(".dt-row2").append(
       '<div class="sort-dropdown">' +

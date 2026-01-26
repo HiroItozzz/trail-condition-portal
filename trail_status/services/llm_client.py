@@ -324,7 +324,7 @@ class DeepseekClient(ConversationalAi):
 
         @traceable(
             run_type="llm",
-            name="Trail_Analysis_Deepseek",
+            name=f"{self.model.capitalize()}_{self.prompt_filename}",
             metadata={
                 "ls_provider": self.provider,
                 "ls_model_name": self.model,
@@ -426,7 +426,7 @@ class GeminiClient(ConversationalAi):
 
         @traceable(
             run_type="llm",
-            name="Trail_Analysis_Gemini",
+            name=f"{self.model.capitalize()}_{self.prompt_filename}",
             metadata={
                 "ls_provider": self.provider,
                 "ls_model_name": self.model,
@@ -535,7 +535,7 @@ class GptClient(ConversationalAi):
     async def generate(self):
         @traceable(
             run_type="llm",
-            name="Trail_Analysis_Deepseek",
+            name=f"{self.model.capitalize()}_{self.prompt_filename}",
             metadata={
                 "ls_provider": self.provider,
                 "ls_model_name": self.model,
