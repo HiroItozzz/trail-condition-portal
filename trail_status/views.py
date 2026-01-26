@@ -37,10 +37,19 @@ def _get_sidebar_context() -> dict:
     source_counts = dict(base_conditions.values("source").annotate(count=Count("id")).values_list("source", "count"))
     source_choices = [(id, name) for id, name in DataSource.objects.get_choices() if source_counts.get(id, 0) > 0]
 
+    # 最近追加された情報源（1週間以内、最新5件）
+    seven_days_ago = timezone.now() - timedelta(days=7)
+    recent_sources = (
+        DataSource.objects.filter(created_at__gte=seven_days_ago)
+        .order_by("-created_at")[:5]
+        .values("id", "name", "created_at")
+    )
+
     return {
         "source_choices": source_choices,
         "area_choices": area_choices,
         "status_choices": status_choices,
+        "recent_sources": list(recent_sources),
     }
 
 

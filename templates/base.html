@@ -75,12 +75,31 @@
               </a>
             </a>
             <hr>
-            <div class="mb-6">
+            <div class="mb-3">
               <a href="{% url 'trail-list' %}"
                  class="sidebar-link {% if not current_source and not current_area and not current_status %}active{% endif %}"
                  style="font-size: 14px">すべての情報を表示</a>
             </div>
             <nav>
+              {% if recent_sources %}
+                <h3 style="margin-top: 8px; margin-bottom: 4px;">最近追加された情報源</h3>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                  {% regroup recent_sources by created_at|date:"m/d" as sources_by_date %}
+                  {% for date_group in sources_by_date %}
+                    <li style="margin-top: 0px;">
+                      <span class="text-xs text-gray-500">({{ date_group.grouper }})</span>
+                      {% for source in date_group.list %}
+                        <a href="{% url 'trail-list' %}?source={{ source.id }}"
+                           class="sidebar-link {% if current_source == source.id %}active{% endif %}"
+                           style="display: block; padding-left: 8px;">
+                          {{ source.name }}
+                        </a>
+                      {% endfor %}
+                    </li>
+                  {% endfor %}
+                </ul>
+                <hr style="margin-top: 12px;">
+              {% endif %}
               {% if area_choices %}
                 <h3>山域別</h3>
                 <ul style="list-style: none; padding: 0; margin: 0;">
