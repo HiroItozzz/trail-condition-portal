@@ -97,6 +97,8 @@ var table = $("#trail-table").DataTable({
 
     // 新規情報源がある場合のみ表示
     if (hasRecentSources) {
+      // 新規情報源がある場合は「解消済除く」フィルタを無効化
+      excludeResolved = false;
       filtersHtml +=
         '<label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap">' +
         '<input type="checkbox" id="include-new-sources" class="w-4 h-4 rounded" checked>' +
@@ -104,11 +106,13 @@ var table = $("#trail-table").DataTable({
         "</label>";
     }
 
+    else {
     filtersHtml +=
       '<label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap" style="margin-left: 4px;">' +
         '<input type="checkbox" id="exclude-resolved" class="w-4 h-4 rounded" checked>' +
         "<span>解消済除く</span>" +
         "</label>";
+    }
 
     $(".resolved-filter").html(filtersHtml);
     // ソートドロップダウン
