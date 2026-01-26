@@ -71,9 +71,12 @@ def trail_list(request: HttpRequest) -> HttpResponse:
     # 報告日の降順で並べ替え（updated_atは表示用のみ）
     conditions = conditions.order_by("-reported_at", "-created_at")
 
-    # 最新の更新情報（updated_at or created_atで判定）
-    # 新規追加情報源（DataSource.created_atとTrailCondition.updated_atの差が1日以内）は除外
-    updated_sources = (
+    # 最新の内容更新日（全情報源含む）
+    latest_update_date = TrailCondition.objects.filter(source__isnull=False).aggregate(Max("updated_at"))["updated_at__max"]
+
+    # 1週間以内の更新リスト（新規追加情報源は除外）
+    # 新規追加情報源 = DataSource.created_atとTrailCondition.updated_atの差が1日以内
+    updated_sources_query = (
         TrailCondition.objects.filter(source__isnull=False)
         .values("source__name", "source__url1")
         .annotate(
@@ -84,11 +87,11 @@ def trail_list(request: HttpRequest) -> HttpResponse:
     )
     # DataSourceの作成日とTrailConditionの最新更新日の差が1日以内のものを除外
     updated_sources = [
-        item for item in updated_sources
+        item for item in updated_sources_query
         if (item["latest_date"] - item["source_created_at"]).days > 1
     ]
-    last_checked_at = DataSource.objects.aggregate(Max("last_checked_at"))["last_checked_at__max"]
 
+    last_checked_at = DataSource.objects.aggregate(Max("last_checked_at"))["last_checked_at__max"]
     seven_days_ago = timezone.now().date() - timedelta(days=7)
 
     context = {
@@ -96,6 +99,7 @@ def trail_list(request: HttpRequest) -> HttpResponse:
         "current_source": source_filter,
         "current_area": area_filter,
         "current_status": status_filter,
+        "latest_update_date": latest_update_date,
         "updated_sources": updated_sources,
         "last_checked_at": last_checked_at,
         "seven_days_ago": seven_days_ago,
