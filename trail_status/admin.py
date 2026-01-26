@@ -9,7 +9,17 @@ from .models.source import DataSource
 
 @admin.register(DataSource)
 class DataSourceAdmin(admin.ModelAdmin):
-    list_display = ["name", "id", "prompt_key", "organization_type", "prefecture_code", "url1", "last_scraped_at"]
+    list_display = [
+        "name",
+        "id",
+        "prompt_key",
+        "organization_type",
+        "prefecture_code",
+        "url1",
+        "last_scraped_at",
+        "updated_at",
+        "created_at",
+    ]
     list_filter = ["organization_type", ("last_scraped_at", admin.DateFieldListFilter)]
     search_fields = ["name"]
     readonly_fields = ["last_scraped_at"]

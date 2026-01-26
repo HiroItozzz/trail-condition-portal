@@ -1,7 +1,7 @@
 import logging
 from datetime import timedelta
 
-from django.db.models import Count, Max
+from django.db.models import Count, F, Max
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -72,12 +72,21 @@ def trail_list(request: HttpRequest) -> HttpResponse:
     conditions = conditions.order_by("-reported_at", "-created_at")
 
     # 最新の更新情報（updated_at or created_atで判定）
+    # 新規追加情報源（DataSource.created_atとTrailCondition.updated_atの差が1日以内）は除外
     updated_sources = (
         TrailCondition.objects.filter(source__isnull=False)
         .values("source__name", "source__url1")
-        .annotate(latest_date=Max("updated_at"))
+        .annotate(
+            latest_date=Max("updated_at"),
+            source_created_at=F("source__created_at"),
+        )
         .order_by("-latest_date")
     )
+    # DataSourceの作成日とTrailConditionの最新更新日の差が1日以内のものを除外
+    updated_sources = [
+        item for item in updated_sources
+        if (item["latest_date"] - item["source_created_at"]).days > 1
+    ]
     last_checked_at = DataSource.objects.aggregate(Max("last_checked_at"))["last_checked_at__max"]
 
     seven_days_ago = timezone.now().date() - timedelta(days=7)
