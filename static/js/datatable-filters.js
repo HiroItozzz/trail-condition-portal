@@ -1,8 +1,8 @@
-var includeResolved = false;
+var excludeResolved = true; // デフォルトON: 解消済を除く
 var includeNewSources = true; // デフォルトON: 新規情報源を含む
 
 $.fn.dataTable.ext.search.push(function (settings, data) {
-  if (includeResolved) return true;
+  if (!excludeResolved) return true; // チェックOFF: 全て表示
 
   var resolvedAt = data[7] || "";
   if (!/\d/.test(resolvedAt)) return true;
@@ -14,7 +14,7 @@ $.fn.dataTable.ext.search.push(function (settings, data) {
   var today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  return resolved > today;
+  return resolved > today; // 未来の解消日 = 未解消として表示
 });
 
 // 新規情報源フィルタ
@@ -37,8 +37,8 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
   return true;
 });
 
-$(document).on("change", "#include-resolved", function () {
-  includeResolved = this.checked;
+$(document).on("change", "#exclude-resolved", function () {
+  excludeResolved = this.checked;
   table.draw();
 });
 
