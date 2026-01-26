@@ -26,5 +26,6 @@ $(document).on("change", "#sort-select", function () {
   if (!val) return;
 
   var [col, dir] = val.split("-");
-  table.order([parseInt(col), dir]).draw();
+  // 第1キーでソート、同じ値なら報告日降順（新しい順）
+  table.order([[parseInt(col), dir], [6, "desc"]]).draw();
 });
