@@ -84,7 +84,7 @@
             <span class="date-full">{{ item.updated_at|date:"Y/m/d"|default:"-" }}</span>
             <span class="date-short">{{ item.updated_at|date:"y/m/d"|default:"-" }}</span>
           </td>
-          <td data-detail-url="{% url 'trail-detail' item.id %}">
+          <td data-detail-url="{% url 'trail-detail' item.id %}" data-order="{{ item.mountain_name_raw }}">
             <a href="{% url 'trail-detail' item.id %}"
                class="hidden md:inline"
                style="font-weight: bold;
