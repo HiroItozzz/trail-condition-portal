@@ -217,6 +217,10 @@ class DbWriter:
 
         logger.info(f"\n--- データ照合開始: {self.source_record.name}")
         matches = []
+
+        # 新規情報源の初回実行判定
+        is_first_sync = not TrailCondition.objects.filter(source=self.source_record).exists()
+
         # ステップ1: 候補レコードを取得（sourceのみで絞る）
         candidates = list(
             TrailCondition.objects.filter(
@@ -287,6 +291,7 @@ class DbWriter:
                 source=self.source_record,
                 mountain_name_raw=ai_record.mountain_name_raw,
                 trail_name=ai_record.trail_name,
+                disabled=is_first_sync,  # 新規情報源の初回のみTrue
                 **generated_record_dict,
             )
 
