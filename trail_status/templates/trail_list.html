@@ -47,6 +47,10 @@
           display: none;
       }
 
+      .desktop-hint {
+          display: none;
+      }
+
       @media (max-width: 1024px) {
           .mobile-hint {
               display: block !important;
@@ -55,8 +59,20 @@
               line-height: 1.2;
           }
       }
+
+      @media (min-width: 1025px) {
+          .desktop-hint {
+              display: block !important;
+              margin: 0 0 4px 0;
+              font-size: 12px;
+              line-height: 1.3;
+          }
+      }
   </style>
-  <div class="text-gray-500 mobile-hint">👆 タップで詳細情報を表示</div>
+  <div class="text-gray-500">
+    <div class="mobile-hint">👆 タップで詳細表示 | 📊 項目名で並び替え</div>
+    <div class="desktop-hint">📊 項目名クリックで並び替え</div>
+  </div>
   <table id="trail-table"
          class="display compact cell-border w-full text-[13px] leading-tight nowrap"
          style="width:100%">
