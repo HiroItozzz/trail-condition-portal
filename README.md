@@ -61,7 +61,7 @@
 - [trafilatura](https://trafilatura.readthedocs.io/) - Web content extraction
 - [RapidFuzz](https://rapidfuzz.github.io/RapidFuzz/) - Fuzzy string matching
 - [SudachiPy](https://github.com/WorksApplications/SudachiPy) - Japanese morphological analyzer
-
+- [Datatables](https://datatables.net/) - Interactive table plugin for jQuery
 ---
 
 © 2026 HiroItozzz. All rights reserved.

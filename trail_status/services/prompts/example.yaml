@@ -1,20 +1,29 @@
 # プロンプトファイルの例
 # ファイル名: {id:03d}_{prompt_key}.yaml （例: 001_okutama_vc.yaml）
 
-prompt: 
+prompt: #|
+#  ## 今回の対象サイトは、**「サイト名」**です。
+
+#  ### サイトの特徴
+#  - このサイトは以下の4つの大まかなエリアに分けた上で情報を記載しています
+#    1.
+#    2.
+#    3.
+#    ...
+
 # AI設定（オプション）
 config:
   # 使用するAIモデル（CLI引数で上書き可能）
-  model: 
-  
+  model:
+
   # 生成の揺らぎ幅（0.0-2.0）
   # 事実抽出には低めの値を推奨
   # Gemini専用
-  temperature: 
-  
+  temperature:
+
   # Gemini思考予算（トークン数）
-  thinking_budget: 
-  
+  thinking_budget:
+
   # テンプレートプロンプトを使用するか
   use_template: true
 
