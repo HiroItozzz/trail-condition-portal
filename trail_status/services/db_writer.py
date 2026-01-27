@@ -124,11 +124,12 @@ class DbWriter:
     def persist_condition_and_usage(self, internal_data_list: list[TrailConditionSchemaInternal]) -> dict[str, Any]:
         """登山道状況とLLM使用履歴をDBに保存"""
 
-        # DB同期とLLM使用履歴記録
-        llm_stats: LlmStats = self.result.stats
         # 同期するレコードを照合
         to_update, to_create = self.reconcile_records(internal_data_list)
 
+        # DB同期とLLM使用履歴記録
+        llm_stats: LlmStats = self.result.stats
+        
         # 保存
         with transaction.atomic():
             updated_count, created_count = self._commit_trail_condition(to_update, to_create)

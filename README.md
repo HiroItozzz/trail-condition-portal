@@ -19,6 +19,16 @@
   <img src="docs/images/screenshot-mobile.png" width="180" alt="モバイル版">
 </p>
 
+## このサービスの効果
+1. **登山者側**
+  - 複数サイトを巡回する手間が不要
+  - 統一フォーマットで比較しやすい
+  - 危険情報の見落としリスクが減る
+2. **情報源サイト側**
+  - 自分たちが発信した情報がより多くの登山者に届く
+  - trail-info.jpからのリンクで公式サイトへの流入が期待できる
+  - 個別サイトでは実現困難な「横断検索・比較」が可能になる
+
 ## 特徴
 
 - **自動収集**: 公的機関サイトを定期的にスクレイピングし、最新情報を取得
@@ -51,7 +61,7 @@
 - [trafilatura](https://trafilatura.readthedocs.io/) - Web content extraction
 - [RapidFuzz](https://rapidfuzz.github.io/RapidFuzz/) - Fuzzy string matching
 - [SudachiPy](https://github.com/WorksApplications/SudachiPy) - Japanese morphological analyzer
-
+- [Datatables](https://datatables.net/) - Interactive table plugin for jQuery
 ---
 
 © 2026 HiroItozzz. All rights reserved.
