@@ -3,27 +3,28 @@
 {% block content %}
   <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">このサイトについて</h1>
-
     <section class="mb-8">
       <h2 class="text-2xl font-bold mb-4">🏔️ トレイルインフォとは</h2>
       <p class="mb-4 leading-relaxed">
         トレイルインフォは、自治体・省庁・ビジターセンターといった各機関が公開している登山道の危険情報を集約し、
         一覧で確認できるようにしたサービスです。
       </p>
-      <p class="leading-relaxed">
-        複数のサイトに散らばっている通行止め・落石・積雪などの情報を、ひとつの画面でまとめてチェックできます。
-      </p>
+      <p class="leading-relaxed">複数のサイトに散らばっている通行止め・落石・積雪などの情報を、ひとつの画面でまとめてチェックできます。</p>
     </section>
-
     <section class="mb-8">
       <h2 class="text-2xl font-bold mb-4">🔄 データの更新について</h2>
       <ul class="list-disc ml-6 space-y-2">
-        <li><strong>更新頻度：</strong>1日1回、各情報源サイトをチェックしています</li>
-        <li><strong>情報源：</strong>自治体、省庁ほか登山道状況を調査・報告している各公式サイト</li>
-        <li><strong>処理方法：</strong>AIが自動で情報を抽出・分類しています</li>
+        <li>
+          <strong>更新頻度：</strong>1日1回、各情報源サイトをチェックしています
+        </li>
+        <li>
+          <strong>情報源：</strong>自治体、省庁ほか登山道状況を調査・報告している各公式サイト
+        </li>
+        <li>
+          <strong>処理方法：</strong>AIが自動で情報を抽出・分類しています
+        </li>
       </ul>
     </section>
-
     <section class="mb-8">
       <h2 class="text-2xl font-bold mb-4">📋 表示項目の見方</h2>
       <div class="overflow-x-auto">
@@ -41,7 +42,10 @@
             </tr>
             <tr>
               <td class="border px-4 py-2 font-medium">情報取得日</td>
-              <td class="border px-4 py-2">当サイトがこの情報を取得・更新した日付</td>
+              <td class="border px-4 py-2">
+                当サイトがこの情報を取得・更新した日付
+                <p>（既存項目の場合は、「状況種別」「解消日」のどちらかの変更をAIが検知した場合に情報を取得・更新（※））</p>
+              </td>
             </tr>
             <tr>
               <td class="border px-4 py-2 font-medium">場所</td>
@@ -61,7 +65,7 @@
             </tr>
             <tr>
               <td class="border px-4 py-2 font-medium">報告日</td>
-              <td class="border px-4 py-2">情報源で報告・公開された日付</td>
+              <td class="border px-4 py-2">情報源で報告・公開された日付（わかる場合）</td>
             </tr>
             <tr>
               <td class="border px-4 py-2 font-medium">解消日</td>
@@ -74,8 +78,11 @@
           </tbody>
         </table>
       </div>
+      <div style="margin-top: 4px;">
+        <span class="font-bold">※情報取得日について</span>
+        <p>AI処理による関係上、稀に情報源での更新がない項目も更新扱いとなり、当サイトで取得される場合があります。</p>
+      </div>
     </section>
-
     <section class="mb-8">
       <h2 class="text-2xl font-bold mb-4">⚠️ ご利用にあたって</h2>
       <div class="mb-4">
@@ -89,7 +96,6 @@
         詳しい免責事項は<a href="{% url 'site-policy' %}" class="text-blue-600 hover:underline">サイトポリシー</a>をご確認ください。
       </p>
     </section>
-
     <div class="mt-8 text-sm text-gray-600">
       <a href="{% url 'trail-list' %}" class="text-blue-600 hover:underline">&larr; トップページに戻る</a>
     </div>
