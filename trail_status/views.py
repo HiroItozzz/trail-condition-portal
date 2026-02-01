@@ -121,3 +121,13 @@ def trail_redirect(request: HttpRequest) -> HttpResponseRedirect:
     return redirect("trail-list")
 
 
+def sources_list(request: HttpRequest) -> HttpResponse:
+    """情報源一覧ページ"""
+    sources = DataSource.objects.all().order_by("organization_type", "id")
+    context = {
+        "sources": sources,
+        **_get_sidebar_context(),
+    }
+    return render(request, "sources.html", context)
+
+

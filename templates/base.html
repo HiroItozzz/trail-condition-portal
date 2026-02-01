@@ -44,6 +44,18 @@
           href="{% static 'icons/favicon.png' %}">
     <link rel="stylesheet" href="{% static 'dist/main.css' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- 構造化データ (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "トレイルインフォ",
+      "alternateName": "登山道状況まとめ",
+      "url": "https://trail-info.jp/",
+      "description": "奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。",
+      "inLanguage": "ja-JP"
+    }
+    </script>
     <style>
         body {
             background-image: linear-gradient(to bottom,
@@ -78,12 +90,17 @@
               <span class="block text-center text-sm font-medium tracking-normal text-gray-500">登山道状況まとめ</span>
             </h1>
           </a>
-          <div class="px-4 pb-3 text-xs text-gray-600 leading-relaxed">
+          <div class="px-4 text-xs text-gray-600 leading-relaxed">
             各機関の公式情報を集約して掲載しています。
             <a href="{% url 'about' %}"
                class="font-bold text-blue-600 hover:underline">
               <p>詳しくはこちら</p>
             </a>
+            <div style="margin-top: 14px; margin-bottom: -8px;">
+              <a href="{% url 'sources-list' %}"
+                 class="sidebar-link"
+                 style="font-size: 14px; font-weight: 500;">📚 情報源リンク集</a>
+            </div>
           </a>
           <hr>
           <div class="mb-3">

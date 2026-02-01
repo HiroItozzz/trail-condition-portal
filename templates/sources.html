@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}情報源一覧 - トレイルインフォ{% endblock %}
+{% block content %}
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">情報源一覧</h1>
+    <p class="mb-6 leading-relaxed">
+      当サイトでは、以下の公的機関・団体が公開している登山道危険情報を収集しています。
+      各情報源の最新情報は、リンク先の公式サイトでご確認ください。
+    </p>
+    {% regroup sources by organization_type as sources_by_type %}
+    {% for type_group in sources_by_type %}
+      <section class="mb-8">
+        <div class="space-y-4">
+          {% for source in type_group.list %}
+            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+              <div class="mb-2">
+                <h3 class="text-lg font-bold text-blue-900">{{ source.name }}</h3>
+              </div>
+              <div class="mb-3">
+                <a href="{{ source.url1 }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="text-blue-600 hover:underline text-sm break-all">
+                  {{ source.url1 }}
+                  <span class="ml-1">↗</span>
+                </a>
+                {% if source.url2 %}
+                  <br>
+                  <a href="{{ source.url2 }}"
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     class="text-blue-600 hover:underline text-sm break-all">
+                    {{ source.url2 }}
+                    <span class="ml-1">↗</span>
+                  </a>
+                {% endif %}
+              </div>
+              <!-- 説明欄（後で追加予定） -->
+              <div class="text-sm text-gray-600 mt-2 p-3 bg-gray-50 rounded border border-gray-200">
+                <p class="text-xs text-gray-400 italic">※ 説明欄は準備中です</p>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% endfor %}
+    <div class="mt-8 text-sm text-gray-600">
+      <p class="mb-2">
+        情報源の追加リクエストや、掲載内容に関するお問い合わせは
+        <a href="https://x.com/trailinfo5"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="text-blue-600 hover:underline">@trailinfo5</a>
+        までお願いします。
+      </p>
+      <a href="{% url 'trail-list' %}" class="text-blue-600 hover:underline">&larr; トップページに戻る</a>
+    </div>
+  </div>
+{% endblock %}
