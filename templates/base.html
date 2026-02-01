@@ -24,139 +24,139 @@
           content="{% block twitter_title %}トレイルインフォ - 登山道状況まとめ{% endblock %}">
     <meta name="twitter:description"
           content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
-    <link rel="icon"
-          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏔️</text></svg>">
-      <link rel="stylesheet"
-            href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-      <link rel="stylesheet"
-            href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
-      {% load static %}
-      <link rel="stylesheet" href="{% static 'dist/main.css' %}">
-      <link rel="stylesheet" href="{% static 'css/style.css' %}">
-      <style>
-          body {
-              background-image: linear-gradient(to bottom,
-                  rgba(240, 244, 248, 0.9) 0%,
-                  rgba(248, 249, 250, 0.85) 40%,
-                  rgba(248, 249, 250, 0.65) 50%,
-                  rgba(248, 249, 250, 0.7) 60%,
-                  rgba(248, 249, 250, 0.7) 70%,
-                  rgba(248, 249, 250, 0.9) 80%,
-                  rgba(248, 249, 250, 0.95) 90%,
-                  rgba(248, 249, 250, 1) 95%,
-                  rgba(248, 249, 250, 1) 100%),
-              url('{% static "mountain.webp" %}');
-          }
+    <link rel="stylesheet"
+          href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet"
+          href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+    {% load static %}
+    <link rel="shortcut icon"
+          type="image/png"
+          href="{% static 'icons/favicon.png' %}">
+    <link rel="stylesheet" href="{% static 'dist/main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        body {
+            background-image: linear-gradient(to bottom,
+                rgba(240, 244, 248, 0.9) 0%,
+                rgba(248, 249, 250, 0.85) 40%,
+                rgba(248, 249, 250, 0.65) 50%,
+                rgba(248, 249, 250, 0.7) 60%,
+                rgba(248, 249, 250, 0.7) 70%,
+                rgba(248, 249, 250, 0.9) 80%,
+                rgba(248, 249, 250, 0.95) 90%,
+                rgba(248, 249, 250, 1) 95%,
+                rgba(248, 249, 250, 1) 100%),
+            url('{% static "mountain.webp" %}');
+        }
 
-          #sidebar {
-              background-image: url('{% static "mountain.webp" %}');
-          }
-      </style>
-    </head>
-    <body>
-      <button class="hamburger" id="hamburger">☰</button>
-      <div class="overlay" id="overlay"></div>
-      <div class="main-content">
-        <aside id="sidebar">
-          <div class="sidebar-scroll">
+        #sidebar {
+            background-image: url('{% static "mountain.webp" %}');
+        }
+    </style>
+  </head>
+  <body>
+    <button class="hamburger" id="hamburger">☰</button>
+    <div class="overlay" id="overlay"></div>
+    <div class="main-content">
+      <aside id="sidebar">
+        <div class="sidebar-scroll">
+          <a href="{% url 'trail-list' %}"
+             class="logo-link block py-6 px-0 no-underline transition-colors rounded-lg">
+            <h1 class="mx-auto text-2xl font-black tracking-tighter text-blue-900 whitespace-nowrap"
+                style="width: fit-content">
+              トレイルインフォ
+              <span class="block text-center text-sm font-medium tracking-normal text-gray-500">登山道状況まとめ</span>
+            </h1>
+          </a>
+          <div class="px-4 pb-3 text-xs text-gray-600 leading-relaxed">
+            各機関の公式情報を集約して掲載しています。
+            <a href="{% url 'about' %}"
+               class="font-bold text-blue-600 hover:underline">
+              <p>詳しくはこちら</p>
+            </a>
+          </a>
+          <hr>
+          <div class="mb-3">
             <a href="{% url 'trail-list' %}"
-               class="logo-link block p-4 no-underline transition-colors rounded-lg">
-              <h1 class="text-xl font-black tracking-tighter text-blue-900"
-                  style="width: fit-content">
-                トレイルインフォ
-                <span class="block text-center text-sm font-medium tracking-normal text-gray-500">登山道状況まとめ</span>
-              </h1>
-            </a>
-            <div class="px-4 pb-3 text-xs text-gray-600 leading-relaxed">
-              各機関の公式情報を集約して掲載しています。
-              <a href="{% url 'about' %}"
-                 class="font-bold text-blue-600 hover:underline">
-                <p>詳しくはこちら</p>
-              </a>
-            </a>
-            <hr>
-            <div class="mb-3">
-              <a href="{% url 'trail-list' %}"
-                 class="sidebar-link {% if not current_source and not current_area and not current_status %}active{% endif %}"
-                 style="font-size: 14px">すべての情報を表示</a>
-            </div>
-            <nav>
-              {% if recent_sources %}
-                <h3 style="margin-top: 8px; margin-bottom: 4px;">最近追加された情報源</h3>
-                <ul style="list-style: none; padding: 0; margin: 0;">
-                  {% regroup recent_sources by created_at|date:"m/d" as sources_by_date %}
-                  {% for date_group in sources_by_date %}
-                    <li style="margin-top: 0px;">
-                      <span class="text-xs text-gray-500">({{ date_group.grouper }})</span>
-                      {% for source in date_group.list %}
-                        <a href="{% url 'trail-list' %}?source={{ source.id }}"
-                           class="sidebar-link {% if current_source == source.id %}active{% endif %}"
-                           style="display: block; padding-left: 8px;">
-                          {{ source.name }}
-                        </a>
-                      {% endfor %}
-                    </li>
-                  {% endfor %}
-                </ul>
-                <hr style="margin-top: 12px;">
-              {% endif %}
-              {% if area_choices %}
-                <h3>山域別</h3>
-                <ul style="list-style: none; padding: 0; margin: 0;">
-                  {% for id, name in area_choices %}
-                    <li>
-                      <a href="{% url 'trail-list' %}?area={{ id }}"
-                         class="sidebar-link {% if current_area == id %}active{% endif %}">{{ name }}</a>
-                    </li>
-                  {% endfor %}
-                </ul>
-                <hr>
-              {% endif %}
-              {% if source_choices %}
-                <h3>サイト別</h3>
-                <ul style="list-style: none; padding: 0; margin: 0;">
-                  {% for id, name in source_choices %}
-                    <li>
-                      <a href="{% url 'trail-list' %}?source={{ id|stringformat:'s' }}"
-                         class="sidebar-link {% if current_source == id %}active{% endif %}">{{ name }}</a>
-                    </li>
-                  {% endfor %}
-                </ul>
-                <hr>
-              {% endif %}
-              {% if status_choices %}
-                <h3>状況別</h3>
-                <ul style="list-style: none; padding: 0; margin: 0;">
-                  {% for id, name in status_choices %}
-                    <li>
-                      <a href="{% url 'trail-list' %}?status={{ id }}"
-                         class="sidebar-link {% if current_status == id %}active{% endif %}">{{ name }}</a>
-                    </li>
-                  {% endfor %}
-                </ul>
-              {% endif %}
-            </nav>
+               class="sidebar-link {% if not current_source and not current_area and not current_status %}active{% endif %}"
+               style="font-size: 14px">すべての情報を表示</a>
           </div>
-        </aside>
-        <main id="content">
-          {% block content %}{% endblock %}
-          <footer class="bg-gray-50 border-t border-gray-200 mt-8">
-            <div class="mx-auto">
-              <div class="flex gap-4 justify-end text-xs text-gray-600"
-                   style="text-align: center">
-                <a href="/site-policy/" class="hover:text-blue-600 transition-colors">サイトポリシー</a>
-                <span class="text-gray-500">安全な登山をお楽しみください 🏔️</span>
-                <span>&copy; 2026 トレイルインフォ</span>
-              </div>
-            </div>
-          </footer>
+          <nav>
+            {% if recent_sources %}
+              <h3 style="margin-top: 8px; margin-bottom: 4px;">最近追加された情報源</h3>
+              <ul style="list-style: none; padding: 0; margin: 0;">
+                {% regroup recent_sources by created_at|date:"m/d" as sources_by_date %}
+                {% for date_group in sources_by_date %}
+                  <li style="margin-top: 0px;">
+                    <span class="text-xs text-gray-500">({{ date_group.grouper }})</span>
+                    {% for source in date_group.list %}
+                      <a href="{% url 'trail-list' %}?source={{ source.id }}"
+                         class="sidebar-link {% if current_source == source.id %}active{% endif %}"
+                         style="display: block;
+                                padding-left: 8px">{{ source.name }}</a>
+                    {% endfor %}
+                  </li>
+                {% endfor %}
+              </ul>
+              <hr style="margin-top: 12px;">
+            {% endif %}
+            {% if area_choices %}
+              <h3>山域別</h3>
+              <ul style="list-style: none; padding: 0; margin: 0;">
+                {% for id, name in area_choices %}
+                  <li>
+                    <a href="{% url 'trail-list' %}?area={{ id }}"
+                       class="sidebar-link {% if current_area == id %}active{% endif %}">{{ name }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+              <hr>
+            {% endif %}
+            {% if source_choices %}
+              <h3>サイト別</h3>
+              <ul style="list-style: none; padding: 0; margin: 0;">
+                {% for id, name in source_choices %}
+                  <li>
+                    <a href="{% url 'trail-list' %}?source={{ id|stringformat:'s' }}"
+                       class="sidebar-link {% if current_source == id %}active{% endif %}">{{ name }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+              <hr>
+            {% endif %}
+            {% if status_choices %}
+              <h3>状況別</h3>
+              <ul style="list-style: none; padding: 0; margin: 0;">
+                {% for id, name in status_choices %}
+                  <li>
+                    <a href="{% url 'trail-list' %}?status={{ id }}"
+                       class="sidebar-link {% if current_status == id %}active{% endif %}">{{ name }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </nav>
         </div>
-        <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-        <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-        <script src="{% static 'js/datatable.js' %}"></script>
-        <script src="{% static 'js/datatable-filters.js' %}"></script>
-        <script src="{% static 'js/datatable-ui.js' %}"></script>
-        <script src="{% static 'js/sidebar.js' %}"></script>
-      </body>
-    </html>
+      </aside>
+      <main id="content">
+        {% block content %}{% endblock %}
+        <footer class="bg-gray-50 border-t border-gray-200 mt-8">
+          <div class="mx-auto">
+            <div class="flex gap-4 justify-end text-xs text-gray-600"
+                 style="text-align: center">
+              <a href="/site-policy/" class="hover:text-blue-600 transition-colors">サイトポリシー</a>
+              <span class="text-gray-500">安全な登山をお楽しみください 🏔️</span>
+              <span>&copy; 2026 トレイルインフォ</span>
+            </div>
+          </div>
+        </footer>
+      </div>
+      <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+      <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+      <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+      <script src="{% static 'js/datatable.js' %}"></script>
+      <script src="{% static 'js/datatable-filters.js' %}"></script>
+      <script src="{% static 'js/datatable-ui.js' %}"></script>
+      <script src="{% static 'js/sidebar.js' %}"></script>
+    </body>
+  </html>
