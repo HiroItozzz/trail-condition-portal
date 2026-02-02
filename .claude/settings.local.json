@@ -3,7 +3,8 @@
     "allow": [
       "Bash(curl:*)",
       "Bash(python:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(docker compose exec:*)"
     ]
   },
   "spinnerTipsEnabled": true
