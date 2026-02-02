@@ -19,7 +19,7 @@ class Command(BaseCommand):
 
             # pg_dumpでバックアップ作成
             subprocess.run(
-                ["pg_dump", "--format=custom", "--file", local_path],
+                ["pg_dump", "--dbname", os.environ["DATABASE_URL"], "--format=custom", "--file", local_path],
                 check=True,
                 capture_output=True,
                 text=True,
