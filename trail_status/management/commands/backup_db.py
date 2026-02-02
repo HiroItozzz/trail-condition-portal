@@ -10,8 +10,8 @@ class Command(BaseCommand):
     help = "PostgreSQLデータベースのバックアップをCloud Storageに保存"
 
     def handle(self, *args, **options):
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_file = f"backup_{timestamp}.dump"
+        timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+        backup_file = f"{timestamp}_backup.dump"
         local_path = f"/tmp/{backup_file}"
 
         try:
