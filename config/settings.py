@@ -102,7 +102,7 @@ else:
 DATABASES = {
     "default": dj_database_url.config(
         conn_max_age=600,
-        conn_health_checks=True,
+        conn_health_checks=False,
     ),
 }
 if not DATABASES["default"]:

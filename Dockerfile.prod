@@ -47,6 +47,9 @@ CMD ["sh", "-c", "uv run --frozen --no-dev gunicorn config.wsgi:application --bi
 
 # ========== Stage 6: Batch (バッチジョブ用) ==========
 FROM python-base AS batch
+RUN apt-get update && \
+    apt-get install -y postgresql-client && \
+    rm -rf /var/lib/apt/lists/*
 COPY --from=batch-deps /code/.venv /code/.venv
 COPY . .
 CMD ["uv", "run", "--frozen", "--no-dev", "manage.py", "help"]

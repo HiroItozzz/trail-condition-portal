@@ -54,7 +54,7 @@ def _get_sidebar_context() -> dict:
 
 
 def trail_list(request: HttpRequest) -> HttpResponse:
-    conditions = TrailCondition.objects.filter(disabled=False).select_related("source")
+    conditions = TrailCondition.objects.filter(disabled=False).prefetch_related("source")
 
     # クエリパラメータによる絞り込み
     source_filter = request.GET.get("source")
