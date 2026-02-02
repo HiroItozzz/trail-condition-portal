@@ -33,6 +33,9 @@
                     {{ source.url2 }}
                     <span class="ml-1">↗</span>
                   </a>
+                  {% if source.id == 1 %}
+                    <span class="text-xs text-gray-500 ml-2">(トップページ)</span>
+                  {% endif %}
                 {% endif %}
               </div>
               <!-- 説明欄（後で追加予定） -->
