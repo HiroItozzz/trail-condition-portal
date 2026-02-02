@@ -60,6 +60,10 @@ class Command(BaseCommand):
         if source_id:
             try:
                 source = DataSource.objects.get(id=source_id)
+                if source.data_format != "WEB":
+                    logger.error(f"情報源のデータ形式が'WEB'ではありません: {source_id}: {source.data_format}")
+                    self.stdout.write(self.style.ERROR(f"情報源のデータ形式が'WEB'ではありません: {source_id}: {source.data_format}"))
+                    return
                 model_data_single = SourceSchemaSingle(
                     id=source.id,
                     name=source.name,
@@ -79,7 +83,7 @@ class Command(BaseCommand):
                 SourceSchemaSingle(
                     id=s.id, name=s.name, url1=s.url1, prompt_key=s.prompt_key, content_hash=s.content_hash
                 )
-                for s in DataSource.objects.all()
+                for s in DataSource.objects.filter(data_format="WEB")
             ]
             self.stdout.write(f"全ての情報源を処理: {len(source_data_list)}件")
 
