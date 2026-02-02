@@ -12,6 +12,8 @@ urlpatterns = [
     path("about/", TemplateView.as_view(template_name="about.html"), name="about"),
     # サイトポリシー
     path("site-policy/", TemplateView.as_view(template_name="site-policy.html"), name="site-policy"),
+    # 情報源一覧
+    path("sources/", views.sources_list, name="sources-list"),
     # リダイレクト
     path("trails", views.trail_redirect, name="trail-redirect")
 ]

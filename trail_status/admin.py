@@ -93,6 +93,7 @@ class TrailConditionAdmin(admin.ModelAdmin):
                     "description",
                     "reported_at",
                     "resolved_at",
+                    "comment",
                 )
             },
         ),
