@@ -132,3 +132,6 @@ def sources_list(request: HttpRequest) -> HttpResponse:
         **_get_sidebar_context(),
     }
     return render(request, "sources.html", context)
+
+def blogs_list(request: HttpRequest) -> HttpResponse:
+    pass
