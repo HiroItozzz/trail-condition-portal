@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ item.title }} - トレイルインフォ{% endblock %}
+{% block title %}{{ item.mountain_name_raw }} {{ item.trail_name }} {{ item.get_status_display }} - トレイルインフォ{% endblock %}
 {% block content %}
   <style>
       @media (min-width: 768px) {
