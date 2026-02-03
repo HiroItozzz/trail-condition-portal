@@ -1,5 +1,10 @@
 {% extends 'base.html' %}
-{% block title %}{{ item.mountain_name_raw }} {{ item.trail_name }} {{ item.get_status_display }} - トレイルインフォ{% endblock %}
+{% block title %}
+  {{ item.mountain_name_raw }} {{ item.trail_name }} {{ item.get_status_display }} - トレイルインフォ
+{% endblock %}
+{% block meta_description %}
+  {{ item.trail_name }}の登山道状況。{{ item.title }} {{ item.description|truncatechars:50 }}
+{% endblock %}
 {% block content %}
   <style>
       @media (min-width: 768px) {

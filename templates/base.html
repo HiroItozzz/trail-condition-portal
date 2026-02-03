@@ -20,7 +20,7 @@
       {% block title %}トレイルインフォ - 登山道状況まとめ{% endblock %}
     </title>
     <meta name="description"
-          content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
+          content="{% block meta_description %}奥多摩・丹沢等の登山道状況を公的機関から自動収集。通行止め・通行注意等の最新状況をまとめて確認できます。{% endblock %}">
     <!-- Canonical URL -->
     <link rel="canonical"
           href="{% block canonical_url %}https://trail-info.jp/{% endblock %}">
@@ -28,7 +28,7 @@
     <meta property="og:title"
           content="{% block og_title %}トレイルインフォ - 登山道状況まとめ{% endblock %}">
     <meta property="og:description"
-          content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
+          content="奥多摩・丹沢等の登山道状況を公的機関から自動収集。通行止め・通行注意等の最新状況をまとめて確認できます。">
     <meta property="og:type" content="website">
     <meta property="og:url"
           content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
@@ -44,7 +44,7 @@
     <meta name="twitter:title"
           content="{% block twitter_title %}トレイルインフォ - 登山道状況まとめ{% endblock %}">
     <meta name="twitter:description"
-          content="奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。">
+          content="奥多摩・丹沢等の登山道状況を公的機関から自動収集。通行止め・通行注意等の最新状況をまとめて確認できます。">
     <meta name="twitter:image"
           content="https://trail-info.jp{% static 'og_image.png' %}">
     <link rel="stylesheet"
