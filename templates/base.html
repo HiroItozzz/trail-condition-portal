@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="ja">
   <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-26CGC9JY5Y"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'G-26CGC9JY5Y');
+    </script>
     {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -46,15 +58,15 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <!-- 構造化データ (JSON-LD) -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "トレイルインフォ",
-      "alternateName": "登山道状況まとめ",
-      "url": "https://trail-info.jp/",
-      "description": "奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。",
-      "inLanguage": "ja-JP"
-    }
+        {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "トレイルインフォ",
+            "alternateName": "登山道状況まとめ",
+            "url": "https://trail-info.jp/",
+            "description": "奥多摩・丹沢等の登山道危険情報を公的機関から自動収集。通行止め・落石・積雪等の最新状況をまとめて確認できます。",
+            "inLanguage": "ja-JP"
+        }
     </script>
     <style>
         body {
@@ -99,7 +111,8 @@
             <div style="margin-top: 14px; margin-bottom: -8px;">
               <a href="{% url 'sources-list' %}"
                  class="sidebar-link"
-                 style="font-size: 14px; font-weight: 500;">📚 情報源リンク集</a>
+                 style="font-size: 14px;
+                        font-weight: 500">📚 情報源リンク集</a>
             </div>
           </a>
           <hr>
