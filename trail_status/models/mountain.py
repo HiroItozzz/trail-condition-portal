@@ -14,6 +14,21 @@ class AreaName(models.TextChoices):
     DAIBOSATSU = "DAIBOSATSU", "大菩薩連嶺"
     SAGAMIKO = "SAGAMIKO", "相模湖"
 
+    @classmethod
+    def get_yamareco_area_id(cls, area_code: str) -> str | None:
+        """ヤマレコのエリアIDを取得"""
+        yamareco_map = {
+            "OKUTAMA": "306",
+            "TANZAWA": "307",
+            "TAKAO": "306",
+            "HAKONE": "309",
+            "OKUMUSASHI": "305",
+            "OKUCHICHIBU": "310",
+            "DAIBOSATSU": "310",
+            "SAGAMIKO": "306",
+        }
+        return yamareco_map.get(area_code)
+
 
 class MountainGroup(models.Model):
     """

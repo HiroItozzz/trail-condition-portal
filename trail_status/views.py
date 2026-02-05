@@ -100,8 +100,15 @@ def trail_list(request: HttpRequest) -> HttpResponse:
 
 
 def trail_detail(request: HttpRequest, pk: int) -> HttpResponse:
+    import urllib.parse
+
     item = get_object_or_404(TrailCondition, pk=pk)
-    context = {"item": item, **_get_sidebar_context()}
+    # ヤマレコ検索リンク
+    encoded_m_name = urllib.parse.quote(item.mountain_name_raw, encoding="euc-jp")
+    yamareco_area_id = AreaName.get_yamareco_area_id(item.area)
+    yamareco_url = f"https://www.yamareco.com/modules/yamareco/search_record.php?place={encoded_m_name}&area={yamareco_area_id}&isphoto=1&request=1&submit=submit"
+
+    context = {"item": item, "yamareco_url": yamareco_url, **_get_sidebar_context()}
     return render(request, "detail.html", context=context)
 
 
