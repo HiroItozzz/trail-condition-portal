@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}
-  {{ item.mountain_name_raw }} {{ item.trail_name }} {{ item.get_status_display }} - トレイルインフォ
+  {{ item.mountain_name_raw }} {{ item.trail_name }} {{ item.get_status_display|slice:"2:" }} - トレイルインフォ
 {% endblock %}
-{% block meta_description %}
-  {{ item.trail_name }}の登山道状況。{{ item.title }} {{ item.description|truncatechars:50 }}
-{% endblock %}
+{# djlint:off #}
+{% block meta_description %}{{ item.trail_name }}の登山道状況。{{ item.title }} {{ item.description|truncatechars:50 }}{% endblock %}
+{% block canonical_url %}https://trail-info.jp/trails/{{ item.id }}/{% endblock %}
+{# djlint:on #}
 {% block content %}
   <style>
       @media (min-width: 768px) {
