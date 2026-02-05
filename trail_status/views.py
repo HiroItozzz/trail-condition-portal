@@ -5,20 +5,10 @@ from django.db.models import Count, F, Max
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.generic.base import RedirectView
 
 from .models.condition import AreaName, DataSource, StatusType, TrailCondition
 
 logger = logging.getLogger(__name__)
-
-
-class ArticleCounterRedirectView(RedirectView):
-    permanent = False
-    query_string = True
-    pattern_name = "condition-detail"
-
-    def get_redirect_url(self, *args, **kwargs):
-        return super().get_redirect_url(*args, **kwargs)
 
 
 def _get_sidebar_context() -> dict:
@@ -72,7 +62,9 @@ def trail_list(request: HttpRequest) -> HttpResponse:
     conditions = conditions.order_by("-reported_at", "-created_at")
 
     # 最新の内容更新日（全情報源含む）
-    latest_update_date = TrailCondition.objects.filter(source__isnull=False).aggregate(Max("updated_at"))["updated_at__max"]
+    latest_update_date = TrailCondition.objects.filter(source__isnull=False).aggregate(Max("updated_at"))[
+        "updated_at__max"
+    ]
 
     # 1週間以内の更新リスト（新規追加情報源は除外）
     # 新規追加情報源 = DataSource.created_atとTrailCondition.updated_atの差が1日以内
@@ -87,8 +79,7 @@ def trail_list(request: HttpRequest) -> HttpResponse:
     )
     # DataSourceの作成日とTrailConditionの最新更新日の差が1日以内のものを除外
     updated_sources = [
-        item for item in updated_sources_query
-        if (item["latest_date"] - item["source_created_at"]).days > 1
+        item for item in updated_sources_query if (item["latest_date"] - item["source_created_at"]).days > 1
     ]
 
     last_checked_at = DataSource.objects.aggregate(Max("last_checked_at"))["last_checked_at__max"]
@@ -113,6 +104,7 @@ def trail_detail(request: HttpRequest, pk: int) -> HttpResponse:
     context = {"item": item, **_get_sidebar_context()}
     return render(request, "detail.html", context=context)
 
+
 # クエリパラメータからパスパラメータへのリダイレクト
 def trail_redirect(request: HttpRequest) -> HttpResponseRedirect:
     trail_id = request.GET.get("id")
@@ -129,5 +121,3 @@ def sources_list(request: HttpRequest) -> HttpResponse:
         **_get_sidebar_context(),
     }
     return render(request, "sources.html", context)
-
-

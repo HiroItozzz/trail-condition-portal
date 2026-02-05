@@ -146,3 +146,4 @@ LANGSMITH_API_KEY=...       # LangSmithトレーシング（任意）
 - AI解析は変更検知時のみ実行（コスト最適化）
 - プロンプトファイル名規則: `{source_id:03d}_{prompt_key}.yaml`
 - 本番ログはコンソール出力、開発時のみファイル出力（`logs/django.log`）
+- **Supabase + select_related問題**: ForeignKeyの取得には`select_related`ではなく`prefetch_related`を使用すること。Supabase内部処理との相性で`select_related`を使うと60秒待たされる問題がある
