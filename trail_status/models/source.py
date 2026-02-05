@@ -27,10 +27,11 @@ class DataSource(models.Model):
     )
     url1 = models.URLField("URL①", max_length=500)
     url2 = models.URLField("URL②", max_length=500, blank=True)
+    description = models.TextField("詳細説明",blank=True, help_text="""情報源一覧ページに表示される文章""")
     data_format = models.CharField(
         "データ形式",
         max_length=50,
-        choices=[("WEB", "Webページ")],
+        choices=[("WEB", "Webページ"), ("BLOG","巡視ブログ")],
         default="WEB",
     )
 

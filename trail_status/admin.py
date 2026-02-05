@@ -22,13 +22,14 @@ class DataSourceAdmin(admin.ModelAdmin):
     ]
     list_filter = ["organization_type", ("last_scraped_at", admin.DateFieldListFilter)]
     search_fields = ["name"]
-    readonly_fields = ["last_scraped_at"]
+    readonly_fields = ["last_scraped_at", "last_checked_at", "created_at", "updated_at"]
 
     fieldsets = (
-        ("基本情報", {"fields": ("name", "organization_type", "prefecture_code", "prompt_key")}),
+        ("基本情報", {"fields": ("name", "organization_type", "prefecture_code", "prompt_key", "description")}),
         ("URL", {"fields": ("url1", "url2")}),
         ("データ形式", {"fields": ("data_format",)}),
-        ("ハッシュ追跡", {"fields": ("content_hash", "last_scraped_at"), "classes": ("collapse",)}),
+        ("ハッシュ追跡", {"fields": ("content_hash", "last_scraped_at", "last_checked_at")}),
+        ("メタデータ", {"fields": ("created_at", "updated_at")}),
     )
 
 

@@ -1,4 +1,19 @@
 {% extends 'base.html' %}
+{% block title %}
+  {% if current_area %}
+    {{ conditions.0.get_area_display }}の最新登山道状況一覧 - トレイルインフォ
+  {% elif current_source %}
+    {{ conditions.0.source.name }}発表の最新登山道状況一覧 - トレイルインフォ
+  {% elif current_status %}
+    東京近郊の登山道{{ conditions.0.get_status_display|slice:"2:" }}一覧 - トレイルインフォ
+  {% else %}
+    トレイルインフォ - 登山道状況まとめ
+  {% endif %}
+{% endblock title %}
+{# djlint:off #}
+{% block meta_description %}{% if current_area %}{{ conditions.0.get_area_display }}周辺の登山道状況一覧。通行止め・通行注意等の最新情報を公的機関から自動収集しています。{% elif current_source %}{{ conditions.0.source.name }}発表の登山道状況一覧。通行止め・通行注意等の最新情報をわかりやすく確認できます。{% elif current_status %}東京近郊の登山道{{ conditions.0.get_status_display|slice:"2:" }}一覧。最新の情報をまとめて確認できます。{% else %}奥多摩・丹沢周辺の登山道状況一覧。通行止め・通行注意等の最新状況を自動収集しています。{% endif %}{% endblock meta_description %}
+{% block canonical_url %}{% if current_area %}https://trail-info.jp/?area={{ current_area }}{% elif current_source %}https://trail-info.jp/?source={{ current_source }}{% elif current_status %}https://trail-info.jp/?status={{ current_status }}{% else %}https://trail-info.jp/{% endif %}{% endblock canonical_url %}
+{# djlint:on #}
 {% block content %}
   <div class="mb-3 info-box bg-[#f8f8f8] border border-[#ddd] rounded"
        style="padding: 4px 12px">

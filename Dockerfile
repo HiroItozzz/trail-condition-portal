@@ -10,6 +10,11 @@ COPY pyproject.toml uv.lock* ./
 
 # システム環境に直接インストール
 ENV UV_PROJECT_ENVIRONMENT=/usr/local
+
+RUN apt-get update && \
+    apt-get install -y postgresql-client && \
+    rm -rf /var/lib/apt/lists/*
+    
 RUN uv sync --frozen --extra batch
 
 COPY . .

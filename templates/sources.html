@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}情報源一覧 - トレイルインフォ{% endblock %}
+{% block meta_description %}奥多摩・丹沢周辺の登山道状況を調査している各自治体・機関の公式サイトへのリンク集です。{% endblock %}
 {% block content %}
   <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">情報源一覧</h1>
     <p class="mb-6 leading-relaxed">
-      当サイトでは、以下の公的機関・団体が公開している登山道危険情報を収集しています。
+      当サイトでは、以下の公的機関・団体が公開している登山道状況を収集しています。
       各情報源の最新情報は、リンク先の公式サイトでご確認ください。
     </p>
     {% regroup sources by organization_type as sources_by_type %}
@@ -33,9 +34,7 @@
                     {{ source.url2 }}
                     <span class="ml-1">↗</span>
                   </a>
-                  {% if source.id == 1 %}
-                    <span class="text-xs text-gray-500 ml-2">(トップページ)</span>
-                  {% endif %}
+                  {% if source.id == 1 %}<span class="text-xs text-gray-500 ml-2">(トップページ)</span>{% endif %}
                 {% endif %}
               </div>
               <!-- 説明欄（後で追加予定） -->
