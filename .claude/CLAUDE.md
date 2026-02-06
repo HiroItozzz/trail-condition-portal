@@ -147,3 +147,13 @@ LANGSMITH_API_KEY=...       # LangSmithトレーシング（任意）
 - プロンプトファイル名規則: `{source_id:03d}_{prompt_key}.yaml`
 - 本番ログはコンソール出力、開発時のみファイル出力（`logs/django.log`）
 - **Supabase + select_related問題**: ForeignKeyの取得には`select_related`ではなく`prefetch_related`を使用すること。Supabase内部処理との相性で`select_related`を使うと60秒待たされる問題がある
+
+## External APIs
+
+### ヤマレコAPI
+
+山名から座標・標高・周辺施設（山小屋、水場、危険個所等）を取得できる外部API。
+- 詳細ページでヤマレコ検索リンクを提供（`AreaName.get_yamareco_area_id()`でエリアID変換）
+- 将来的に「地図から探す」UI実装の基盤として活用予定
+- テストツール: `tools/yamareco_poi_search.py`
+- **詳細ドキュメント**: [yamareco-api.md](../docs/my_docs/yamareco-api.md)
