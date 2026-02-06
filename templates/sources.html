@@ -21,7 +21,8 @@
                 <a href="{{ source.url1 }}"
                    target="_blank"
                    rel="noopener noreferrer"
-                   class="text-blue-600 hover:underline text-sm break-all">
+                   class="text-blue-600 hover:underline text-sm break-all"
+                   onclick="gtag('event', 'source_click', { 'source_id': {{ source.id }}, 'source_name': '{{ source.name }}' });">
                   {{ source.url1 }}
                   <span class="ml-1">↗</span>
                 </a>
