@@ -34,7 +34,7 @@ sidebar.addEventListener("click", function (e) {
 // スワイプジェスチャー
 (function () {
   const DEAD_ZONE = 40; // ブラウザ戻るジェスチャーと競合する範囲(px)を無視
-  const EDGE_ZONE = 80; // サイドバー開始を検知する範囲の外端(px)
+  const EDGE_ZONE = 120; // サイドバー開始を検知する範囲の外端(px)
   const SIDEBAR_WIDTH = 250;
   const THRESHOLD = 0.3; // 開閉判定の閾値（幅の30%）
 
