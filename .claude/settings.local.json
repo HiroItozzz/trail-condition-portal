@@ -4,7 +4,8 @@
       "Bash(curl:*)",
       "Bash(python:*)",
       "WebSearch",
-      "Bash(docker compose exec:*)"
+      "Bash(docker compose exec:*)",
+      "WebFetch(domain:pqina.nl)"
     ]
   },
   "spinnerTipsEnabled": true
