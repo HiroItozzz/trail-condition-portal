@@ -33,7 +33,7 @@ sidebar.addEventListener("click", function (e) {
 
 // スワイプジェスチャー
 (function () {
-  const EDGE_ZONE = 25; // 左端からのスワイプ検知幅(px)
+  const EDGE_ZONE = 50; // 左端からのスワイプ検知幅(px) ※ブラウザ戻るゾーン(~40dp)より広く
   const SIDEBAR_WIDTH = 250;
   const THRESHOLD = 0.3; // 開閉判定の閾値（幅の30%）
 
