@@ -118,7 +118,8 @@
       <div>
         <a href="{{ yamareco_url }}"
            target="_blank"
-           class="text-blue-600 hover:underline">
+           class="text-blue-600 hover:underline"
+           onclick="gtag('event', 'yamareco_click', { 'trail_id': {{ item.id }}, 'mountain_name': '{{ item.mountain_name_raw }}' });">
           {{ item.mountain_name_raw }}の最新ユーザー投稿
           <small class="text-blue-500">↗</small>
         </a>を<span style="white-space: nowrap">ヤマレコで検索</span>
