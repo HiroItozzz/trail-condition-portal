@@ -33,7 +33,8 @@ sidebar.addEventListener("click", function (e) {
 
 // スワイプジェスチャー
 (function () {
-  const EDGE_ZONE = 50; // 左端からのスワイプ検知幅(px) ※ブラウザ戻るゾーン(~40dp)より広く
+  const DEAD_ZONE = 40; // ブラウザ戻るジェスチャーと競合する範囲(px)を無視
+  const EDGE_ZONE = 80; // サイドバー開始を検知する範囲の外端(px)
   const SIDEBAR_WIDTH = 250;
   const THRESHOLD = 0.3; // 開閉判定の閾値（幅の30%）
 
@@ -73,7 +74,8 @@ sidebar.addEventListener("click", function (e) {
       isOpen = sidebar.classList.contains("open");
 
       // 左端スワイプ(開く)またはサイドバー/オーバーレイ上(閉じる)
-      if (!isOpen && touchStartX <= EDGE_ZONE) {
+      // DEAD_ZONE以内はブラウザ戻るジェスチャーと競合するため無視
+      if (!isOpen && touchStartX > DEAD_ZONE && touchStartX <= EDGE_ZONE) {
         tracking = true;
       } else if (isOpen) {
         tracking = true;
