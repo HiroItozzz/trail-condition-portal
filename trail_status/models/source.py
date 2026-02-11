@@ -1,5 +1,6 @@
 from django.db import models
 
+from .mountain import AreaName
 from .utils import ChoiceManager
 
 
@@ -27,13 +28,15 @@ class DataSource(models.Model):
     )
     url1 = models.URLField("URL①", max_length=500)
     url2 = models.URLField("URL②", max_length=500, blank=True)
-    description = models.TextField("詳細説明",blank=True, help_text="""情報源一覧ページに表示される文章""")
+    description = models.TextField("詳細説明", blank=True, help_text="""情報源一覧ページに表示される文章""")
     data_format = models.CharField(
         "データ形式",
         max_length=50,
-        choices=[("WEB", "Webページ"), ("BLOG","巡視ブログ")],
+        choices=[("WEB", "Webページ"), ("BLOG", "巡視ブログ")],
         default="WEB",
     )
+
+    area_name = models.CharField("山域", max_length=20, choices=AreaName.choices, default="", blank=True, help_text="""巡視ブログのエリア名分類用に使用""")  # 例: 奥多摩
 
     # ハッシュベース重複検出
     content_hash = models.CharField(
