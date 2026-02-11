@@ -1,20 +1,37 @@
 import asyncio
+import html
 import logging
+import re
 from datetime import datetime
+from datetime import timezone as dt_timezone
 from pathlib import Path
 
 import feedparser
+from feedparser import FeedParserDict
 from httpx import AsyncClient, HTTPStatusError
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 
 logger = logging.getLogger(__name__)
 
 
-class BlogFeed(BaseModel):
-    title: str
-    summary: str
-    published_at: datetime
-    url: str
+class BlogFeedSchema(BaseModel):
+    title: str = Field(description="記事のタイトル", max_length=100)
+    summary: str = Field(description="記事の冒頭", max_length=200)
+    url: str = Field(description="記事へのリンクURL", max_length=500)
+    published_at: datetime = Field(description="投稿日時")
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize(cls, values: dict) -> dict:
+        for key in ("title", "summary"):
+            v = values.get(key, "")
+            v = html.unescape(v)
+            v = re.sub(r"<.*?>", "", v)
+            v = v.replace("\n", " ").replace("\\n", " ").replace("\u3000", " ")
+            values[key] = v
+        values["title"] = values["title"][:100]
+        values["summary"] = values["summary"][:200]
+        return values
 
 
 class BlogFetcher:
@@ -27,7 +44,7 @@ class BlogFetcher:
         self.id = id
         self.name = name
 
-    async def __call__(self, client: AsyncClient) -> list[BlogFeed]:
+    async def __call__(self, client: AsyncClient) -> list[BlogFeedSchema]:
         xml = await self.fetch_url(client)
         return self.parse_feed(xml)
 
@@ -44,15 +61,15 @@ class BlogFetcher:
             raise e
 
     @staticmethod
-    def parse_feed(xml: str) -> list[BlogFeed]:
-        data = feedparser.parse(xml)
+    def parse_feed(xml: str) -> list[BlogFeedSchema]:
+        data: FeedParserDict = feedparser.parse(xml)
         feed_list = []
         for entry in data.entries:
             feed_list.append(
-                BlogFeed(
+                BlogFeedSchema(
                     title=entry.title,
-                    summary=entry.summary[:100],
-                    published_at=datetime(*entry.published_parsed[:6]),
+                    summary=entry.summary,
+                    published_at=datetime(*entry.published_parsed[:6], tzinfo=dt_timezone.utc),
                     url=entry.link,
                 )
             )

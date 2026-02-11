@@ -2,12 +2,14 @@ import asyncio
 import logging
 from typing import Any
 
+from django.utils import timezone
 from django.core.management.base import BaseCommand
+from django.db import transaction
 from httpx import AsyncClient
 
+from trail_status.models.feed import BlogFeed
 from trail_status.models.source import DataSource
-from trail_status.services.blog_fetcher import BlogFeed, BlogFetcher
-from trail_status.services.types import PatrolBlogDict
+from trail_status.services.blog_fetcher import BlogFeedSchema, BlogFetcher
 
 logger = logging.getLogger(__name__)
 
@@ -19,30 +21,51 @@ class Command(BaseCommand):
         logger.info("blog_syncコマンド開始")
 
         sources = DataSource.objects.filter(data_format="BLOG")
-        source_data_list: list[PatrolBlogDict] = [
-            {"id": source.id, "name": source.name, "url": source.url1} for source in sources
-        ]
-        self.stdout.write(f"全てのWEB情報源を処理: {len(source_data_list)}件")
+        self.stdout.write(f"全てのWEB情報源を処理: {len(sources)}件")
 
         # メイン処理
-        results: list[BlogFeed | BaseException] = asyncio.run(self.get_all_feed(source_data_list))
+        results: list[list[BlogFeedSchema] | BaseException] = asyncio.run(self.get_all_feeds(sources))
 
-        for source_data, result in zip(source_data_list, results):
-            if hasattr(result, BaseException):
-                logger.error(f"情報源{source_data["id"]}の処理でエラー発生。詳細: {result}")
+        now = timezone.now()
+        for source, result in zip(sources, results):
+            if isinstance(result, BaseException):
+                logger.error(f"情報源{source.id}の処理でエラー発生。詳細: {result}")
                 continue
             
-            取得したブログフィードをブログフィードモデルで永続化するコード
-            更新有無の判定:　既存ブログフィード集合-取得した集合の差集合
-            取得したsummaryの正規化1: re.sub(re.compile('<.*?>'), '', str3)
-            取得したsummaryの正規化2:
-            data = parsed.replace("\\n","").replace("\n","").replace("\u3000","")
+            existing_data:BlogFeed = BlogFeed.objects.filter(source__id=source.id)
+            
+            # フィードのURLで既存データと照合
+            existing_urls = {url for url in existing_data.url}
+            obtained_urls = {feed.url for feed in result}
+            new_urls = obtained_urls - existing_urls
+
+            # レコード新規作成処理
+            new_records= []
+            for feed in result:
+                if feed.url in new_urls:    
+                    new_records.append(BlogFeed(
+                        source=source,
+                        created_at=now
+                        **feed.model_dump()
+                    ))
+
+            if new_urls:    
+                logger.info(f"新規作成予定: {source.name} - {len(new_urls)}件")
+            else:
+                logger.info(f"{source.name}: ブログ更新なし")
+        
+        with transaction.atomic():
+            BlogFeed.objects.bulk_create(new_records)
+        
+        logger.info(f"{len(new_records)}件のブログを新規取得")
+        self.stdout.write(
+            self.style.SUCCESS(f"✅ {len(new_records)}件のブログを新規取得")
+        )
 
 
-
-    async def get_all_feed(self, source_data_list: list[PatrolBlogDict]) -> list[BlogFeed | BaseException]:
+    async def get_all_feeds(self, source_list: list[DataSource]) -> list[list[BlogFeedSchema] | BaseException]:
         """各情報源のフィードデータをすべて取得しリストで返却"""
-        url_list = [single_data["url"] for single_data in source_data_list]
+        url_list = [source.url1 for source in source_list]
         async with AsyncClient() as client:
             tasks = [BlogFetcher(url)(client) for url in url_list]
             results = await asyncio.gather(*tasks, return_exceptions=True)

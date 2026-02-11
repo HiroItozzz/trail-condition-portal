@@ -40,7 +40,7 @@ class BlogFetcher:
 
     def parse_feed(self, xml: str, property_key: str):
         data = feedparser.parse(xml)
-        title_list = [(idx, getattr(entry, property_key, None)[:100]) for idx, entry in enumerate(data.entries, start=1)]
+        title_list = [(idx, getattr(entry, property_key, None)) for idx, entry in enumerate(data.entries, start=1)]
         return title_list
 
 
@@ -54,7 +54,7 @@ async def main():
 
 if __name__ == "__main__":
     from datetime import datetime
-    property_key = "summary"
+    property_key = "tags"
     results = asyncio.run(main())
     output_text = ""
     output_path = Path.cwd() / f"feed_{property_key}_sample.txt"
