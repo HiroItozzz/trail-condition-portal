@@ -5,6 +5,7 @@ from .models.llm_usage import LlmUsage
 from .models.mountain import MountainAlias, MountainGroup
 from .models.prompt_backup import PromptBackup
 from .models.source import DataSource
+from .models.feed import BlogFeed
 
 
 @admin.register(DataSource)
@@ -12,6 +13,7 @@ class DataSourceAdmin(admin.ModelAdmin):
     list_display = [
         "name",
         "id",
+        "data_format",
         "prompt_key",
         "organization_type",
         "prefecture_code",
@@ -108,6 +110,28 @@ class TrailConditionAdmin(admin.ModelAdmin):
     def reported_date(self, obj):
         return obj.reported_at.strftime("%m/%d %H:%M")
 
+
+@admin.register(BlogFeed)
+class BlogFeedAdmin(admin.ModelAdmin):
+    list_display = [
+        "source",
+        "title",
+        "summary",
+        "url",
+        "published_at",
+        "created_at",
+        "disabled",
+    ]
+    list_filter = ["source", "disabled"]
+    search_fields = ["title", "summary"]
+    readonly_fields = ["created_at"]
+
+    fieldsets = (
+        ("情報源", {"fields": ("source",)}),
+        ("記事情報", {"fields": ("title", "summary", "url", "published_at")}),
+        ("管理", {"fields": ("disabled",)}),
+        ("メタデータ", {"fields": ("created_at",), "classes": ("collapse",)}),
+    )
 
 @admin.register(LlmUsage)
 class LlmUsageAdmin(admin.ModelAdmin):

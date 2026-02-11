@@ -1,0 +1,70 @@
+1. [{'term': '活動レポート', 'scheme': None, 'label': None}]
+2. [{'term': '活動レポート', 'scheme': None, 'label': None}]
+3. [{'term': '活動レポート', 'scheme': None, 'label': None}]
+4. [{'term': '活動レポート', 'scheme': None, 'label': None}]
+5. [{'term': '活動レポート', 'scheme': None, 'label': None}]
+6. [{'term': '活動レポート', 'scheme': None, 'label': None}]
+7. [{'term': '活動レポート', 'scheme': None, 'label': None}]
+8. [{'term': '活動レポート', 'scheme': None, 'label': None}]
+9. [{'term': '活動レポート', 'scheme': None, 'label': None}]
+10. [{'term': '活動レポート', 'scheme': None, 'label': None}]
+1. None
+2. None
+3. None
+4. None
+5. None
+6. None
+7. None
+8. None
+9. None
+10. None
+11. None
+12. None
+13. None
+14. None
+15. None
+16. None
+17. None
+18. None
+19. None
+20. None
+21. None
+22. None
+23. None
+24. None
+25. None
+1. None
+2. None
+3. None
+4. None
+5. None
+6. None
+7. None
+8. None
+9. None
+10. None
+11. None
+12. None
+13. None
+14. None
+15. None
+16. None
+17. None
+18. None
+19. None
+20. None
+21. None
+22. None
+23. None
+24. None
+25. None
+1. [{'term': '都民の森ニュース', 'scheme': None, 'label': None}]
+2. [{'term': '都民の森ニュース', 'scheme': None, 'label': None}]
+3. [{'term': '都民の森ニュース', 'scheme': None, 'label': None}]
+4. [{'term': '都民の森ニュース', 'scheme': None, 'label': None}]
+5. [{'term': '都民の森ニュース', 'scheme': None, 'label': None}]
+6. [{'term': '都民の森ニュース', 'scheme': None, 'label': None}]
+7. [{'term': '都民の森ニュース', 'scheme': None, 'label': None}]
+8. [{'term': '都民の森ニュース', 'scheme': None, 'label': None}]
+9. [{'term': '都民の森ニュース', 'scheme': None, 'label': None}]
+10. [{'term': '都民の森ニュース', 'scheme': None, 'label': None}]

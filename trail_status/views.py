@@ -12,28 +12,32 @@ logger = logging.getLogger(__name__)
 
 
 def _get_sidebar_context() -> dict:
-    """サイドバー用のフィルター選択肢を取得"""
+    """サイドバー用のフィルター選択肢を取得（データがある項目のみ表示）"""
     base_conditions = TrailCondition.objects.filter(disabled=False)
-
-    # 山域別の件数
-    area_counts = dict(base_conditions.values("area").annotate(count=Count("id")).values_list("area", "count"))
-    area_choices = [(id, name) for id, name in AreaName.choices if area_counts.get(id, 0) > 0]
-
-    # 状況別の件数
-    status_counts = dict(base_conditions.values("status").annotate(count=Count("id")).values_list("status", "count"))
-    status_choices = [(id, name) for id, name in StatusType.choices if status_counts.get(id, 0) > 0]
-
-    # サイト別の件数
-    source_counts = dict(base_conditions.values("source").annotate(count=Count("id")).values_list("source", "count"))
-    source_choices = [(id, name) for id, name in DataSource.objects.get_choices() if source_counts.get(id, 0) > 0]
 
     # 最近追加された情報源（1週間以内、最新5件）
     seven_days_ago = timezone.now() - timedelta(days=7)
     recent_sources = (
-        DataSource.objects.filter(created_at__gte=seven_days_ago)
+        DataSource.objects.filter(data_format="WEB", created_at__gte=seven_days_ago)
         .order_by("-created_at")[:5]
         .values("id", "name", "created_at")
     )
+
+    # 山域フィルター選択肢（データがある山域のみ）
+    area_counts = dict(base_conditions.values("area").annotate(count=Count("id")).values_list("area", "count"))
+    area_choices = [(id, name) for id, name in AreaName.choices if area_counts.get(id, 0) > 0]
+
+    # 状況フィルター選択肢（データがある状況タイプのみ）
+    status_counts = dict(base_conditions.values("status").annotate(count=Count("id")).values_list("status", "count"))
+    status_choices = [(id, name) for id, name in StatusType.choices if status_counts.get(id, 0) > 0]
+
+    # 情報源フィルター選択肢（データがある情報源のみ）
+    source_counts = dict(base_conditions.values("source").annotate(count=Count("id")).values_list("source", "count"))
+    source_choices = [
+        (id, name)
+        for id, name in DataSource.objects.filter(data_format="WEB").get_choices()
+        if source_counts.get(id, 0) > 0
+    ]
 
     return {
         "source_choices": source_choices,
@@ -122,9 +126,12 @@ def trail_redirect(request: HttpRequest) -> HttpResponseRedirect:
 
 def sources_list(request: HttpRequest) -> HttpResponse:
     """情報源一覧ページ"""
-    sources = DataSource.objects.all().order_by("organization_type", "id")
+    sources = DataSource.objects.filter(data_format="WEB").order_by("organization_type", "id")
     context = {
         "sources": sources,
         **_get_sidebar_context(),
     }
     return render(request, "sources.html", context)
+
+def blogs_list(request: HttpRequest) -> HttpResponse:
+    pass

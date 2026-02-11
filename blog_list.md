@@ -1,7 +1,7 @@
 ### RSSフィードあり 【カテゴライズ済み】
-- https://okutama-sr.jpn.org/blog/feed/
-- https://hadanovc.blogspot.com/feeds/posts/default
-- https://nishitanzawashizenkyoushitsu.blogspot.com/feeds/posts/default
+https://okutama-sr.jpn.org/blog/feed/
+https://hadanovc.blogspot.com/feeds/posts/default
+https://nishitanzawashizenkyoushitsu.blogspot.com/feeds/posts/default
 
 ### RSSフィードあり 【カテゴライズなし】
 - https://www.hinohara-mori.jp/feed
