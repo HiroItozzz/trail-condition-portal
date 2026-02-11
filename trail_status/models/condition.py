@@ -23,11 +23,10 @@ class TrailCondition(models.Model):
 
     source = models.ForeignKey(
         DataSource,
-        on_delete=models.SET_NULL,
-        null=True,
+        on_delete=models.PROTECT,
         verbose_name="情報源",
     )
-    url1 = models.URLField("情報源URL")
+    url1 = models.URLField("情報源URL",max_length=500)
 
     trail_name = models.CharField("登山道名・区間（原文）", max_length=50)
     mountain_name_raw = models.CharField("山名（原文）", default="", max_length=50, blank=True)

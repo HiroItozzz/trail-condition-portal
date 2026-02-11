@@ -91,7 +91,7 @@ class Command(BaseCommand):
 
             # DataSourceを取得
             try:
-                source = DataSource.objects.get(id=source_id)
+                source = DataSource.objects.filter(data_format="WEB").get(id=source_id)
             except DataSource.DoesNotExist:
                 self.stdout.write(self.style.WARNING(f"スキップ: DataSource ID {source_id} が見つかりません"))
                 continue
@@ -135,6 +135,10 @@ class Command(BaseCommand):
         # DataSourceを取得
         try:
             source = DataSource.objects.get(id=source_id)
+            if source.data_format != "WEB":
+                logger.error(f"情報源のデータ形式が'WEB'ではありません: {source_id}: {source.data_format}")
+                self.stdout.write(self.style.ERROR(f"情報源のデータ形式が'WEB'ではありません: {source_id}: {source.data_format}"))
+                return
             self.stdout.write(f"データソース: {source.name}\n")
         except DataSource.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"DataSource ID {source_id} が見つかりません"))
