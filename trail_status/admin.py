@@ -13,6 +13,7 @@ class DataSourceAdmin(admin.ModelAdmin):
     list_display = [
         "name",
         "id",
+        "data_format",
         "prompt_key",
         "organization_type",
         "prefecture_code",
@@ -112,7 +113,25 @@ class TrailConditionAdmin(admin.ModelAdmin):
 
 @admin.register(BlogFeed)
 class BlogFeedAdmin(admin.ModelAdmin):
-    pass
+    list_display = [
+        "source",
+        "title",
+        "summary",
+        "url",
+        "published_at",
+        "created_at",
+        "disabled",
+    ]
+    list_filter = ["source", "disabled"]
+    search_fields = ["title", "summary"]
+    readonly_fields = ["created_at"]
+
+    fieldsets = (
+        ("情報源", {"fields": ("source",)}),
+        ("記事情報", {"fields": ("title", "summary", "url", "published_at")}),
+        ("管理", {"fields": ("disabled",)}),
+        ("メタデータ", {"fields": ("created_at",), "classes": ("collapse",)}),
+    )
 
 @admin.register(LlmUsage)
 class LlmUsageAdmin(admin.ModelAdmin):
