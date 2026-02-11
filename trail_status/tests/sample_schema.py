@@ -9,7 +9,7 @@ from pprint import pprint
 
 from pydantic import BaseModel, Field
 
-from trail_status.models.condition import StatusType
+from trail_status.models import StatusType
 
 
 class TrailConditionSchema(BaseModel):

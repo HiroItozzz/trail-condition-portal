@@ -1,8 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .models.condition import TrailCondition
-from .models.mountain import MountainAlias
+from .models import MountainAlias, TrailCondition
 
 
 @receiver(post_save, sender=MountainAlias)

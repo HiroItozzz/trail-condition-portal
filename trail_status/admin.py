@@ -1,11 +1,6 @@
 from django.contrib import admin
 
-from .models.condition import TrailCondition
-from .models.llm_usage import LlmUsage
-from .models.mountain import MountainAlias, MountainGroup
-from .models.prompt_backup import PromptBackup
-from .models.source import DataSource
-from .models.feed import BlogFeed
+from .models import BlogFeed, DataSource, LlmUsage, MountainAlias, MountainGroup, PromptBackup, TrailCondition
 
 
 @admin.register(DataSource)
@@ -27,9 +22,12 @@ class DataSourceAdmin(admin.ModelAdmin):
     readonly_fields = ["last_scraped_at", "last_checked_at", "created_at", "updated_at"]
 
     fieldsets = (
-        ("基本情報", {"fields": ("name", "organization_type", "prefecture_code", "prompt_key", "description")}),
+        (
+            "基本情報",
+            {"fields": ("name", "organization_type", "prefecture_code", "prompt_key", "data_format")},
+        ),
         ("URL", {"fields": ("url1", "url2")}),
-        ("データ形式", {"fields": ("data_format",)}),
+        ("付加情報", {"fields": ("area_name", "description",)}),
         ("ハッシュ追跡", {"fields": ("content_hash", "last_scraped_at", "last_checked_at")}),
         ("メタデータ", {"fields": ("created_at", "updated_at")}),
     )
@@ -132,6 +130,7 @@ class BlogFeedAdmin(admin.ModelAdmin):
         ("管理", {"fields": ("disabled",)}),
         ("メタデータ", {"fields": ("created_at",), "classes": ("collapse",)}),
     )
+
 
 @admin.register(LlmUsage)
 class LlmUsageAdmin(admin.ModelAdmin):

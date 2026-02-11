@@ -2,8 +2,7 @@ from rest_framework import generics
 
 from api.permissions import IsAdminUserOrReadOnly
 from api.serializers import TrailConditionSerializer
-from trail_status.models.condition import TrailCondition
-from trail_status.models.source import DataSource
+from trail_status.models import DataSource, TrailCondition
 
 
 class ListView(generics.ListCreateAPIView):

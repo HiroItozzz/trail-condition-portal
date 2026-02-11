@@ -5,7 +5,7 @@ from pathlib import Path
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from trail_status.models.source import DataSource
+from trail_status.models import DataSource
 from trail_status.services.db_writer import DbWriter
 from trail_status.services.llm_client import LlmConfig
 from trail_status.services.pipeline import ResultSingle, SourceSchemaSingle

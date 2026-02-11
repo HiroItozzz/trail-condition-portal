@@ -2,8 +2,7 @@ from datetime import date
 
 from pydantic import BaseModel, Field
 
-from ..models.condition import StatusType
-from ..models.mountain import AreaName
+from ..models import AreaName, StatusType
 
 area_help_text = " / ".join([f"{label}:{name}" for name, label in AreaName.choices])
 

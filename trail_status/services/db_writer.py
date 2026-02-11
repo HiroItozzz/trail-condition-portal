@@ -10,9 +10,7 @@ from django.utils import timezone
 from rapidfuzz import fuzz
 from sudachipy import Dictionary, SplitMode
 
-from ..models.condition import TrailCondition
-from ..models.llm_usage import LlmUsage
-from ..models.source import DataSource
+from ..models import DataSource, LlmUsage, TrailCondition
 from .llm_stats import LlmStats
 from .pipeline import ResultSingle, SourceSchemaSingle
 from .schema import TrailConditionSchemaInternal, TrailConditionSchemaList

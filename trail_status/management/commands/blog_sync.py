@@ -7,8 +7,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from httpx import AsyncClient
 
-from trail_status.models.feed import BlogFeed
-from trail_status.models.source import DataSource
+from trail_status.models import BlogFeed, DataSource
 from trail_status.services.blog_fetcher import BlogFeedSchema, BlogFetcher
 
 logger = logging.getLogger(__name__)
