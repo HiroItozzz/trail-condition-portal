@@ -5,6 +5,7 @@ from .models.llm_usage import LlmUsage
 from .models.mountain import MountainAlias, MountainGroup
 from .models.prompt_backup import PromptBackup
 from .models.source import DataSource
+from .models.feed import BlogFeed
 
 
 @admin.register(DataSource)
@@ -108,6 +109,10 @@ class TrailConditionAdmin(admin.ModelAdmin):
     def reported_date(self, obj):
         return obj.reported_at.strftime("%m/%d %H:%M")
 
+
+@admin.register(BlogFeed)
+class BlogFeedAdmin(admin.ModelAdmin):
+    pass
 
 @admin.register(LlmUsage)
 class LlmUsageAdmin(admin.ModelAdmin):

@@ -35,7 +35,7 @@ class Command(BaseCommand):
             existing_data:BlogFeed = BlogFeed.objects.filter(source__id=source.id)
             
             # フィードのURLで既存データと照合
-            existing_urls = {url for url in existing_data.url}
+            existing_urls = set(existing_data.values_list("url", flat=True))
             obtained_urls = {feed.url for feed in result}
             new_urls = obtained_urls - existing_urls
 
@@ -45,7 +45,7 @@ class Command(BaseCommand):
                 if feed.url in new_urls:    
                     new_records.append(BlogFeed(
                         source=source,
-                        created_at=now
+                        created_at=now,
                         **feed.model_dump()
                     ))
 
