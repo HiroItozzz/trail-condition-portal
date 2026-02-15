@@ -59,6 +59,16 @@
 | Text Matching | RapidFuzz, SudachiPy |
 | Infrastructure | Cloud Run, Supabase, Cloudflare, Docker |
 
+## ディレクトリ構成
+
+```
+trail_status/          # メインアプリ（モデル・ビュー・データ収集パイプライン）
+  services/            # スクレイピング・AI処理・DB書き込み
+  services/prompts/    # 情報源ごとのプロンプト定義（YAML）
+frontend/              # Tailwind CSS / Vite
+templates/             # Djangoテンプレート
+```
+
 ## 実装の詳細
 
 - 自前実装のプロンプト管理システム

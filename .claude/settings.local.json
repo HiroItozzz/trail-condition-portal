@@ -5,7 +5,8 @@
       "Bash(python:*)",
       "WebSearch",
       "Bash(docker compose exec:*)",
-      "WebFetch(domain:pqina.nl)"
+      "WebFetch(domain:pqina.nl)",
+      "WebFetch(domain:www.schemastore.org)"
     ]
   },
   "spinnerTipsEnabled": true
