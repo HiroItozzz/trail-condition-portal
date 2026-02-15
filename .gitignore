@@ -24,4 +24,5 @@ logs/*
 !logs/.gitkeep
 backups/
 my_docs/
+reports/
 /CLAUDE.md
