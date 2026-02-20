@@ -6,6 +6,7 @@ from django.core.management.base import BaseCommand
 
 from trail_status.models import DataSource
 from trail_status.services.db_writer import DbWriter
+from trail_status.services.llm_client import ConversationalAi, DeepseekClient, GeminiClient, GptClient, LlmConfig
 from trail_status.services.pipeline import AiPipeline, ResultSingle, SourceSchemaSingle, UpdatedDataList
 from trail_status.services.schema import TrailConditionSchemaList
 from trail_status.services.slack_notifier import SlackNotifier
@@ -62,7 +63,9 @@ class Command(BaseCommand):
                 source = DataSource.objects.get(id=source_id)
                 if source.data_format != "WEB":
                     logger.error(f"情報源のデータ形式が'WEB'ではありません: {source_id}: {source.data_format}")
-                    self.stdout.write(self.style.ERROR(f"情報源のデータ形式が'WEB'ではありません: {source_id}: {source.data_format}"))
+                    self.stdout.write(
+                        self.style.ERROR(f"情報源のデータ形式が'WEB'ではありません: {source_id}: {source.data_format}")
+                    )
                     return
                 model_data_single = SourceSchemaSingle(
                     id=source.id,
@@ -88,7 +91,9 @@ class Command(BaseCommand):
             self.stdout.write(f"全ての情報源を処理: {len(source_data_list)}件")
 
         # パイプライン処理を実行（純粋にasync処理のみ）
-        processor = AiPipeline(source_data_list, ai_model=ai_model, new_hash_mode=new_hash_mode)
+        processor = AiPipeline(
+            source_data_list, client_factory=self.default_client_factory, ai_model=ai_model, new_hash_mode=new_hash_mode
+        )
         all_source_results: UpdatedDataList = asyncio.run(processor.run())
 
         # DB保存（同期処理）
@@ -141,6 +146,18 @@ class Command(BaseCommand):
         # 結果サマリーを表示
         summary = self.generate_summary(all_source_results)
         self.print_summary(summary)
+
+    @staticmethod
+    def default_client_factory(config: LlmConfig) -> ConversationalAi:
+        if config.model.startswith("deepseek"):
+            ai_client = DeepseekClient(config)
+        elif config.model.startswith("gemini"):
+            ai_client = GeminiClient(config)
+        elif config.model.startswith("gpt"):
+            ai_client = GptClient(config)
+        else:
+            raise ValueError(f"サポートされていないモデル: {config.model}")
+        return ai_client
 
     def generate_summary(self, results: UpdatedDataList) -> dict[str, Any]:
         """処理結果のサマリーを生成"""

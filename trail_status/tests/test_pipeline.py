@@ -1,27 +1,23 @@
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
-from trail_status.services.llm_client import LlmConfig
+from trail_status.services.llm_client import ConversationalAi, LlmConfig
 from trail_status.services.pipeline import AiPipeline, SourceSchemaSingle
 from trail_status.services.schema import TrailConditionSchemaList
 
 
 @pytest.mark.asyncio
 async def test_process_source_data_full_flow(monkeypatch, mock_async_client, sample_token_stats):
-    # --- DeepseekClient.generate の戻り値を準備 ---
-    mock_ai_result = TrailConditionSchemaList(trail_condition_records=[])
+    class FakeClient(ConversationalAi):
+        async def generate(self):
+            return fake_ai_result, sample_token_stats
 
-    # generateメソッドが呼ばれた際の戻り値を設定
-    async_gen_mock = AsyncMock(return_value=(mock_ai_result, sample_token_stats))
-
-    # クラスのメソッドを差し替え
-    monkeypatch.setattr("trail_status.services.pipeline.DeepseekClient.generate", async_gen_mock)
-    monkeypatch.setattr("trail_status.services.pipeline.GeminiClient.generate", async_gen_mock)
-    monkeypatch.setattr("trail_status.services.pipeline.GptClient.generate", async_gen_mock)
+    # --- ConversationalAi.generate の戻り値を準備 ---
+    fake_ai_result = TrailConditionSchemaList(trail_condition_records=[])
 
     # --- LlmConfig.from_file のモック化 ---
-    mock_config = LlmConfig(data="テスト", model="deepseek-chat")
+    mock_config = LlmConfig(data="テスト", model="gemini-2.5-flash")
     monkeypatch.setattr("trail_status.services.pipeline.LlmConfig.from_file", MagicMock(return_value=mock_config))
 
     # --- テスト用ソースデータ ---
@@ -35,7 +31,7 @@ async def test_process_source_data_full_flow(monkeypatch, mock_async_client, sam
         )
     ]
     # --- テスト実行 ---
-    pipeline = AiPipeline(source_data_list, ai_model="deepseek-chat")
+    pipeline = AiPipeline(source_data_list, client_factory=lambda config: FakeClient(config))
 
     results = await pipeline.run()
 
