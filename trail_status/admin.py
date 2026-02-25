@@ -27,7 +27,15 @@ class DataSourceAdmin(admin.ModelAdmin):
             {"fields": ("name", "organization_type", "prefecture_code", "prompt_key", "data_format")},
         ),
         ("URL", {"fields": ("url1", "url2")}),
-        ("付加情報", {"fields": ("area_name", "description",)}),
+        (
+            "付加情報",
+            {
+                "fields": (
+                    "area_name",
+                    "description",
+                )
+            },
+        ),
         ("ハッシュ追跡", {"fields": ("content_hash", "last_scraped_at", "last_checked_at")}),
         ("メタデータ", {"fields": ("created_at", "updated_at")}),
     )
@@ -95,6 +103,7 @@ class TrailConditionAdmin(admin.ModelAdmin):
                     "reported_at",
                     "resolved_at",
                     "comment",
+                    "reference_URL",
                 )
             },
         ),
