@@ -145,6 +145,8 @@ class LlmFee(BaseLlmFee):
         # flat rate: input/outputの単価が固定 ($per 1M tokens)
         "gemini-2.5-flash":        {"type": "flat",   "input": 0.30, "output":  2.5},
         "gemini-3-flash-preview":  {"type": "flat",   "input": 0.50, "output":  3.0},
+        # (260304追記)gemini-flash-latest は gemini-3-flash-previewの料金で算出
+        "gemini-flash-latest":     {"type": "flat",   "input": 0.50, "output":  3.0},
         "deepseek-chat":           {"type": "flat",   "input": 0.28, "output":  0.42},
         "deepseek-reasoner":       {"type": "flat",   "input": 0.28, "output":  0.42},
         "gpt-5-mini":              {"type": "flat",   "input": 0.25, "output":  2.0},

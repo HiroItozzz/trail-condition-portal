@@ -7,6 +7,7 @@ import shutil
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 import yaml
 from django.conf import settings
@@ -34,7 +35,7 @@ class LlmConfig(BaseModel):
     site_prompt: str | None = Field(default="", description="サイト固有プロンプト")
     use_template: bool = Field(default=True, description="template.yamlを使用するか")
     model: str = Field(
-        pattern=r"^(gemini|deepseek|gpt)-.+", default="gemini-3-flash-preview", description="使用するLLMモデル"
+        pattern=r"^(gemini|deepseek|gpt)-.+", default="gemini-flash-latest", description="使用するLLMモデル"
     )
     data: str = Field(description="解析するテキスト")
     temperature: float = Field(
@@ -123,7 +124,7 @@ class LlmConfig(BaseModel):
         temp_value = cli_overrides.get("temperature")
         if temp_value is None:
             temp_value = site_config.get("temperature")
-        else:
+        if temp_value is not None:
             kwargs["temperature"] = temp_value
 
         # thinking_budget: 0対応（通常0は無効値なので or 使用）
@@ -221,6 +222,8 @@ class LlmConfig(BaseModel):
 
 
 class ConversationalAi(ABC):
+    MAX_RETRIES = 3
+
     def __init__(self, config: LlmConfig):
         self.model: str = config.model
         self.temperature: float = config.temperature
@@ -233,21 +236,74 @@ class ConversationalAi(ABC):
         self.websearch: bool = config.allow_websearch
         self._config: LlmConfig | None = config
 
-    @abstractmethod
     async def generate(self) -> tuple[dict, TokenStats]:
-        pass
+        @traceable(
+            run_type="llm",
+            name=f"{self.prompt_filename}_{self.model.capitalize()}",
+            metadata={
+                "ls_provider": self.provider,
+                "ls_model_name": self.model,
+                "ls_temperature": self.temperature,
+                "ls_max_tokens": self.thinking_budget,
+            },
+        )
+        async def _run() -> tuple[ConditionSchemaAiList, TokenStats]:
+            """LangSmithのデコレータを定義するためだけの関数内関数
+
+            Returns:
+                tuple[ConditionSchemaAiList, TokenStats]
+            """
+            for i in range(self.MAX_RETRIES):
+                logger.info(f"{self.model}の応答を待っています。")
+                logger.debug(f"LlmConfig詳細： \n{self._config}")
+                logger.debug(f"APIキー: ...{self.api_key[-5:]}")
+
+                try:
+                    raw_response = await self._call_api()  # 各クライアントで実装されるAPI呼び出し
+                    response_text = self._extract_text(raw_response)  # 各クライアントで実装されるテキスト抽出
+                    validated_data = self._get_validated_data(raw_response)  # 共通のバリデーション
+                    break
+                except ValidationError as e:
+                    await self.validation_error(e, i, self.MAX_RETRIES, response_text)
+                except Exception as e:
+                    await self._handle_exceptions(e, i, self.MAX_RETRIES)
+
+            # AI出力の保存設定
+            if os.getenv("SAVE_AI_OUTPUTS") in ["True", "true", "t"]:
+                self.save_sample_data(response_text)
+            stats = self._create_token_stats(raw_response)  # 共通のトークン統計作成関数
+
+            logger.debug("ConversationalAiの処理終了")
+            return validated_data, stats
+
+        return await _run()
+
+    @abstractmethod
+    async def _call_api(self) -> Any: ...
+
+    @abstractmethod
+    def _extract_text(self, raw_response: Any) -> str: ...
+
+    @abstractmethod
+    def _get_validated_data(self, raw_response: Any) -> ConditionSchemaAiList: ...
+
+    @abstractmethod
+    def _create_token_stats(self, raw_response: Any) -> TokenStats: ...
+
+    @abstractmethod
+    async def _handle_exceptions(self, e: Exception, retry_count: int, max_retries: int) -> None: ...
 
     # サーバーエラーとバリデーションエラー時のみリトライ
-    async def handle_server_error(self, i, max_retries):
+    async def handle_server_error(self, e, i, max_retries):
         if i < max_retries - 1:
             logger.warning(f"{self.model}の計算資源が逼迫しているようです。{3 ** (i + 1)}秒後にリトライします。")
             await asyncio.sleep(3 ** (i + 1))
         else:
             logger.error(f"{self.model}は現在過負荷のようです。少し時間をおいて再実行する必要があります。")
             logger.error("実行を中止します。")
-            raise
+            raise e
 
-    async def validation_error(self, i, max_retries, response_text):
+    async def validation_error(self, e, i, max_retries, response_text) -> None:
         if i < max_retries - 1:
             logger.warning(f"{self.model}が構造化出力に失敗。")
             self.temperature += 0.1
@@ -263,29 +319,19 @@ class ConversationalAi(ABC):
             logger.error(f"{self.model}が{max_retries}回構造化出力に失敗。LLMの設定を見直してください。")
             self.save_invalid_data(response_text)
             logger.error("実行を中止します。")
-            raise
+            raise e
 
     def handle_client_error(self, e: Exception):
         logger.error("エラー：APIレート制限。")
         logger.error("詳細はapp.logを確認してください。実行を中止します。")
         logger.error(f"詳細: {e}")
-        raise
+        raise e
 
     def handle_unexpected_error(self, e: Exception):
         logger.error("要約取得中に予期せぬエラー発生。詳細はapp.logを確認してください。")
         logger.error("実行を中止します。")
         logger.error(f"詳細: {e}")
-        raise
-
-    @traceable
-    def validate_response(self, response_text: str) -> ConditionSchemaAiList:
-        """AI出力データのバリデーション"""
-        try:
-            validated_data = ConditionSchemaAiList.model_validate_json(response_text)
-            logger.info(f"{self.model}が構造化出力に成功")
-        except ValidationError as e:
-            raise e
-        return validated_data
+        raise e
 
     def save_sample_data(self, response_text: str):
         # デバッグ用：サンプル出力を保存
@@ -313,214 +359,173 @@ class ConversationalAi(ABC):
 
 
 class DeepseekClient(ConversationalAi):
+    from openai.types.chat import ChatCompletion
+
     @property
     def prompt_for_deepseek(self):
         STATEMENT = f"【重要】次の行から示す要請はこのPydanticモデルに合うJSONで出力してください: {ConditionSchemaAiList.model_json_schema()}\n"
         return STATEMENT + self.prompt + "\n\n\n" + self.data
 
-    async def generate(self) -> tuple[ConditionSchemaAiList, TokenStats]:
+    async def _call_api(self) -> ChatCompletion:
         from langsmith.wrappers import wrap_openai
         from openai import AsyncOpenAI
 
-        @traceable(
-            run_type="llm",
-            name=f"{self.prompt_filename}_{self.model.capitalize()}",
-            metadata={
-                "ls_provider": self.provider,
-                "ls_model_name": self.model,
-                "ls_temperature": self.temperature,
-                "ls_max_tokens": self.thinking_budget,
-            },
+        client = wrap_openai(AsyncOpenAI(api_key=self.api_key, base_url="https://api.deepseek.com"))
+
+        response = await client.chat.completions.create(
+            model=self.model,
+            temperature=self.temperature,
+            messages=[{"role": "user", "content": self.prompt_for_deepseek}],
+            response_format={"type": "json_object"},
+            stream=False,
         )
-        async def _run() -> tuple[ConditionSchemaAiList, TokenStats]:
-            """LangSmithのデコレータを定義するためだけの関数内関数
+        return response
 
-            Returns:
-                tuple[TrailConditionSchemaList, TokenStats]
-            """
-            client = wrap_openai(AsyncOpenAI(api_key=self.api_key, base_url="https://api.deepseek.com"))
+    def _extract_text(self, raw_response: ChatCompletion) -> str:
+        return raw_response.choices[0].message.content or ""
 
-            max_retries = 3
-            for i in range(max_retries):
-                logger.info(f"{self.model}の応答を待っています。")
-                logger.debug(f"LlmConfig詳細： \n{self._config}")
-                logger.debug(f"APIキー: ...{self.api_key[-5:]}")
-                try:
-                    response = await client.chat.completions.create(
-                        model=self.model,
-                        temperature=self.temperature,
-                        messages=[{"role": "user", "content": self.prompt_for_deepseek}],
-                        response_format={"type": "json_object"},
-                        stream=False,
-                    )
-                    generated_text = response.choices[0].message.content or ""
-                    validated_data = self.validate_response(generated_text)
-                    break
-                except ValidationError:
-                    await self.validation_error(i, max_retries, generated_text)
-                except Exception as e:
-                    # https://api-docs.deepseek.com/quick_start/error_codes
-                    if any(code in str(e) for code in ["500", "502", "503"]):
-                        await self.handle_server_error(i, max_retries)
-                    elif "429" in str(e):
-                        logger.error("APIレート制限。しばらく経ってから再実行してください。")
-                        raise
-                    elif "401" in str(e):
-                        logger.error("エラー：APIキーが誤っているか、入力されていません。")
-                        logger.error(f"実行を中止します。詳細：{e}")
-                        raise
-                    elif "402" in str(e):
-                        logger.error("残高が不足しているようです。アカウントを確認してください。")
-                        logger.error(f"実行を中止します。詳細：{e}")
-                        raise
-                    elif "422" in str(e):
-                        logger.error("リクエストに無効なパラメータが含まれています。設定を見直してください。")
-                        logger.error(f"実行を中止します。詳細：{e}")
-                        raise
-                    else:
-                        self.handle_unexpected_error(e)
+    def _get_validated_data(self, raw_response: ChatCompletion) -> ConditionSchemaAiList:
+        return ConditionSchemaAiList.model_validate_json(self._extract_text(raw_response))
 
-            # 安全なNoneチェックを追加
-            if response.usage:
-                prompt_tokens = response.usage.prompt_tokens
-                completion_tokens = response.usage.completion_tokens
-                thoughts_tokens = getattr(response.usage.completion_tokens_details, "reasoning_tokens", 0) or 0
-                # 純粋なoutput_tokensを計算
-                output_tokens = completion_tokens - thoughts_tokens
+    def _create_token_stats(self, raw_response: ChatCompletion) -> TokenStats:
+        # Noneチェック
+        if raw_response.usage:
+            prompt_tokens = raw_response.usage.prompt_tokens
+            completion_tokens = raw_response.usage.completion_tokens
+            thoughts_tokens = getattr(raw_response.usage.completion_tokens_details, "reasoning_tokens", 0) or 0
+            # 純粋なoutput_tokensを計算
+            output_tokens = completion_tokens - thoughts_tokens
 
-            else:
-                logger.warning("Deepseek API response did not include usage metadata.")
-                prompt_tokens = 0
-                thoughts_tokens = 0
-                output_tokens = 0
+        else:
+            logger.warning("Deepseek API response did not include usage metadata.")
+            prompt_tokens = 0
+            thoughts_tokens = 0
+            output_tokens = 0
 
-            stats = TokenStats(
-                prompt_tokens,
-                thoughts_tokens,
-                output_tokens,
-                len(self.prompt_for_deepseek),
-                len(generated_text),
-                self.model,
-            )
+        stats = TokenStats(
+            prompt_tokens,
+            thoughts_tokens,
+            output_tokens,
+            len(self.prompt_for_deepseek),
+            len(self._extract_text(raw_response)),
+            self.model,
+        )
+        return stats
 
-            # AI出力の保存設定
-            if os.getenv("SAVE_AI_OUTPUTS") in ["True", "true", "t"]:
-                self.save_sample_data(generated_text)
-
-            logger.debug("DeepseekClientの処理終了")
-            return validated_data, stats
-
-        return await _run()
+    async def _handle_exceptions(self, e: Exception, retry_count: int, max_retries: int) -> None:
+        if any(code in str(e) for code in ["500", "502", "503"]):
+            await self.handle_server_error(retry_count, max_retries)
+        elif "429" in str(e):
+            logger.error("APIレート制限。しばらく経ってから再実行してください。")
+            raise e
+        elif "401" in str(e):
+            logger.error("エラー：APIキーが誤っているか、入力されていません。")
+            logger.error(f"実行を中止します。詳細：{e}")
+            raise e
+        elif "402" in str(e):
+            logger.error("残高が不足しているようです。アカウントを確認してください。")
+            logger.error(f"実行を中止します。詳細：{e}")
+            raise e
+        elif "422" in str(e):
+            logger.error("リクエストに無効なパラメータが含まれています。設定を見直してください。")
+            logger.error(f"実行を中止します。詳細：{e}")
+            raise e
+        else:
+            self.handle_unexpected_error(e)
 
 
 class GeminiClient(ConversationalAi):
+    from google.genai.types import GenerateContentResponse
+
     @property
     def prompt_for_gemini(self):
         return self.prompt + "\n\n\n" + self.data
 
-    async def generate(self) -> tuple[ConditionSchemaAiList, TokenStats]:
+    async def _call_api(self) -> GenerateContentResponse:
         from google import genai
         from google.genai import types
-        from google.genai.errors import ClientError, ServerError
         from langsmith.wrappers import wrap_gemini
 
-        @traceable(
-            run_type="llm",
-            name=f"{self.prompt_filename}_{self.model.capitalize()}",
-            metadata={
-                "ls_provider": self.provider,
-                "ls_model_name": self.model,
-                "ls_temperature": self.temperature,
-                "ls_max_tokens": self.thinking_budget,
-            },
+        # api_key引数なしでも、環境変数"GEMNI_API_KEY"の値を勝手に参照するが、可読性のため代入
+        client = wrap_gemini(
+            genai.Client(http_options=types.HttpOptions(timeout=120 * 1000))  # 2分
         )
-        async def _run() -> tuple[ConditionSchemaAiList, TokenStats]:
-            """LangSmithのデコレータを定義するためだけの関数内関数
 
-            Args:
-                _ (str): LangSmithトレースのためのプロンプト入力
+        # 検索許可設定
+        search_tool = types.Tool(google_search=types.GoogleSearch()) if self.websearch else None
 
-            Returns:
-                tuple[TrailConditionSchemaList, TokenStats]
-            """
-            # api_key引数なしでも、環境変数"GEMNI_API_KEY"の値を勝手に参照するが、可読性のため代入
-            client = wrap_gemini(
-                genai.Client(http_options=types.HttpOptions(timeout=120 * 1000))  # 2分
-            )
+        response = await client.aio.models.generate_content(  # リクエスト
+            model=self.model,
+            contents=self.prompt_for_gemini,
+            config=types.GenerateContentConfig(
+                temperature=self.temperature,
+                response_mime_type="application/json",  # 構造化出力
+                response_json_schema=ConditionSchemaAiList.model_json_schema(),
+                thinking_config=types.ThinkingConfig(thinking_budget=self.thinking_budget),
+                tools=[search_tool],
+            ),
+        )
+        return response
 
-            # 検索許可設定
-            search_tool = types.Tool(google_search=types.GoogleSearch()) if self.websearch else None
+    def _extract_text(self, raw_response: GenerateContentResponse) -> str:
+        return raw_response.text
 
-            max_retries = 3
-            for i in range(max_retries):
-                logger.info(f"{self.model}の応答を待っています。")
-                logger.debug(f"LlmConfig詳細： \n{self._config}")
-                logger.debug(f"APIキー: ...{self.api_key[-5:]}")
+    @traceable
+    def _get_validated_data(self, raw_response: GenerateContentResponse) -> ConditionSchemaAiList:
+        """AI出力データのバリデーション"""
+        try:
+            validated_data = ConditionSchemaAiList.model_validate_json(self._extract_text(raw_response))
+            logger.info(f"{self.model}が構造化出力に成功")
+        except ValidationError as e:
+            raise e
+        return validated_data
 
-                try:
-                    response = await client.aio.models.generate_content(  # リクエスト
-                        model=self.model,
-                        contents=self.prompt_for_gemini,
-                        config=types.GenerateContentConfig(
-                            temperature=self.temperature,
-                            response_mime_type="application/json",  # 構造化出力
-                            response_json_schema=ConditionSchemaAiList.model_json_schema(),
-                            thinking_config=types.ThinkingConfig(thinking_budget=self.thinking_budget),
-                            tools=[search_tool],
-                        ),
-                    )
-                    validated_data = self.validate_response(response.text)
-                    break
-                except ValidationError:
-                    await self.validation_error(i, max_retries, response.text)
-                except ServerError:
-                    await self.handle_server_error(i, max_retries)
-                except ClientError as e:
-                    self.handle_client_error(e)
-                except Exception as e:
-                    self.handle_unexpected_error(e)
+    async def _handle_exceptions(self, e: Exception, retry_count: int, max_retries: int) -> None:
+        from google.genai.errors import ClientError, ServerError
 
-            for part in response.candidates[0].content.parts:
-                if not part.text:
-                    continue
-                elif part.thought:
-                    logger.debug("## **Thoughts summary:**")
-                    logger.debug(part.text)
-                else:
-                    logger.debug("## **Answer:**")
-                    logger.debug(part.text)
+        if isinstance(e, ServerError):
+            await self.handle_server_error(retry_count, max_retries)
+        elif isinstance(e, ClientError):
+            self.handle_client_error(e)
+        else:
+            self.handle_unexpected_error(e)
 
-            # 安全なNoneチェックを追加
-            if response.usage_metadata:
-                prompt_tokens = response.usage_metadata.prompt_token_count
-                thoughts_tokens = getattr(response.usage_metadata, "thoughts_token_count", 0) or 0
-                output_tokens = response.usage_metadata.candidates_token_count
+    def _create_token_stats(self, raw_response: GenerateContentResponse) -> TokenStats:
+        for part in raw_response.candidates[0].content.parts:
+            if not part.text:
+                continue
+            elif part.thought:
+                logger.debug("## **Thoughts summary:**")
+                logger.debug(part.text)
             else:
-                logger.warning("Gemini API response did not include usage metadata.")
-                prompt_tokens = 0
-                thoughts_tokens = 0
-                output_tokens = 0
+                logger.debug("## **Answer:**")
+                logger.debug(part.text)
 
-            stats = TokenStats(
-                prompt_tokens,
-                thoughts_tokens,
-                output_tokens,
-                len(self.prompt),
-                len(response.text),
-                self.model,
-            )
+        # Noneチェック
+        if raw_response.usage_metadata:
+            prompt_tokens = raw_response.usage_metadata.prompt_token_count
+            thoughts_tokens = getattr(raw_response.usage_metadata, "thoughts_token_count", 0) or 0
+            output_tokens = raw_response.usage_metadata.candidates_token_count
+        else:
+            logger.warning("Gemini API response did not include usage metadata.")
+            prompt_tokens = 0
+            thoughts_tokens = 0
+            output_tokens = 0
 
-            # AI出力の保存設定
-            if os.getenv("SAVE_AI_OUTPUTS") in ["True", "true", "t"]:
-                self.save_sample_data(response.text)
-
-            logger.debug("GeminiClientの処理終了")
-            return validated_data, stats
-
-        return await _run()
+        stats = TokenStats(
+            prompt_tokens,
+            thoughts_tokens,
+            output_tokens,
+            len(self.prompt),
+            len(raw_response.text),
+            self.model,
+        )
+        return stats
 
 
 class GptClient(ConversationalAi):
+    from openai.types.responses import ParsedResponse
+
     @property
     def prompt_for_gpt(self):
         input = [
@@ -532,96 +537,73 @@ class GptClient(ConversationalAi):
         ]
         return input
 
-    async def generate(self):
-        @traceable(
-            run_type="llm",
-            name=f"{self.prompt_filename}_{self.model.capitalize()}",
-            metadata={
-                "ls_provider": self.provider,
-                "ls_model_name": self.model,
-                "ls_temperature": self.temperature,
-                "ls_max_tokens": self.thinking_budget,
-            },
+    async def _call_api(self) -> ParsedResponse[ConditionSchemaAiList]:
+        from langsmith.wrappers import wrap_openai
+        from openai import AsyncOpenAI
+
+        client = wrap_openai(AsyncOpenAI())
+        # 検索許可設定
+        search_tool = (
+            {"type": "web_search", "user_location": {"city": "Tokyo", "type": "approximate"}}
+            if self.websearch
+            else None
         )
-        async def _run() -> tuple[ConditionSchemaAiList, TokenStats]:
-            from langsmith.wrappers import wrap_openai
-            from openai import AsyncOpenAI
 
-            client = wrap_openai(AsyncOpenAI())
-            search_tool = (
-                {"type": "web_search", "user_location": {"city": "Tokyo", "type": "approximate"}}
-                if self.websearch
-                else None
-            )
+        response = await client.responses.parse(
+            model=self.model,
+            tools=[search_tool],
+            input=self.prompt_for_gpt,
+            text_format=ConditionSchemaAiList,
+        )
+        return response
 
-            max_retries = 3
-            for i in range(max_retries):
-                try:
-                    logger.info(f"{self.model}の応答を待っています。")
-                    logger.debug(f"LlmConfig詳細： \n{self._config}")
-                    logger.debug(f"APIキー: ...{self.api_key[-5:]}")
+    def _extract_text(self, raw_response: ParsedResponse[ConditionSchemaAiList]) -> str:
+        return raw_response.output_parsed.model_dump_json()
 
-                    response = await client.responses.parse(
-                        model="gpt-5-mini",
-                        tools=[search_tool],
-                        input=self.prompt_for_gpt,
-                        text_format=ConditionSchemaAiList,
-                    )
-                    validated_data = response.output_parsed
-                    logger.info(f"{self.model}が構造化出力に成功")
-                    break
+    def _get_validated_data(self, raw_response: ParsedResponse[ConditionSchemaAiList]) -> ConditionSchemaAiList:
+        return raw_response.output_parsed
 
-                except Exception as e:
-                    # https://api-docs.deepseek.com/quick_start/error_codes
-                    if any(code in str(e) for code in ["500", "502", "503"]):
-                        await self.handle_server_error(i, max_retries)
-                    elif "429" in str(e):
-                        logger.error("APIレート制限。しばらく経ってから再実行してください。")
-                        raise
-                    elif "401" in str(e):
-                        logger.error("エラー：APIキーが誤っているか、入力されていません。")
-                        logger.error(f"実行を中止します。詳細：{e}")
-                        raise
-                    elif "402" in str(e):
-                        logger.error("残高が不足しているようです。アカウントを確認してください。")
-                        logger.error(f"実行を中止します。詳細：{e}")
-                        raise
-                    elif "422" in str(e):
-                        logger.error("リクエストに無効なパラメータが含まれています。設定を見直してください。")
-                        logger.error(f"実行を中止します。詳細：{e}")
-                        raise
-                    else:
-                        self.handle_unexpected_error(e)
+    def _create_token_stats(self, raw_response: ParsedResponse[ConditionSchemaAiList]) -> TokenStats:
+        # Noneチェック
+        if raw_response.usage:
+            input_tokens = raw_response.usage.input_tokens
+            output_tokens = raw_response.usage.output_tokens
+            thoughts_tokens = getattr(raw_response.usage.output_tokens_details, "reasoning_tokens", 0) or 0
+            # 純粋なoutput_tokensを計算
+            pure_output_tokens = output_tokens - thoughts_tokens
+        else:
+            logger.warning("GPT API response did not include usage metadata.")
+            input_tokens = 0
+            thoughts_tokens = 0
+            pure_output_tokens = 0
 
-            # 安全なNoneチェックを追加
-            if response.usage:
-                input_tokens = response.usage.input_tokens
-                output_tokens = response.usage.output_tokens
-                thoughts_tokens = getattr(response.usage.output_tokens_details, "reasoning_tokens", 0) or 0
-                # 純粋なoutput_tokensを計算
-                pure_output_tokens = output_tokens - thoughts_tokens
+        stats = TokenStats(
+            input_tokens,
+            thoughts_tokens,
+            pure_output_tokens,
+            len(self.prompt + self.data),
+            -1,
+            self.model,
+        )
+        return stats
 
-            else:
-                logger.warning("Deepseek API response did not include usage metadata.")
-                input_tokens = 0
-                thoughts_tokens = 0
-                pure_output_tokens = 0
-
-            # AI出力の保存設定
-            if os.getenv("SAVE_AI_OUTPUTS", "False") in ["True", "true", "t"]:
-                raw_text = validated_data.model_dump_json()
-                self.save_sample_data(raw_text)
-
-            stats = TokenStats(
-                input_tokens,
-                thoughts_tokens,
-                pure_output_tokens,
-                len(self.prompt_for_gpt),
-                -1,
-                self.model,
-            )
-
-            logger.debug(f"{self.model}の処理終了")
-            return validated_data, stats
-
-        return await _run()
+    async def _handle_exceptions(self, e: Exception, retry_count: int, max_retries: int) -> None:
+        if any(code in str(e) for code in ["500", "502", "503"]):
+            await self.handle_server_error(retry_count, max_retries)
+        elif "429" in str(e):
+            logger.error("APIレート制限。しばらく経ってから再実行してください。")
+            raise e
+        elif "401" in str(e):
+            logger.error("エラー：APIキーが誤っているか、入力されていません。")
+            logger.error(f"実行を中止します。詳細：{e}")
+            raise e
+        elif "402" in str(e):
+            logger.error("残高が不足しているようです。アカウントを確認してください。")
+            logger.error(f"実行を中止します。詳細：{e}")
+            raise e
+        elif "422" in str(e):
+            logger.error("リクエストに無効なパラメータが含まれています。設定を見直してください。")
+            logger.error(f"実行を中止します。詳細：{e}")
+            raise e
+        else:
+            self.handle_unexpected_error(e)
