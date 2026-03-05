@@ -143,18 +143,19 @@ class LlmFee(BaseLlmFee):
     # fmt: off
     _fees: dict = {
         # flat rate: input/outputの単価が固定 ($per 1M tokens)
-        "gemini-2.5-flash":        {"type": "flat",   "input": 0.30, "output":  2.5},
-        "gemini-3-flash-preview":  {"type": "flat",   "input": 0.50, "output":  3.0},
-        # (260304追記)gemini-flash-latest は gemini-3-flash-previewの料金で算出
-        "gemini-flash-latest":     {"type": "flat",   "input": 0.50, "output":  3.0},
-        "deepseek-chat":           {"type": "flat",   "input": 0.28, "output":  0.42},
-        "deepseek-reasoner":       {"type": "flat",   "input": 0.28, "output":  0.42},
-        "gpt-5-mini":              {"type": "flat",   "input": 0.25, "output":  2.0},
-        "gpt-5-nano":              {"type": "flat",   "input": 0.05, "output":  0.4},
+        "gemini-2.5-flash":              {"type": "flat",   "input": 0.30, "output":  2.5},
+        "gemini-3-flash-preview":        {"type": "flat",   "input": 0.50, "output":  3.0},
+        "gemini-3.1-flash-lite-preview": {"type": "flat",   "input": 0.25, "output":  1.5},
+        # (260304現在)gemini-flash-latest は gemini-3-flash-previewの料金で算出
+        "gemini-flash-latest":           {"type": "flat",   "input": 0.50, "output":  3.0},
+        "deepseek-chat":                 {"type": "flat",   "input": 0.28, "output":  0.42},
+        "deepseek-reasoner":             {"type": "flat",   "input": 0.28, "output":  0.42},
+        "gpt-5-mini":                    {"type": "flat",   "input": 0.25, "output":  2.0},
+        "gpt-5-nano":                    {"type": "flat",   "input": 0.05, "output":  0.4},
         # tiered: トークン量によって単価が変わる
-        "gemini-2.5-pro":          {"type": "tiered", "threshold": 200_000,
-                                    "under": {"input": 1.25, "output": 10.0},
-                                    "over":  {"input": 2.50, "output": 15.0}},
+        "gemini-2.5-pro":                {"type": "tiered", "threshold": 200_000,
+                                          "under": {"input": 1.25, "output": 10.0},
+                                          "over":  {"input": 2.50, "output": 15.0}},
     }
     # fmt: on
 
