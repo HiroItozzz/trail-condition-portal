@@ -63,6 +63,17 @@ class MountainAliasAdmin(admin.ModelAdmin):
     search_fields = ["alias_name", "mountain_group__name"]
 
 
+# 一括更新リストの設置絵
+@admin.action(description="情報の無効化の解除")
+def unable_disabled(modeladmin, request, queryset):
+    queryset.update(disabled=False)
+
+
+@admin.action(description="情報の無効化")
+def enable_disabled(modeladmin, request, queryset):
+    queryset.update(disabled=False)
+
+
 @admin.register(TrailCondition)
 class TrailConditionAdmin(admin.ModelAdmin):
     list_display = [
@@ -112,6 +123,8 @@ class TrailConditionAdmin(admin.ModelAdmin):
         ("管理", {"fields": ("disabled",)}),
         ("メタデータ", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
     )
+
+    actions = [unable_disabled, enable_disabled]
 
     @admin.display(description="報告日", ordering="reported_at")
     def reported_date(self, obj):
