@@ -1,9 +1,9 @@
-prompt: 
+prompt:
 # AI設定
 config:
   model:
   # バリデーションエラー多発のため
-  temperature: 0.2
+  # temperature: 0.2
 
   thinking_budget: 12000
 

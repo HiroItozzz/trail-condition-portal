@@ -38,7 +38,7 @@ class LlmConfig(BaseModel):
     )
     data: str = Field(description="解析するテキスト")
     temperature: float = Field(
-        default=0.0, ge=0, le=2.0, description="生成ごとの揺らぎの幅（※ deepseek-reasonerでは無視される）"
+        default=0.5, ge=0, le=2.0, description="生成ごとの揺らぎの幅（※ deepseek-reasonerでは無視される）"
     )
     thinking_budget: int = Field(default=10000, ge=-1, le=15000, description="Geminiの思考予算（トークン数）")
     prompt_filename: str | None = Field(default=None, description="LLMエラー処理での識別用ファイルネーム")
