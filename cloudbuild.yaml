@@ -7,6 +7,8 @@ steps:
     waitFor: ["-"]
     args:
       - "build"
+      - "--cache-from"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:latest"
       - "--target=server"
       - "-t"
       - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
@@ -20,6 +22,8 @@ steps:
     waitFor: ["-"]
     args:
       - "build"
+      - "--cache-from"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:latest"
       - "--target=batch"
       - "-t"
       - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA"
