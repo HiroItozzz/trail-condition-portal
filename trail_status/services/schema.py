@@ -7,7 +7,7 @@ from ..models import AreaName, StatusType
 area_help_text = " / ".join([f"{label}:{name}" for name, label in AreaName.choices])
 
 
-class TrailConditionSchemaAi(BaseModel):
+class ConditionSchemaAi(BaseModel):
     """
     AIに構造化出力を指定するスキーマの各項目
     ※重要：descriptionはAIが読むプロンプト部分
@@ -43,13 +43,13 @@ class TrailConditionSchemaAi(BaseModel):
     comment: str = Field(default="", description="備考欄 / 状況詳細説明から漏れる情報があれば自由記述")
 
 
-class TrailConditionSchemaList(BaseModel):
+class ConditionSchemaAiList(BaseModel):
     """AIでの構造化出力を指定するスキーマ"""
 
-    trail_condition_records: list[TrailConditionSchemaAi] = Field(description="登山道状況のリスト")
+    trail_condition_records: list[ConditionSchemaAi] = Field(description="登山道状況のリスト")
 
 
-class TrailConditionSchemaInternal(TrailConditionSchemaAi):
+class ConditionSchemaAiInternal(ConditionSchemaAi):
     """DjangoのTrailConditionモデルに保存する内容と完全に一致するクラス"""
 
     url1: str

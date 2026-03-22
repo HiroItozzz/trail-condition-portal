@@ -13,7 +13,7 @@ from sudachipy import Dictionary, SplitMode
 from ..models import DataSource, LlmUsage, TrailCondition
 from .llm_stats import LlmStats
 from .pipeline import ResultSingle, SourceSchemaSingle
-from .schema import TrailConditionSchemaInternal, TrailConditionSchemaList
+from .schema import ConditionSchemaAiInternal, ConditionSchemaAiList
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +123,7 @@ class DbWriter:
     def _convert_to_internal_schema(self):
         """AI出力結果とAI設定を保存用スキーマへ統合"""
         # 単一ソースのAI出力を取得
-        trail_conditions_list: TrailConditionSchemaList = self.result.extracted_trail_conditions
+        trail_conditions_list: ConditionSchemaAiList = self.result.extracted_trail_conditions
 
         # TrailCondition用のLLM設定(JSONField)
         ai_config = {
@@ -136,7 +136,7 @@ class DbWriter:
         }
         # Djangoモデル格納のため同じ形式のパイダンティックスキーマにダンプ
         internal_data_list = [
-            TrailConditionSchemaInternal(
+            ConditionSchemaAiInternal(
                 **record.model_dump(),
                 url1=self.source_schema_single.url1,
                 ai_config=ai_config,
@@ -157,7 +157,7 @@ class DbWriter:
         if to_update:
             # TrailConditionSchemaInternalのフィールド名を取得
             # Djangoモデルの更新対象フィールドと一致している前提
-            fields_to_update = list(TrailConditionSchemaInternal.model_fields.keys())
+            fields_to_update = list(ConditionSchemaAiInternal.model_fields.keys())
 
             # bulk_updateではauto_now=Trueが機能しないため手動でセット
             for record in to_update:
@@ -198,7 +198,7 @@ class DbWriter:
         )
 
     def _reconcile_records(
-        self, existing_record_list: list[TrailCondition], ai_record_list: list[TrailConditionSchemaInternal]
+        self, existing_record_list: list[TrailCondition], ai_record_list: list[ConditionSchemaAiInternal]
     ) -> tuple[list[TrailCondition], list[TrailCondition]]:
         """
         AIの抽出データ(Pydantic)を既存レコードと照合する。
@@ -245,7 +245,7 @@ class DbWriter:
             used_model_records.add(db_record.id)
             used_ai_records.add(ai_idx)
 
-            matched_ai_record: TrailConditionSchemaInternal = ai_record_list[ai_idx]
+            matched_ai_record: ConditionSchemaAiInternal = ai_record_list[ai_idx]
 
             matched_m_name = matched_ai_record.mountain_name_raw
             matched_t_name = matched_ai_record.trail_name
@@ -307,7 +307,7 @@ class DbWriter:
         logger.info(f"--- データ照合終了: {self.source_schema_single.name}")
         return to_update, to_create
 
-    def _calculate_similarity(self, existing: TrailCondition, new_data: TrailConditionSchemaInternal) -> float:
+    def _calculate_similarity(self, existing: TrailCondition, new_data: ConditionSchemaAiInternal) -> float:
         """
         複数フィールドを組み合わせた類似度スコア（0.0 ~ 1.0）
 

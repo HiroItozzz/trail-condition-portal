@@ -6,7 +6,7 @@ import pytest
 from trail_status.models import AreaName, StatusType, TrailCondition
 from trail_status.services.db_writer import DbWriter
 from trail_status.services.pipeline import ResultSingle, SourceSchemaSingle
-from trail_status.services.schema import TrailConditionSchemaInternal
+from trail_status.services.schema import ConditionSchemaAiInternal
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def mock_existing_record():
 @pytest.fixture
 def mock_ai_result_update():
     """更新ありモック"""
-    sample_ai_result = TrailConditionSchemaInternal(
+    sample_ai_result = ConditionSchemaAiInternal(
         mountain_name_raw="テスト山",
         trail_name="テスト道",
         title="通行止め",
@@ -57,7 +57,7 @@ def mock_ai_result_update():
 @pytest.fixture
 def mock_ai_result_create():
     """新規登録モック"""
-    sample_ai_result = TrailConditionSchemaInternal(
+    sample_ai_result = ConditionSchemaAiInternal(
         mountain_name_raw="サンプル山",
         trail_name="サンプル道",
         title="通行止め",
@@ -74,7 +74,7 @@ def mock_ai_result_create():
 @pytest.fixture
 def mock_ai_result_no_change():
     """更新なしモック"""
-    sample_ai_result = TrailConditionSchemaInternal(
+    sample_ai_result = ConditionSchemaAiInternal(
         mountain_name_raw="テスト山",
         trail_name="テスト道",
         title="通行止め",

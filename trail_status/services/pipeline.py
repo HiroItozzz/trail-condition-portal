@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from .fetcher import DataFetcher
 from .llm_client import ConversationalAi, LlmConfig
 from .llm_stats import LlmStats
-from .schema import TrailConditionSchemaList
+from .schema import ConditionSchemaAiList
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class ResultSingle(BaseModel):
     new_hash: str | None = Field(default=None, description="ハッシュ値（リクエスト成功時）")
     scraped_length: int = 0
     content_changed: bool | None = None
-    extracted_trail_conditions: TrailConditionSchemaList | None = None
+    extracted_trail_conditions: ConditionSchemaAiList | None = None
     stats: LlmStats | None = None
     config: LlmConfig | None = None
 
@@ -133,7 +133,7 @@ class AiPipeline:
 
     async def _analyze_with_ai(
         self, source_data: SourceSchemaSingle, scraped_text: str
-    ) -> tuple[LlmConfig, TrailConditionSchemaList, LlmStats]:
+    ) -> tuple[LlmConfig, ConditionSchemaAiList, LlmStats]:
         """AI解析処理"""
         import time
 

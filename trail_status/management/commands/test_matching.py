@@ -9,7 +9,7 @@ from trail_status.models import DataSource, TrailCondition
 from trail_status.services.db_writer import DbWriter
 from trail_status.services.llm_client import LlmConfig
 from trail_status.services.pipeline import ResultSingle, SourceSchemaSingle
-from trail_status.services.schema import TrailConditionSchemaInternal
+from trail_status.services.schema import ConditionSchemaAiInternal
 
 logger = logging.getLogger(__name__)
 
@@ -213,7 +213,7 @@ class Command(BaseCommand):
 
         # TrailConditionSchemaInternalリストを作成
         internal_data_list = [
-            TrailConditionSchemaInternal(**record, url1=source.url1, ai_config=ai_config, ai_model=model_name)
+            ConditionSchemaAiInternal(**record, url1=source.url1, ai_config=ai_config, ai_model=model_name)
             for record in ai_conditions
         ]
 

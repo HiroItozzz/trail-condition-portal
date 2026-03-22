@@ -14,7 +14,7 @@ from langsmith import traceable
 from pydantic import BaseModel, Field, ValidationError, computed_field
 
 from .llm_stats import TokenStats
-from .schema import TrailConditionSchemaList
+from .schema import ConditionSchemaAiList
 
 logger = logging.getLogger(__name__)
 
@@ -278,10 +278,10 @@ class ConversationalAi(ABC):
         raise
 
     @traceable
-    def validate_response(self, response_text: str) -> TrailConditionSchemaList:
+    def validate_response(self, response_text: str) -> ConditionSchemaAiList:
         """AI出力データのバリデーション"""
         try:
-            validated_data = TrailConditionSchemaList.model_validate_json(response_text)
+            validated_data = ConditionSchemaAiList.model_validate_json(response_text)
             logger.info(f"{self.model}が構造化出力に成功")
         except ValidationError as e:
             raise e
@@ -315,10 +315,10 @@ class ConversationalAi(ABC):
 class DeepseekClient(ConversationalAi):
     @property
     def prompt_for_deepseek(self):
-        STATEMENT = f"【重要】次の行から示す要請はこのPydanticモデルに合うJSONで出力してください: {TrailConditionSchemaList.model_json_schema()}\n"
+        STATEMENT = f"【重要】次の行から示す要請はこのPydanticモデルに合うJSONで出力してください: {ConditionSchemaAiList.model_json_schema()}\n"
         return STATEMENT + self.prompt + "\n\n\n" + self.data
 
-    async def generate(self) -> tuple[TrailConditionSchemaList, TokenStats]:
+    async def generate(self) -> tuple[ConditionSchemaAiList, TokenStats]:
         from langsmith.wrappers import wrap_openai
         from openai import AsyncOpenAI
 
@@ -332,7 +332,7 @@ class DeepseekClient(ConversationalAi):
                 "ls_max_tokens": self.thinking_budget,
             },
         )
-        async def _run() -> tuple[TrailConditionSchemaList, TokenStats]:
+        async def _run() -> tuple[ConditionSchemaAiList, TokenStats]:
             """LangSmithのデコレータを定義するためだけの関数内関数
 
             Returns:
@@ -418,7 +418,7 @@ class GeminiClient(ConversationalAi):
     def prompt_for_gemini(self):
         return self.prompt + "\n\n\n" + self.data
 
-    async def generate(self) -> tuple[TrailConditionSchemaList, TokenStats]:
+    async def generate(self) -> tuple[ConditionSchemaAiList, TokenStats]:
         from google import genai
         from google.genai import types
         from google.genai.errors import ClientError, ServerError
@@ -434,7 +434,7 @@ class GeminiClient(ConversationalAi):
                 "ls_max_tokens": self.thinking_budget,
             },
         )
-        async def _run() -> tuple[TrailConditionSchemaList, TokenStats]:
+        async def _run() -> tuple[ConditionSchemaAiList, TokenStats]:
             """LangSmithのデコレータを定義するためだけの関数内関数
 
             Args:
@@ -464,7 +464,7 @@ class GeminiClient(ConversationalAi):
                         config=types.GenerateContentConfig(
                             temperature=self.temperature,
                             response_mime_type="application/json",  # 構造化出力
-                            response_json_schema=TrailConditionSchemaList.model_json_schema(),
+                            response_json_schema=ConditionSchemaAiList.model_json_schema(),
                             thinking_config=types.ThinkingConfig(thinking_budget=self.thinking_budget),
                             tools=[search_tool],
                         ),
@@ -543,7 +543,7 @@ class GptClient(ConversationalAi):
                 "ls_max_tokens": self.thinking_budget,
             },
         )
-        async def _run() -> tuple[TrailConditionSchemaList, TokenStats]:
+        async def _run() -> tuple[ConditionSchemaAiList, TokenStats]:
             from langsmith.wrappers import wrap_openai
             from openai import AsyncOpenAI
 
@@ -565,7 +565,7 @@ class GptClient(ConversationalAi):
                         model="gpt-5-mini",
                         tools=[search_tool],
                         input=self.prompt_for_gpt,
-                        text_format=TrailConditionSchemaList,
+                        text_format=ConditionSchemaAiList,
                     )
                     validated_data = response.output_parsed
                     logger.info(f"{self.model}が構造化出力に成功")

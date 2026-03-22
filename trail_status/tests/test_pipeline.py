@@ -4,7 +4,7 @@ import pytest
 
 from trail_status.services.llm_client import ConversationalAi, LlmConfig
 from trail_status.services.pipeline import AiPipeline, SourceSchemaSingle
-from trail_status.services.schema import TrailConditionSchemaList
+from trail_status.services.schema import ConditionSchemaAiList
 
 
 @pytest.mark.asyncio
@@ -14,7 +14,7 @@ async def test_process_source_data_full_flow(monkeypatch, mock_async_client, sam
             return fake_ai_result, sample_token_stats
 
     # --- ConversationalAi.generate の戻り値を準備 ---
-    fake_ai_result = TrailConditionSchemaList(trail_condition_records=[])
+    fake_ai_result = ConditionSchemaAiList(trail_condition_records=[])
 
     # --- LlmConfig.from_file のモック化 ---
     mock_config = LlmConfig(data="テスト", model="gemini-2.5-flash")
