@@ -41,7 +41,7 @@ class LlmConfig(BaseModel):
         default=0.5, ge=0, le=2.0, description="生成ごとの揺らぎの幅（※ deepseek-reasonerでは無視される）"
     )
     thinking_budget: int = Field(default=10000, ge=-1, le=15000, description="Geminiの思考予算（トークン数）")
-    prompt_filename: str | None = Field(default=None, description="LLMエラー処理での識別用ファイルネーム")
+    prompt_filename: str | None = Field(default=None, description="プロンプトファイル名")
     allow_websearch: bool = Field(default=True, description="Gemini, OpenAIでWeb検索を許可するかどうか")
 
     @computed_field
