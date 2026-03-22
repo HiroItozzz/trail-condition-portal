@@ -53,6 +53,7 @@ documents/
 .claude/
 sample/
 backups/
+feed_samples/
 
 # Tests (optional: remove if you want tests in image)
 **/tests/
