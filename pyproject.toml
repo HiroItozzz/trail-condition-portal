@@ -3,7 +3,7 @@ name = "trail-condition-portal"
 version = "0.1.0"
 description = "登山道危険情報の自動収集・統合表示サービス"
 readme = "README.md"
-requires-python = ">=3.13.7"
+requires-python = "==3.13.11"
 authors = [{ name = "HiroItozzz" }]
 license = { text = "All rights reserved" }
 dependencies = [
