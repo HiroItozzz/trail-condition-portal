@@ -3,8 +3,8 @@ from unittest.mock import MagicMock
 import pytest
 
 from trail_status.services.llm_client import ConversationalAi, LlmConfig
-from trail_status.services.pipeline import AiPipeline, SourceSchemaSingle
-from trail_status.services.schema import ConditionSchemaAiList
+from trail_status.services.pipeline import AiPipeline
+from trail_status.services.types import ConditionSchemaAiList, SourceSchemaSingle
 
 
 @pytest.mark.asyncio

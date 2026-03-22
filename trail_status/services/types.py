@@ -1,8 +1,17 @@
+from __future__ import annotations
+
+import typing
+from dataclasses import dataclass
 from datetime import date
 
 from pydantic import BaseModel, Field
 
 from ..models import AreaName, StatusType
+
+if typing.TYPE_CHECKING:
+    from .llm_client import LlmConfig
+    from .llm_stats import LlmStats
+
 
 area_help_text = " / ".join([f"{label}:{name}" for name, label in AreaName.choices])
 
@@ -44,7 +53,10 @@ class ConditionSchemaAi(BaseModel):
 
 
 class ConditionSchemaAiList(BaseModel):
-    """AIでの構造化出力を指定するスキーマ"""
+    """
+    AIでの構造化出力を指定するスキーマ
+    descriptionをAIが読む
+    """
 
     trail_condition_records: list[ConditionSchemaAi] = Field(description="登山道状況のリスト")
 
@@ -57,3 +69,28 @@ class ConditionSchemaAiInternal(ConditionSchemaAi):
     ai_model: str = ""
     prompt_file: str = ""
     mountain_group: str | None = Field(default=None, description="山グループ / 後で手動入力")
+
+
+@dataclass
+class SourceSchemaSingle:
+    """DjangoモデルのDataSourceから取り出したデータ"""
+
+    id: int
+    name: str
+    url1: str
+    prompt_key: str
+    content_hash: str | None = None
+
+
+@dataclass
+class ResultSingle:
+    """AI出力のサマリー"""
+
+    success: bool
+    message: str
+    new_hash: str | None = None
+    scraped_length: int = 0
+    content_changed: bool | None = None
+    extracted_trail_conditions: ConditionSchemaAiList | None = None
+    stats: LlmStats | None = None
+    config: LlmConfig | None = None

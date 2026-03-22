@@ -8,8 +8,7 @@ from django.db import transaction
 from trail_status.models import DataSource, TrailCondition
 from trail_status.services.db_writer import DbWriter
 from trail_status.services.llm_client import LlmConfig
-from trail_status.services.pipeline import ResultSingle, SourceSchemaSingle
-from trail_status.services.schema import ConditionSchemaAiInternal
+from trail_status.services.types import ConditionSchemaAiInternal, ResultSingle, SourceSchemaSingle
 
 logger = logging.getLogger(__name__)
 

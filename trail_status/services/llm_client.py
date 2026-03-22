@@ -14,7 +14,7 @@ from langsmith import traceable
 from pydantic import BaseModel, Field, ValidationError, computed_field
 
 from .llm_stats import TokenStats
-from .schema import ConditionSchemaAiList
+from .types import ConditionSchemaAiList
 
 logger = logging.getLogger(__name__)
 

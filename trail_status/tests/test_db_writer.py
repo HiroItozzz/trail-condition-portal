@@ -5,8 +5,7 @@ import pytest
 
 from trail_status.models import AreaName, StatusType, TrailCondition
 from trail_status.services.db_writer import DbWriter
-from trail_status.services.pipeline import ResultSingle, SourceSchemaSingle
-from trail_status.services.schema import ConditionSchemaAiInternal
+from trail_status.services.types import ConditionSchemaAiInternal, ResultSingle, SourceSchemaSingle
 
 
 @pytest.fixture

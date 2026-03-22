@@ -3,41 +3,15 @@ import logging
 from typing import Callable
 
 import httpx
-from pydantic import BaseModel, Field
 
 from .fetcher import DataFetcher
 from .llm_client import ConversationalAi, LlmConfig
 from .llm_stats import LlmStats
-from .schema import ConditionSchemaAiList
+from .types import ConditionSchemaAiList, ResultSingle, SourceSchemaSingle
 
 logger = logging.getLogger(__name__)
 
 ClientFactory = Callable[[LlmConfig], ConversationalAi]
-
-
-class SourceSchemaSingle(BaseModel):
-    id: int = Field(description="Djangoモデルから取り出した情報源ID")
-    name: str = Field(description="Djangoモデルから取り出した情報源名")
-    url1: str = Field(description="Djangoモデルから取り出した情報源URL")
-    prompt_key: str = Field(description="Djangoモデルから取り出した情報源プロンプトファイル名（stem）")
-    content_hash: str | None = Field(
-        default=None, description="Djangoモデルから取り出した過去のHTMLボディのハッシュキー"
-    )
-
-
-class ResultSingle(BaseModel):
-    success: bool = Field(description="スクレイピングの成功判定")
-    message: str = Field(description="試行結果メッセージ")
-    new_hash: str | None = Field(default=None, description="ハッシュ値（リクエスト成功時）")
-    scraped_length: int = 0
-    content_changed: bool | None = None
-    extracted_trail_conditions: ConditionSchemaAiList | None = None
-    stats: LlmStats | None = None
-    config: LlmConfig | None = None
-
-    model_config = {"arbitrary_types_allowed": True}
-
-
 UpdatedDataList = list[tuple[SourceSchemaSingle, ResultSingle | BaseException]]
 
 

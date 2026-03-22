@@ -31,10 +31,10 @@ class DataFetcher:
 
         except httpx.HTTPStatusError as e:
             logger.error(f"HTTP error occurred: {e.response.status_code} for {self.url}")
-            raise
+            raise e
         except Exception as e:
             logger.exception(f"Unexpected error fetching {self.url}")
-            raise
+            raise e
 
     async def fetch_parsed_text(self, response_text: str) -> str:
         """

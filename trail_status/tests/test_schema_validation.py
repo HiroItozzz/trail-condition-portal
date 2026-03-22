@@ -4,7 +4,7 @@
 
 import pytest
 
-from trail_status.services.schema import ConditionSchemaAiList
+from trail_status.services.types import ConditionSchemaAiList
 
 
 def test_valid_schema_validation():
