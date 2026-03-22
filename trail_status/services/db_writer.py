@@ -74,18 +74,19 @@ class DbWriter:
 
     def save_to_source(self) -> None:
         """情報源モデルへ保存"""
-        source = DataSource.objects.get(id=self.source_schema_single.id)
-        # サイト巡回日時を更新
-        # ハッシュ取得andLLMスキップ時も success=True
-        source.last_checked_at = timezone.now()
+        if isinstance(self.result, ResultSingle):
+            source = DataSource.objects.get(id=self.source_schema_single.id)
+            # サイト巡回日時を更新
+            # ハッシュ取得andLLMスキップ時も success=True
+            source.last_checked_at = timezone.now()
 
-        # コンテンツハッシュとスクレイピング時刻を更新
-        if self.result.content_changed:
-            source.content_hash = self.result.new_hash
-            source.last_scraped_at = timezone.now()
+            # コンテンツハッシュとスクレイピング時刻を更新
+            if self.result.content_changed:
+                source.content_hash = self.result.new_hash
+                source.last_scraped_at = timezone.now()
 
-        # コミット
-        source.save(update_fields=["content_hash", "last_scraped_at", "last_checked_at"])
+            # コミット
+            source.save(update_fields=["content_hash", "last_scraped_at", "last_checked_at"])
 
     def persist_condition_and_usage(self) -> dict[str, Any]:
         """登山道状況とLLM使用履歴をDBに保存"""
@@ -94,7 +95,7 @@ class DbWriter:
         internal_data_list = self._convert_to_internal_schema()
 
         # DBから比較対象を取得
-        existing_records = TrailCondition.objects.filter(source_id=self.source_schema_single.id)
+        existing_records = list(TrailCondition.objects.filter(source_id=self.source_schema_single.id))
 
         # 同期するレコードを照合
         to_update, to_create = self._reconcile_records(existing_records, internal_data_list)
