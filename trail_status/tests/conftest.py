@@ -19,7 +19,7 @@ def mock_api_keys(monkeypatch):
 
 
 @pytest.fixture
-def clean_env(monkeypatch):
+def no_api_keys(monkeypatch):
     """環境変数をクリア"""
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)

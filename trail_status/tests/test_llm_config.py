@@ -9,12 +9,7 @@ from trail_status.services.llm_client import LlmConfig
 
 def test_valid_config(mock_api_keys):
     """正常な設定でのインスタンス化テスト"""
-    config = LlmConfig(
-        site_prompt="テストプロンプト",
-        model="deepseek-chat",
-        temperature=0.5,
-        data="テストデータ"
-    )
+    config = LlmConfig(site_prompt="テストプロンプト", model="deepseek-chat", temperature=0.5, data="テストデータ")
     assert config.site_prompt == "テストプロンプト"
     assert config.model == "deepseek-chat"
     assert config.temperature == 0.5
@@ -24,11 +19,7 @@ def test_valid_config(mock_api_keys):
 def test_invalid_model_pattern():
     """不正なモデル名でのバリデーションテスト"""
     with pytest.raises(ValueError):
-        LlmConfig(
-            site_prompt="テストプロンプト",
-            model="invalid-model",
-            data="テストデータ"
-        )
+        LlmConfig(site_prompt="テストプロンプト", model="invalid-model", data="テストデータ")
 
 
 def test_invalid_temperature_range():
@@ -38,36 +29,24 @@ def test_invalid_temperature_range():
             site_prompt="テストプロンプト",
             model="deepseek-chat",
             temperature=3.0,  # 範囲外
-            data="テストデータ"
+            data="テストデータ",
         )
 
 
 def test_api_key_auto_detection_deepseek(mock_api_keys):
     """DeepSeekモデルでのAPIキー自動取得テスト"""
-    config = LlmConfig(
-        site_prompt="テストプロンプト",
-        model="deepseek-reasoner",
-        data="テストデータ"
-    )
+    config = LlmConfig(site_prompt="テストプロンプト", model="deepseek-reasoner", data="テストデータ")
     assert config.api_key == "test-deepseek-key"
 
 
 def test_api_key_auto_detection_gemini(mock_api_keys):
     """GeminiモデルでのAPIキー自動取得テスト"""
-    config = LlmConfig(
-        site_prompt="テストプロンプト",
-        model="gemini-3-flash-preview",
-        data="テストデータ"
-    )
+    config = LlmConfig(site_prompt="テストプロンプト", model="gemini-3-flash-preview", data="テストデータ")
     assert config.api_key == "test-gemini-key"
 
 
-def test_api_key_missing_error(clean_env):
+def test_api_key_missing_error(no_api_keys):
     """APIキー未設定時のエラーテスト"""
-    config = LlmConfig(
-        site_prompt="テストプロンプト",
-        model="deepseek-chat",
-        data="テストデータ"
-    )
+    config = LlmConfig(site_prompt="テストプロンプト", model="deepseek-chat", data="テストデータ")
     with pytest.raises(ValueError, match="環境変数 DEEPSEEK_API_KEY が設定されていません"):
         _ = config.api_key
