@@ -1,0 +1,170 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "奥の院口トイレ",
+      "mountain_name_raw": "御岳山",
+      "title": "凍結のため使用不可",
+      "description": "奥の院口トイレは凍結のため、現在使用できません。",
+      "reported_at": "2026-02-25",
+      "status": "FACILITY",
+      "area": "OKUTAMA"
+    },
+    {
+      "trail_name": "神苑の森コース（天狗の腰掛杉～鳥居前広場）",
+      "mountain_name_raw": "御岳山",
+      "title": "当面通行止め",
+      "description": "天狗の腰掛杉から鳥居前広場までの神苑の森コースは、大きな倒木が道を塞いでいるため、当面通行止めです。",
+      "status": "CLOSURE",
+      "area": "OKUTAMA"
+    },
+    {
+      "trail_name": "表参道（ケーブルカー滝本駅～武蔵御嶽神社 間）",
+      "mountain_name_raw": "御岳山",
+      "title": "通行可（丸山園地トイレ凍結）",
+      "description": "舗装路。\n丸山園地トイレは、凍結のため使用できません。",
+      "reported_at": "2026-01-28",
+      "status": "FACILITY",
+      "area": "OKUTAMA"
+    },
+    {
+      "trail_name": "ロックガーデン",
+      "mountain_name_raw": "御岳山",
+      "title": "通行可",
+      "description": "2025年11月11日に、長尾平～奥の院口トイレ間の倒木は処理されました。通常通りに通行可能です。",
+      "status": "CLEAR",
+      "area": "OKUTAMA"
+    },
+    {
+      "trail_name": "御岳山～大岳山",
+      "mountain_name_raw": "御岳山",
+      "title": "通行可（奥の院口トイレ凍結）",
+      "description": "奥の院口トイレは、凍結のため使用できません。",
+      "reported_at": "2026-02-21",
+      "status": "FACILITY",
+      "area": "OKUTAMA"
+    },
+    {
+      "trail_name": "日の出山～上養沢",
+      "mountain_name_raw": "日の出山",
+      "title": "通行止",
+      "description": "「関東ふれあいの道⑥杉の木陰のみち」くろも岩～柿平園地は、落石の危険があるため、2025年1月25日より通行止めとなりました。",
+      "reported_at": "2025-01-25",
+      "status": "CLOSURE",
+      "area": "OKUTAMA"
+    },
+    {
+      "trail_name": "日の出山～三室山～ 愛宕山～二俣尾駅",
+      "mountain_name_raw": "日の出山",
+      "title": "一部通行止",
+      "description": "三室山～愛宕山間（通行止め）\n※2024年9月9日より、伐採作業のため2026年8月13日まで通行止め",
+      "reported_at": "2024-09-09",
+      "resolved_at": "2026-08-13",
+      "status": "CLOSURE",
+      "area": "OKUTAMA"
+    },
+    {
+      "trail_name": "御岳山～大楢峠～鳩ノ巣駅",
+      "mountain_name_raw": "御岳山",
+      "title": "通行止",
+      "description": "御岳山～大楢峠間（通行止）※崩落箇所あり\n鳩ノ巣～大楢峠間 (通行止め) ※2020年5月9日より、登山道に土砂崩落が確認されたため通行止め",
+      "reported_at": "2020-05-09",
+      "status": "CLOSURE",
+      "area": "OKUTAMA"
+    },
+    {
+      "trail_name": "海沢林道",
+      "mountain_name_raw": "大岳山",
+      "title": "一部通行止め",
+      "description": "海沢園地から大楢峠間の林道は通行止めが解除されました。（車両は不可）\n海沢三滝へは一部通行止め",
+      "status": "CLOSURE",
+      "area": "OKUTAMA"
+    },
+    {
+      "trail_name": "御岳林道（七代の滝から上養沢方面）",
+      "mountain_name_raw": "御岳山",
+      "title": "通行止",
+      "description": "林道災害復旧工事のため、終日全面通行止め。",
+      "status": "CLOSURE",
+      "area": "OKUTAMA"
+    },
+    {
+      "trail_name": "御岳渓谷遊歩道",
+      "mountain_name_raw": "御岳山",
+      "title": "通行可（一部工事）",
+      "description": "御岳小橋は2019年台風19号により流されているため、現在ありません。\n鵜の瀬橋工事（床版取替工、塗替塗装工）に伴い、鵜の瀬橋が通行止めとなります。工事期間：令和8年1月中旬から3月下旬まで（予定）",
+      "resolved_at": "2026-03-31",
+      "status": "FACILITY",
+      "area": "OKUTAMA"
+    },
+    {
+      "trail_name": "御岳山周辺",
+      "mountain_name_raw": "御岳山",
+      "title": "ツキノワグマ目撃情報（2025年12月1日）",
+      "description": "ケーブルカー線路上にて1頭目撃",
+      "reported_at": "2025-12-01",
+      "status": "ANIMAL",
+      "area": "OKUTAMA",
+      "reference_URL": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html"
+    },
+    {
+      "trail_name": "御岳山周辺",
+      "mountain_name_raw": "御岳山",
+      "title": "ツキノワグマ目撃情報（2025年10月2日）",
+      "description": "奥の院口トイレ付近にて2頭（親子）目撃",
+      "reported_at": "2025-10-02",
+      "status": "ANIMAL",
+      "area": "OKUTAMA",
+      "reference_URL": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html"
+    },
+    {
+      "trail_name": "御岳山周辺",
+      "mountain_name_raw": "御岳山",
+      "title": "ツキノワグマ目撃情報（2025年8月27日）",
+      "description": "天狗の腰掛け杉～天狗岩間にて1頭目撃",
+      "reported_at": "2025-08-27",
+      "status": "ANIMAL",
+      "area": "OKUTAMA",
+      "reference_URL": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html"
+    },
+    {
+      "trail_name": "御岳山周辺",
+      "mountain_name_raw": "御岳山",
+      "title": "ツキノワグマ目撃情報（2025年8月21日）",
+      "description": "古里～大塚山間にて1頭目撃",
+      "reported_at": "2025-08-21",
+      "status": "ANIMAL",
+      "area": "OKUTAMA",
+      "reference_URL": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html"
+    },
+    {
+      "trail_name": "御岳山周辺",
+      "mountain_name_raw": "御岳山",
+      "title": "ツキノワグマ目撃情報（2025年6月8日）",
+      "description": "奥の院口トイレ付近にて1頭目撃",
+      "reported_at": "2025-06-08",
+      "status": "ANIMAL",
+      "area": "OKUTAMA",
+      "reference_URL": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html"
+    },
+    {
+      "trail_name": "御岳山周辺",
+      "mountain_name_raw": "御岳山",
+      "title": "ツキノワグマ目撃情報（2025年6月6日）",
+      "description": "アクバ峠から上高岩山間で真新しいクマ剥ぎ確認",
+      "reported_at": "2025-06-06",
+      "status": "ANIMAL",
+      "area": "OKUTAMA",
+      "reference_URL": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html"
+    },
+    {
+      "trail_name": "御岳山周辺",
+      "mountain_name_raw": "御岳山",
+      "title": "ツキノワグマ目撃情報（2025年5月23日）",
+      "description": "御岳山駅付近にて1頭目撃",
+      "reported_at": "2025-05-23",
+      "status": "ANIMAL",
+      "area": "OKUTAMA",
+      "reference_URL": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html"
+    }
+  ]
+}

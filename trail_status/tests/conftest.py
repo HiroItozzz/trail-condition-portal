@@ -25,6 +25,12 @@ def no_api_keys(monkeypatch):
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
 
 
+@pytest.fixture(autouse=True)
+def disable_sample_save(monkeypatch):
+    """全テストで AI 出力サンプル保存を無効化"""
+    monkeypatch.delenv("SAVE_AI_OUTPUTS", raising=False)
+
+
 @pytest.fixture
 def mock_async_client(monkeypatch):
     """httpx.AsyncClientをモック"""
