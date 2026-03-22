@@ -50,8 +50,6 @@ def mock_async_client(monkeypatch):
     return mock_client
 
 
-
-
 @pytest.fixture
 def sample_url():
     return "https://sample.com/"
@@ -66,6 +64,7 @@ def sample_llm_config():
         "model": "deepseek-chat",
         "temperature": 0.3,
         "data": "テスト用データ",
+        "prompt_key": "test_key",
     }
 
 
@@ -73,6 +72,7 @@ def sample_llm_config():
 def sample_prompt_data():
     """テスト用プロンプトとデータ"""
     return {"prompt": "テスト用プロンプト", "data": "テスト用データ"}
+
 
 @pytest.fixture
 def sample_token_stats():
@@ -84,6 +84,7 @@ def sample_token_stats():
     mock_stats.prompt_tokens = 100
     mock_stats.completion_tokens = 50
     return mock_stats
+
 
 @pytest.fixture
 def mock_openai_response():

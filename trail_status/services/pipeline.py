@@ -20,7 +20,9 @@ class SourceSchemaSingle(BaseModel):
     name: str = Field(description="Djangoモデルから取り出した情報源名")
     url1: str = Field(description="Djangoモデルから取り出した情報源URL")
     prompt_key: str = Field(description="Djangoモデルから取り出した情報源プロンプトファイル名（stem）")
-    content_hash: str | None = Field(description="Djangoモデルから取り出した過去のHTMLボディのハッシュキー")
+    content_hash: str | None = Field(
+        default=None, description="Djangoモデルから取り出した過去のHTMLボディのハッシュキー"
+    )
 
 
 class ResultSingle(BaseModel):

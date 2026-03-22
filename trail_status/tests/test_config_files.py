@@ -5,8 +5,6 @@
 import yaml
 from django.conf import settings
 
-from trail_status.services.schema import TrailConditionSchemaList
-
 
 class TestConfigFile:
     """設定ファイル読み込みテスト"""
