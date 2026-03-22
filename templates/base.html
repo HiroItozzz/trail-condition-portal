@@ -17,22 +17,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-      {% block title %}トレイルインフォ - 登山道状況まとめ{% endblock %}
+      {% block title %}
+        トレイルインフォ - 登山道状況まとめ
+      {% endblock title %}
     </title>
     <meta name="description"
-          content="{% block meta_description %}奥多摩・丹沢等の登山道状況を公的機関から自動収集。通行止め・通行注意等の最新状況をまとめて確認できます。{% endblock %}">
+          content="{% block meta_description %}奥多摩・丹沢等の登山道状況を公的機関から自動収集。通行止め・通行注意等の最新状況をまとめて確認できます。{% endblock meta_description %}">
     <!-- Canonical URL -->
     <link rel="canonical"
-          href="{% block canonical_url %}https://trail-info.jp/{% endblock %}">
-    {% block meta_robots %}{% endblock %}
+          href="{% block canonical_url %}https://trail-info.jp/{% endblock canonical_url %}">
+    {% block meta_robots %}
+    {% endblock meta_robots %}
     <!-- OGタグ (SNSシェア用) -->
     <meta property="og:title"
-          content="{% block og_title %}トレイルインフォ - 登山道状況まとめ{% endblock %}">
+          content="{% block og_title %}トレイルインフォ - 登山道状況まとめ{% endblock og_title %}">
     <meta property="og:description"
           content="奥多摩・丹沢等の登山道状況を公的機関から自動収集。通行止め・通行注意等の最新状況をまとめて確認できます。">
     <meta property="og:type" content="website">
     <meta property="og:url"
-          content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
+          content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock og_url %}">
     <meta property="og:site_name" content="トレイルインフォ - 登山道状況まとめ">
     <meta property="og:locale" content="ja_JP">
     <meta property="og:image"
@@ -43,7 +46,7 @@
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title"
-          content="{% block twitter_title %}トレイルインフォ - 登山道状況まとめ{% endblock %}">
+          content="{% block twitter_title %}トレイルインフォ - 登山道状況まとめ{% endblock twitter_title %}">
     <meta name="twitter:description"
           content="奥多摩・丹沢等の登山道状況を公的機関から自動収集。通行止め・通行注意等の最新状況をまとめて確認できます。">
     <meta name="twitter:image"
@@ -115,7 +118,7 @@
                  style="font-size: 14px;
                         font-weight: 500">📚 情報源リンク集</a>
             </div>
-          </a>
+          </div>
           <hr>
           <nav>
             {% if recent_sources %}
@@ -175,24 +178,27 @@
         </div>
       </aside>
       <main id="content">
-        {% block content %}{% endblock %}
+        {% block content %}
+        {% endblock content %}
         <footer class="bg-gray-50 border-t border-gray-200 mt-8">
           <div class="mx-auto">
             <div class="flex gap-4 justify-end text-xs text-gray-600"
                  style="text-align: center">
-              <a href="/site-policy/" class="hover:text-blue-600 transition-colors">サイトポリシー</a>
+              <a href="{% url 'site-policy' %}"
+                 class="hover:text-blue-600 transition-colors">サイトポリシー</a>
               <span class="text-gray-500">安全な登山をお楽しみください 🏔️</span>
-              <span>&copy; 2026 トレイルインフォ</span>
+              <span>© 2026 トレイルインフォ</span>
             </div>
           </div>
         </footer>
-      </div>
-      <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-      <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-      <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-      <script src="{% static 'js/datatable.js' %}"></script>
-      <script src="{% static 'js/datatable-filters.js' %}"></script>
-      <script src="{% static 'js/datatable-ui.js' %}"></script>
-      <script src="{% static 'js/sidebar.js' %}"></script>
-    </body>
-  </html>
+      </main>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="{% static 'js/datatable.js' %}"></script>
+    <script src="{% static 'js/datatable-filters.js' %}"></script>
+    <script src="{% static 'js/datatable-ui.js' %}"></script>
+    <script src="{% static 'js/sidebar.js' %}"></script>
+  </body>
+</html>
