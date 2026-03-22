@@ -87,9 +87,9 @@ class DataFetcher:
         current_hash = self.calculate_content_hash(html)
 
         # 初回スクレイピングまたはハッシュが異なる場合は変更あり
-        has_changed = previous_hash is None or current_hash != previous_hash
+        has_changed = not previous_hash or current_hash != previous_hash
 
-        if previous_hash is None:
+        if not previous_hash:
             logger.debug(f"初回スクレイピング - ハッシュ: {current_hash[:8]}...")
         elif has_changed:
             logger.debug(f"コンテンツ変更検知 - 旧: {previous_hash[:8]}... 新: {current_hash[:8]}...")
