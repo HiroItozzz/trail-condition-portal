@@ -1,9 +1,75 @@
-{% extends "base.html" %}
-{% block title %}
-  登山道巡視ブログ集
-{% endblock title %}
+{# djlint: off #}
+{% extends 'base.html' %}
+{% block title %}登山道巡視ブログ集 - トレイルインフォ{% endblock title %}
 {% block meta_description %}
-  登山道を定期的に巡視し調査報告しているブログのリンク集です。
+  奥多摩・丹沢周辺の登山道を定期的に巡視し調査報告しているブログのリンク集です。最新の記事も確認できます。
 {% endblock meta_description %}
+{# djlint: on #}
 {% block content %}
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">巡視ブログ集</h1>
+    <p class="mb-6 leading-relaxed">
+      登山道を定期的に巡視し、現地の状況を報告しているブログの一覧です。
+      各ブログの最新記事も表示しています。
+    </p>
+    {% for area_code, area_data in grouped_sources.items %}
+      <section class="mb-10">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-blue-200">{{ area_data.label }}</h2>
+        <div class="space-y-4">
+          {% for source in area_data.sources %}
+            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+              <div class="mb-2">
+                <h3 class="text-lg font-bold text-blue-900">
+                  <a href="{{ source.url2 }}"
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     class="hover:underline"
+                     onclick="gtag('event', 'blog_source_click', { 'source_id': {{ source.id }}, 'source_name': '{{ source.name }}' });">
+                    {{ source.name }}
+                    <span class="text-sm font-normal">↗</span>
+                  </a>
+                </h3>
+              </div>
+              {% if source.description %}<p class="text-sm text-gray-600 mb-3">{{ source.description }}</p>{% endif %}
+              {% if source.recent_feeds %}
+                <div class="mt-3 space-y-2">
+                  <h4 class="text-xs font-medium text-gray-500">最新の記事</h4>
+                  {% for feed in source.recent_feeds %}
+                    <div class="pl-3 border-l-2 border-gray-200">
+                      <a href="{{ feed.url }}"
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         class="text-sm text-blue-600 hover:underline leading-snug"
+                         onclick="gtag('event', 'blog_feed_click', { 'source_name': '{{ source.name }}', 'feed_title': '{{ feed.title|truncatechars:30 }}' });">
+                        {{ feed.title }}
+                      </a>
+                      <div class="flex items-center gap-2 mt-0.5">
+                        <span class="text-xs text-gray-400">{{ feed.published_at|date:"Y/m/d" }}</span>
+                        {% if feed.summary %}
+                          <span class="text-xs text-gray-500 truncate" style="max-width: 300px;">{{ feed.summary|truncatechars:60 }}</span>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% empty %}
+      <p class="text-gray-500">現在、登録されている巡視ブログはありません。</p>
+    {% endfor %}
+    <div class="mt-8 text-sm text-gray-600">
+      <p class="mb-2">
+        巡視ブログの追加リクエストは
+        <a href="https://x.com/trailinfo5"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="text-blue-600 hover:underline">@trailinfo5</a>
+        までお願いします。
+      </p>
+      <a href="{% url 'trail-list' %}" class="text-blue-600 hover:underline">← トップページに戻る</a>
+    </div>
+  </div>
 {% endblock content %}
