@@ -14,11 +14,12 @@ logger = logging.getLogger(__name__)
 def _get_sidebar_context() -> dict:
     """サイドバー用のフィルター選択肢を取得（データがある項目のみ表示）"""
     base_conditions = TrailCondition.objects.filter(disabled=False)
+    base_datasources = DataSource.objects.filter(data_format="WEB")
 
     # 最近追加された情報源（1週間以内、最新5件）
     seven_days_ago = timezone.now() - timedelta(days=7)
     recent_sources = (
-        DataSource.objects.filter(data_format="WEB", created_at__gte=seven_days_ago)
+        base_datasources.filter(created_at__gte=seven_days_ago)
         .order_by("-created_at")[:5]
         .values("id", "name", "created_at")
     )
@@ -33,11 +34,7 @@ def _get_sidebar_context() -> dict:
 
     # 情報源フィルター選択肢（データがある情報源のみ）
     source_counts = dict(base_conditions.values("source").annotate(count=Count("id")).values_list("source", "count"))
-    source_choices = [
-        (id, name)
-        for id, name in DataSource.objects.filter(data_format="WEB").get_choices()
-        if source_counts.get(id, 0) > 0
-    ]
+    source_choices = [(id, name) for id, name in base_datasources.get_choices() if source_counts.get(id, 0) > 0]
 
     return {
         "source_choices": source_choices,
@@ -48,13 +45,15 @@ def _get_sidebar_context() -> dict:
 
 
 def trail_list(request: HttpRequest) -> HttpResponse:
-    conditions = TrailCondition.objects.filter(disabled=False).prefetch_related("source")
+    base_conditions = TrailCondition.objects.filter(disabled=False).prefetch_related("source")
+    base_datasources = DataSource.objects.filter(data_format="WEB")
 
     # クエリパラメータによる絞り込み
     source_filter = request.GET.get("source")
     area_filter = request.GET.get("area")
     status_filter = request.GET.get("status")
 
+    conditions = base_conditions
     if source_filter:
         conditions = conditions.filter(source=source_filter)
     if area_filter:
@@ -66,15 +65,12 @@ def trail_list(request: HttpRequest) -> HttpResponse:
     conditions = conditions.order_by("-reported_at", "-created_at")
 
     # 最新の内容更新日（全情報源含む）
-    latest_update_date = TrailCondition.objects.filter(source__isnull=False).aggregate(Max("updated_at"))[
-        "updated_at__max"
-    ]
+    latest_update_date = base_conditions.aggregate(Max("updated_at"))["updated_at__max"]
 
     # 1週間以内の更新リスト（新規追加情報源は除外）
     # 新規追加情報源 = DataSource.created_atとTrailCondition.updated_atの差が1日以内
     updated_sources_query = (
-        TrailCondition.objects.filter(source__isnull=False)
-        .values("source__name", "source__url1")
+        base_conditions.values("source__name", "source__url1")
         .annotate(
             latest_date=Max("updated_at"),
             source_created_at=F("source__created_at"),
@@ -83,7 +79,7 @@ def trail_list(request: HttpRequest) -> HttpResponse:
     )
     # DataSourceの作成日とTrailConditionの最新更新日の差が1日以内のものを除外
     updated_sources = [
-        item for item in updated_sources_query if (item["latest_date"] - item["source_created_at"]).days > 1
+        item for item in updated_sources_query if item["latest_date"] - item["source_created_at"] > timedelta(days=1)
     ]
 
     last_checked_at = DataSource.objects.aggregate(Max("last_checked_at"))["last_checked_at__max"]
@@ -132,6 +128,7 @@ def sources_list(request: HttpRequest) -> HttpResponse:
         **_get_sidebar_context(),
     }
     return render(request, "sources.html", context)
+
 
 def blogs_list(request: HttpRequest) -> HttpResponse:
     pass
