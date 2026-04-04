@@ -76,7 +76,7 @@ steps:
       - "--command=uv"
       - "--args=run,--frozen,--no-dev,manage.py,trail_sync"
   - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
-    id: "deploy-sync-job"
+    id: "deploy-blog-sync-job"
     waitFor: ["push-batch"]
     entrypoint: "gcloud"
     args:
