@@ -45,10 +45,22 @@ class BlogFetcher:
         self.name = name
 
     async def __call__(self, client: AsyncClient) -> list[BlogFeedSchema]:
-        xml = await self.fetch_url(client)
-        return self.parse_feed(xml)
+        xml = await self._fetch_url(client)
+        return self._parse_feed(xml)
 
-    async def fetch_url(self, client: AsyncClient) -> str:
+    async def _fetch_url(self, client: AsyncClient) -> str:
+        """生のブログフィードのxmlを取得する。
+
+        Args:
+            client (AsyncClient): HTTPクライアント
+
+        Raises:
+            HTTPStatusError: HTTPエラーが発生した場合
+            Exception: その他の予期しないエラーが発生した場合
+
+        Returns:
+            str: ブログフィードのXMLデータ
+        """
         try:
             response = await client.get(self.url, headers=self.headers)
             response.raise_for_status()
@@ -61,7 +73,15 @@ class BlogFetcher:
             raise e
 
     @staticmethod
-    def parse_feed(xml: str) -> list[BlogFeedSchema]:
+    def _parse_feed(xml: str) -> list[BlogFeedSchema]:
+        """ブログのフィードをパースし、記事のリストを返す。
+
+        Args:
+            xml (str): ブログフィードのXMLデータ
+
+        Returns:
+            list[BlogFeedSchema]: 記事のリスト
+        """
         data: FeedParserDict = feedparser.parse(xml)
         feed_list = []
         for entry in data.entries:

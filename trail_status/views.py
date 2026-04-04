@@ -6,7 +6,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .models import AreaName, DataSource, StatusType, TrailCondition
+from .models import AreaName, BlogFeed, DataSource, StatusType, TrailCondition
 
 logger = logging.getLogger(__name__)
 
@@ -48,13 +48,15 @@ def _get_sidebar_context() -> dict:
 
 
 def trail_list(request: HttpRequest) -> HttpResponse:
-    conditions = TrailCondition.objects.filter(disabled=False).prefetch_related("source")
+    base_conditions = TrailCondition.objects.filter(disabled=False).prefetch_related("source")
+    base_datasources = DataSource.objects.filter(data_format="WEB")
 
     # クエリパラメータによる絞り込み
     source_filter = request.GET.get("source")
     area_filter = request.GET.get("area")
     status_filter = request.GET.get("status")
 
+    conditions = base_conditions
     if source_filter:
         conditions = conditions.filter(source=source_filter)
     if area_filter:
@@ -83,10 +85,10 @@ def trail_list(request: HttpRequest) -> HttpResponse:
     )
     # DataSourceの作成日とTrailConditionの最新更新日の差が1日以内のものを除外
     updated_sources = [
-        item for item in updated_sources_query if (item["latest_date"] - item["source_created_at"]).days > 1
+        item for item in updated_sources_query if item["latest_date"] - item["source_created_at"] > timedelta(days=1)
     ]
 
-    last_checked_at = DataSource.objects.aggregate(Max("last_checked_at"))["last_checked_at__max"]
+    last_checked_at = base_datasources.aggregate(Max("last_checked_at"))["last_checked_at__max"]
     seven_days_ago = timezone.now().date() - timedelta(days=7)
 
     context = {
@@ -133,5 +135,49 @@ def sources_list(request: HttpRequest) -> HttpResponse:
     }
     return render(request, "sources.html", context)
 
-def blogs_list(request: HttpRequest) -> HttpResponse:
-    pass
+
+def blog_list(request: HttpRequest) -> HttpResponse:
+    """巡視ブログ一覧ページ"""
+    from collections import OrderedDict
+
+    from django.db.models import Prefetch
+
+    sources = (
+        DataSource.objects.filter(data_format="BLOG")
+        .prefetch_related(
+            Prefetch(
+                "blogfeed_set",
+                queryset=BlogFeed.objects.filter(disabled=False).order_by("-published_at")[:4],
+                to_attr="recent_feeds",
+            )
+        )
+        .order_by("area_name", "id")
+    )
+
+    # エリア別にグルーピング（AreaName.choices の順序を維持）
+    area_order = [code for code, _ in AreaName.choices]
+    area_labels = dict(AreaName.choices)
+
+    grouped = OrderedDict()
+    for source in sources:
+        area_code = source.area_name or "OTHER"
+        if area_code not in grouped:
+            grouped[area_code] = {
+                "label": area_labels.get(area_code, "その他"),
+                "sources": [],
+            }
+        grouped[area_code]["sources"].append(source)
+
+    # AreaName.choices の順序でソート（OTHER は末尾）
+    sorted_grouped = OrderedDict()
+    for code in area_order:
+        if code in grouped:
+            sorted_grouped[code] = grouped[code]
+    if "OTHER" in grouped:
+        sorted_grouped["OTHER"] = grouped["OTHER"]
+
+    context = {
+        "grouped_sources": sorted_grouped,
+        **_get_sidebar_context(),
+    }
+    return render(request, "blogs.html", context)

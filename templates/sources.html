@@ -49,16 +49,17 @@
         </div>
       </section>
     {% endfor %}
-    <div class="mt-8 text-sm text-gray-600">
-      <p class="mb-2">
-        情報源の追加リクエストや、掲載内容に関するお問い合わせは
+    <div class="mt-8 text-gray-600">
+      <p class="mb-2 text-sm">
+        掲載内容に関するお問い合わせは
         <a href="https://x.com/trailinfo5"
            target="_blank"
            rel="noopener noreferrer"
            class="text-blue-600 hover:underline">@trailinfo5</a>
         までお願いします。
       </p>
-      <a href="{% url 'trail-list' %}" class="text-blue-600 hover:underline">← トップページに戻る</a>
+      <a href="{% url 'trail-list' %}"
+         class="text-md text-blue-600 hover:underline">← トップページに戻る</a>
     </div>
   </div>
 {% endblock content %}

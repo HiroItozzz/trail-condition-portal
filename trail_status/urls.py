@@ -16,5 +16,6 @@ urlpatterns = [
     path("sources/", views.sources_list, name="sources-list"),
     # リダイレクト
     path("trails", views.trail_redirect, name="trail-redirect"),
-    path("blogs/", views.blogs_list, name="blog-list"),
+    # 巡視ブログ一覧
+    path("blogs/", views.blog_list, name="blog-list"),
 ]
