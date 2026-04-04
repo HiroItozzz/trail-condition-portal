@@ -7,6 +7,7 @@ from httpx import AsyncClient
 
 from trail_status.models import BlogFeed, DataSource
 from trail_status.services.blog_fetcher import BlogFeedSchema, BlogFetcher
+from trail_status.services.slack_notifier import SlackNotifier
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +29,19 @@ class Command(BaseCommand):
         new_records = []
         for source, result in zip(sources, results):
             if isinstance(result, BaseException):
-                logger.error(f"情報源{source.id}の処理でエラー発生。詳細: {result}")
+                # 失敗時
+                logger.error(f"巡視ブログ{source.id}の処理でエラー発生。詳細: {result}")
+
+                # Slack通知
+                notifier = SlackNotifier()
+                error_message = f"{source.name}のブログ取得中に予期せぬエラー。\n{str(result)}"
+                notifier.send_error_notification(
+                    source_name=source.name,
+                    error_message=error_message,
+                )
                 continue
 
-            # 各記事のURLで照合
+            # 各記事のURLで新規投稿を抽出
             existing_feed_urls = set(all_exisiting_feeds.filter(source__id=source.id).values_list("url", flat=True))
             obtained_urls = {feed.url for feed in result}
             new_urls = obtained_urls - existing_feed_urls
