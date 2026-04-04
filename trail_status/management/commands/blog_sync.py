@@ -46,8 +46,8 @@ class Command(BaseCommand):
                         BlogFeed(
                             source=source,
                             created_at=now,
-                            disabled=is_first_sync  # 初回登録は管理画面で人間が情報の有効化を行う
-                            ** feed.model_dump(),
+                            disabled=is_first_sync,  # 初回登録は管理画面で人間が情報の有効化を行う
+                            **feed.model_dump(),
                         )
                     )
 
