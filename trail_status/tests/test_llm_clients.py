@@ -47,15 +47,15 @@ async def test_deepseek_generate_success(config, monkeypatch, mock_openai_respon
     client = DeepseekClient(config)
 
     # validate_responseメソッドをモック化（Pydantic検証をスキップ）
-    from trail_status.services.schema import TrailConditionSchemaList
+    from trail_status.services.types import ConditionSchemaAiList
 
-    mock_validated_data = TrailConditionSchemaList(trail_condition_records=[])
+    mock_validated_data = ConditionSchemaAiList(trail_condition_records=[])
     monkeypatch.setattr(client, "validate_response", lambda x: mock_validated_data)
     monkeypatch.setattr(client, "save_sample_data", lambda x: None)
 
     validated_data, token_stats = await client.generate()
 
-    assert isinstance(validated_data, TrailConditionSchemaList)
+    assert isinstance(validated_data, ConditionSchemaAiList)
     assert len(validated_data.trail_condition_records) == 0
     assert token_stats.input_tokens == 100
     assert token_stats.pure_output_tokens == 50

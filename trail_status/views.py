@@ -6,7 +6,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .models.condition import AreaName, DataSource, StatusType, TrailCondition
+from .models import AreaName, DataSource, StatusType, TrailCondition
 
 logger = logging.getLogger(__name__)
 

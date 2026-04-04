@@ -3,8 +3,7 @@ import time
 import requests
 from django.core.management.base import BaseCommand
 
-from trail_status.models.condition import TrailCondition
-from trail_status.models.mountain import AreaName
+from trail_status.models import AreaName, TrailCondition
 
 
 class Command(BaseCommand):

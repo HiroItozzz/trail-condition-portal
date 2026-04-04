@@ -1,48 +1,28 @@
 import asyncio
 import logging
+from typing import Callable
 
 import httpx
-from pydantic import BaseModel, Field
 
 from .fetcher import DataFetcher
-from .llm_client import DeepseekClient, GeminiClient, GptClient, LlmConfig
+from .llm_client import ConversationalAi, LlmConfig
 from .llm_stats import LlmStats
-from .schema import TrailConditionSchemaList
+from .types import ConditionSchemaAiList, ResultSingle, SourceSchemaSingle
 
 logger = logging.getLogger(__name__)
 
-
-class SourceSchemaSingle(BaseModel):
-    id: int = Field(description="Djangoモデルから取り出した情報源ID")
-    name: str = Field(description="Djangoモデルから取り出した情報源名")
-    url1: str = Field(description="Djangoモデルから取り出した情報源URL")
-    prompt_key: str = Field(description="Djangoモデルから取り出した情報源プロンプトファイル名（stem）")
-    content_hash: str | None = Field(description="Djangoモデルから取り出した過去のHTMLボディのハッシュキー")
-
-
-class ResultSingle(BaseModel):
-    success: bool = Field(description="スクレイピングの成功判定")
-    message: str = Field(description="試行結果メッセージ")
-    new_hash: str | None = Field(default=None, description="ハッシュ値（リクエスト成功時）")
-    scraped_length: int = 0
-    content_changed: bool | None = None
-    extracted_trail_conditions: TrailConditionSchemaList | None = None
-    stats: LlmStats | None = None
-    config: LlmConfig | None = None
-
-    model_config = {"arbitrary_types_allowed": True}
-
-
+ClientFactory = Callable[[LlmConfig], ConversationalAi]
 UpdatedDataList = list[tuple[SourceSchemaSingle, ResultSingle | BaseException]]
 
 
 class AiPipeline:
     """登山道状況のスクレイピング・AI出力パイプライン（純粋async処理）"""
 
-    def __init__(self, source_data_list: list[SourceSchemaSingle], **kwargs):
+    def __init__(self, source_data_list: list[SourceSchemaSingle], client_factory: ClientFactory, **kwargs):
         self.source_data_list = source_data_list
         self.ai_model = kwargs.get("ai_model")
         self.new_hash_mode = kwargs.get("new_hash_mode")
+        self.client_factory = client_factory
 
     async def __call__(self) -> UpdatedDataList:
         return await self.run()
@@ -127,7 +107,7 @@ class AiPipeline:
 
     async def _analyze_with_ai(
         self, source_data: SourceSchemaSingle, scraped_text: str
-    ) -> tuple[LlmConfig, TrailConditionSchemaList, LlmStats]:
+    ) -> tuple[LlmConfig, ConditionSchemaAiList, LlmStats]:
         """AI解析処理"""
         import time
 
@@ -142,15 +122,8 @@ class AiPipeline:
             logger.exception(f"プロンプトファイル読み込みエラー: {prompt_filename}")
             raise e
 
-        # AIクライアントの選択
-        if config.model.startswith("deepseek"):
-            ai_client = DeepseekClient(config)
-        elif config.model.startswith("gemini"):
-            ai_client = GeminiClient(config)
-        elif config.model.startswith("gpt"):
-            ai_client = GptClient(config)
-        else:
-            raise ValueError(f"サポートされていないモデル: {self.ai_model}")
+        # AIクライアントの注入
+        ai_client = self.client_factory(config)
 
         # 実行時間測定
         try:

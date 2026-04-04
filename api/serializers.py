@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
-from trail_status.models.condition import TrailCondition
-from trail_status.models.source import DataSource
+from trail_status.models import DataSource, TrailCondition
 
 
 class TrailConditionSerializer(serializers.ModelSerializer):

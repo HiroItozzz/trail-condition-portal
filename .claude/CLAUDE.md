@@ -106,7 +106,7 @@ YAMLでプロンプトとAI設定を管理:
 
 **Record Matching**: 3段階ハイブリッド同定（完全一致 → RapidFuzz類似度 → 新規作成）
 - 閾値: 0.7、フィールド重み（山名0.3, 登山道0.3, タイトル0.25, 説明0.15）
-- 詳細: [record-matching-algorithm.md](documents/record-matching-algorithm.md)
+- 詳細: [record-matching-algorithm.md](../docs/my_docs/260123-record-matching-algorithm.md)
 
 ## Environment Variables
 
@@ -156,4 +156,4 @@ LANGSMITH_API_KEY=...       # LangSmithトレーシング（任意）
 - 詳細ページでヤマレコ検索リンクを提供（`AreaName.get_yamareco_area_id()`でエリアID変換）
 - 将来的に「地図から探す」UI実装の基盤として活用予定
 - テストツール: `tools/yamareco_poi_search.py`
-- **詳細ドキュメント**: [yamareco-api.md](../docs/my_docs/yamareco-api.md)
+- **詳細ドキュメント**: [yamareco-api.md](../docs/my_docs/260205-yamareco-api.md)

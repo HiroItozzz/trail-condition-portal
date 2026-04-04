@@ -19,7 +19,7 @@ def mock_api_keys(monkeypatch):
 
 
 @pytest.fixture
-def clean_env(monkeypatch):
+def no_api_keys(monkeypatch):
     """環境変数をクリア"""
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
@@ -64,6 +64,7 @@ def sample_llm_config():
         "model": "deepseek-chat",
         "temperature": 0.3,
         "data": "テスト用データ",
+        "prompt_key": "test_key",
     }
 
 
@@ -71,6 +72,7 @@ def sample_llm_config():
 def sample_prompt_data():
     """テスト用プロンプトとデータ"""
     return {"prompt": "テスト用プロンプト", "data": "テスト用データ"}
+
 
 @pytest.fixture
 def sample_token_stats():
@@ -82,6 +84,7 @@ def sample_token_stats():
     mock_stats.prompt_tokens = 100
     mock_stats.completion_tokens = 50
     return mock_stats
+
 
 @pytest.fixture
 def mock_openai_response():

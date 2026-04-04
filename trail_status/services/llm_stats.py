@@ -133,74 +133,44 @@ class BaseLlmFee(ABC):
         self.model = model
 
     @abstractmethod
-    def fees(self) -> dict:
-        pass
-
-    @abstractmethod
-    def model_list(self) -> list:
-        pass
-
-    @abstractmethod
     def calculate(self, tokens: int, token_type: str) -> float:
         pass
 
 
 class LlmFee(BaseLlmFee):
-    """2025/12/09現在"""
+    """2026/02/21現在"""
 
-    _fees = {
-        "gemini-2.5-flash": {"input": 0.3, "output": 2.5},  # $per 1M tokens
-        "gemini-3-flash-preview": {"input": 0.5, "output": 3.0},
-        "gemini-2.5-pro": {
-            "under_0.2M": {"input": 1.25, "output": 10.00},
-            "over_0.2M": {"input": 2.5, "output": 15.0},
-        },
-        "deepseek": {"input(cache_hit)": 0.028, "input": 0.28, "output": 0.42},
-        "gpt-5-mini": {"input(cache_hit)": 0.025, "input": 0.25, "output": 2.0},
-        "gpt-5-nano": {"input(cache_hit)": 0.005, "input": 0.05, "output": 0.4},
+    # fmt: off
+    _fees: dict = {
+        # flat rate: input/outputの単価が固定 ($per 1M tokens)
+        "gemini-2.5-flash":        {"type": "flat",   "input": 0.30, "output":  2.5},
+        "gemini-3-flash-preview":  {"type": "flat",   "input": 0.50, "output":  3.0},
+        "deepseek-chat":           {"type": "flat",   "input": 0.28, "output":  0.42},
+        "deepseek-reasoner":       {"type": "flat",   "input": 0.28, "output":  0.42},
+        "gpt-5-mini":              {"type": "flat",   "input": 0.25, "output":  2.0},
+        "gpt-5-nano":              {"type": "flat",   "input": 0.05, "output":  0.4},
+        # tiered: トークン量によって単価が変わる
+        "gemini-2.5-pro":          {"type": "tiered", "threshold": 200_000,
+                                    "under": {"input": 1.25, "output": 10.0},
+                                    "over":  {"input": 2.50, "output": 15.0}},
     }
-    _model_list = [
-        "gemini-2.5-pro",
-        "gemini-2.5-flash",
-        "gemini-3-flash-preview",
-        "deepseek-chat",
-        "deepseek-reasoner",
-        "gpt-5-mini",
-        "gpt-5-nano",
-    ]
-
-    @property
-    def fees(self) -> dict:
-        return self._fees
-
-    @property
-    def model_list(self) -> list:
-        return self._model_list
+    # fmt: on
 
     def calculate(self, tokens: int | None, token_type: str) -> float:
         token_type = "output" if token_type == "thoughts" else token_type
-        tokens = 0 if not tokens else tokens
-        if self.model not in self.model_list:
+        tokens = tokens or 0
+
+        if self.model not in self._fees:
             logger.warning("料金表に登録されていないモデルです")
             logger.warning("gemini-2.5-proの料金で試算します")
             self.model = "gemini-2.5-pro"
 
-        if self.model.startswith("deepseek"):
-            base_fee = self.fees["deepseek"]
+        fee_entry = self._fees[self.model]
 
-            if token_type == "output":
-                dollar_per_1M_tokens = base_fee["output"]
-            else:
-                dollar_per_1M_tokens = base_fee["input"]
-
-        elif self.model in ["gemini-2.5-flash", "gemini-3-flash-preview", "gpt-5-mini", "gpt-5-nano"]:
-            dollar_per_1M_tokens = self.fees[self.model][token_type]
-
+        if fee_entry["type"] == "tiered":
+            tier = "under" if tokens <= fee_entry["threshold"] else "over"
+            dollar_per_1M_tokens = fee_entry[tier][token_type]
         else:
-            base_fee = self.fees["gemini-2.5-pro"]
-            if tokens <= 200000:
-                dollar_per_1M_tokens = base_fee["under_0.2M"][token_type]
-            else:
-                dollar_per_1M_tokens = base_fee["over_0.2M"][token_type]
+            dollar_per_1M_tokens = fee_entry[token_type]
 
-        return dollar_per_1M_tokens * tokens / 1000000
+        return dollar_per_1M_tokens * tokens / 1_000_000

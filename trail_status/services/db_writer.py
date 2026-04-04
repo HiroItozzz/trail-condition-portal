@@ -10,12 +10,9 @@ from django.utils import timezone
 from rapidfuzz import fuzz
 from sudachipy import Dictionary, SplitMode
 
-from ..models.condition import TrailCondition
-from ..models.llm_usage import LlmUsage
-from ..models.source import DataSource
+from ..models import DataSource, LlmUsage, TrailCondition
 from .llm_stats import LlmStats
-from .pipeline import ResultSingle, SourceSchemaSingle
-from .schema import TrailConditionSchemaInternal, TrailConditionSchemaList
+from .types import ConditionSchemaAiInternal, ConditionSchemaAiList, ResultSingle, SourceSchemaSingle
 
 logger = logging.getLogger(__name__)
 
@@ -75,61 +72,37 @@ class DbWriter:
         self.source_schema_single = source_schema_single
         self.result = result_by_source
 
-    @property
-    def source_record(self) -> DataSource:
-        return DataSource.objects.get(id=self.source_schema_single.id)
-
     def save_to_source(self) -> None:
         """情報源モデルへ保存"""
-        source = self.source_record
-        # サイト巡回日時を更新
-        # ハッシュ取得andLLMスキップ時も success=True
-        source.last_checked_at = timezone.now()
+        if isinstance(self.result, ResultSingle):
+            source = DataSource.objects.get(id=self.source_schema_single.id)
+            # サイト巡回日時を更新
+            # ハッシュ取得andLLMスキップ時も success=True
+            source.last_checked_at = timezone.now()
 
-        # コンテンツハッシュとスクレイピング時刻を更新
-        if self.result.content_changed:
-            source.content_hash = self.result.new_hash
-            source.last_scraped_at = timezone.now()
+            # コンテンツハッシュとスクレイピング時刻を更新
+            if self.result.content_changed:
+                source.content_hash = self.result.new_hash
+                source.last_scraped_at = timezone.now()
 
-        # コミット
-        source.save(update_fields=["content_hash", "last_scraped_at", "last_checked_at"])
+            # コミット
+            source.save(update_fields=["content_hash", "last_scraped_at", "last_checked_at"])
 
-    def convert_to_internal_schema(self):
-        """AI出力結果とAI設定を保存用スキーマへ統合"""
-        # 単一ソースのAI出力を取得
-        trail_conditions_list: TrailConditionSchemaList = self.result.extracted_trail_conditions
-
-        # TrailCondition用のLLM設定(JSONField)
-        ai_config = {
-            k: v
-            for k, v in {
-                "temperature": self.result.config.temperature,
-                "thinking_budget": self.result.config.thinking_budget,
-            }.items()
-            if v is not None
-        }
-        # Djangoモデル格納のため同じ形式のパイダンティックスキーマにダンプ
-        internal_data_list = [
-            TrailConditionSchemaInternal(
-                **record.model_dump(),
-                url1=self.source_schema_single.url1,
-                ai_config=ai_config,
-                ai_model=self.result.config.model,
-                prompt_file=self.source_record.prompt_filename,
-            )
-            for record in trail_conditions_list.trail_condition_records
-        ]
-        return internal_data_list
-
-    def persist_condition_and_usage(self, internal_data_list: list[TrailConditionSchemaInternal]) -> dict[str, Any]:
+    def persist_condition_and_usage(self) -> dict[str, Any]:
         """登山道状況とLLM使用履歴をDBに保存"""
 
+        # AIの結果をDB比較用のデータに整形
+        internal_data_list = self._convert_to_internal_schema()
+
+        # DBから比較対象を取得
+        existing_records = list(TrailCondition.objects.filter(source_id=self.source_schema_single.id))
+
         # 同期するレコードを照合
-        to_update, to_create = self.reconcile_records(internal_data_list)
+        to_update, to_create = self._reconcile_records(existing_records, internal_data_list)
 
         # DB同期とLLM使用履歴記録
         llm_stats: LlmStats = self.result.stats
-        
+
         # 保存
         with transaction.atomic():
             updated_count, created_count = self._commit_trail_condition(to_update, to_create)
@@ -147,6 +120,33 @@ class DbWriter:
             "created": created_count,
         }
 
+    def _convert_to_internal_schema(self):
+        """AI出力結果とAI設定を保存用スキーマへ統合"""
+        # 単一ソースのAI出力を取得
+        trail_conditions_list: ConditionSchemaAiList = self.result.extracted_trail_conditions
+
+        # TrailCondition用のLLM設定(JSONField)
+        ai_config = {
+            k: v
+            for k, v in {
+                "temperature": self.result.config.temperature,
+                "thinking_budget": self.result.config.thinking_budget,
+            }.items()
+            if v is not None
+        }
+        # Djangoモデル格納のため同じ形式のパイダンティックスキーマにダンプ
+        internal_data_list = [
+            ConditionSchemaAiInternal(
+                **record.model_dump(),
+                url1=self.source_schema_single.url1,
+                ai_config=ai_config,
+                ai_model=self.result.config.model,
+                prompt_file=self.result.config.prompt_filename,
+            )
+            for record in trail_conditions_list.trail_condition_records
+        ]
+        return internal_data_list
+
     def _commit_trail_condition(
         self, to_update: list[TrailCondition], to_create: list[TrailCondition]
     ) -> tuple[int, int]:
@@ -157,7 +157,7 @@ class DbWriter:
         if to_update:
             # TrailConditionSchemaInternalのフィールド名を取得
             # Djangoモデルの更新対象フィールドと一致している前提
-            fields_to_update = list(TrailConditionSchemaInternal.model_fields.keys())
+            fields_to_update = list(ConditionSchemaAiInternal.model_fields.keys())
 
             # bulk_updateではauto_now=Trueが機能しないため手動でセット
             for record in to_update:
@@ -186,7 +186,7 @@ class DbWriter:
         """LLM使用履歴をDBに保存"""
         stats = llm_stats.to_dict()
         LlmUsage.objects.create(
-            source=self.source_record,
+            source_id=self.source_schema_single.id,
             model=stats["model"],
             prompt_tokens=stats["input_tokens"],
             thinking_tokens=stats["thoughts_tokens"],
@@ -197,8 +197,8 @@ class DbWriter:
             execution_time_seconds=stats.get("execution_time"),  # Noneでも可
         )
 
-    def reconcile_records(
-        self, ai_record_list: list[TrailConditionSchemaInternal]
+    def _reconcile_records(
+        self, existing_record_list: list[TrailCondition], ai_record_list: list[ConditionSchemaAiInternal]
     ) -> tuple[list[TrailCondition], list[TrailCondition]]:
         """
         AIの抽出データ(Pydantic)を既存レコードと照合する。
@@ -216,19 +216,14 @@ class DbWriter:
         to_update: list[TrailCondition] = []
         to_create: list[TrailCondition] = []
 
-        logger.info(f"\n--- データ照合開始: {self.source_record.name}")
+        logger.info(f"\n--- データ照合開始: {self.source_schema_single.name}")
         matches = []
 
         # 新規情報源の初回実行判定
-        is_first_sync = not TrailCondition.objects.filter(source=self.source_record).exists()
+        is_first_sync = len(existing_record_list) == 0
 
-        # ステップ1: 候補レコードを取得（sourceのみで絞る）
-        candidates = list(
-            TrailCondition.objects.filter(
-                source=self.source_record,
-                disabled=False,
-            )
-        )
+        # ステップ1: 候補レコードを取得（disabled==Falseのみで絞る）
+        candidates = list(record for record in existing_record_list if not record.disabled)
 
         # ステップ2: 候補レコード×AI出力レコードを総当りで類似度計算
         for ai_idx, ai_record in enumerate(ai_record_list):
@@ -250,7 +245,7 @@ class DbWriter:
             used_model_records.add(db_record.id)
             used_ai_records.add(ai_idx)
 
-            matched_ai_record: TrailConditionSchemaInternal = ai_record_list[ai_idx]
+            matched_ai_record: ConditionSchemaAiInternal = ai_record_list[ai_idx]
 
             matched_m_name = matched_ai_record.mountain_name_raw
             matched_t_name = matched_ai_record.trail_name
@@ -263,8 +258,7 @@ class DbWriter:
             # title/description/reported_at/reference_URL はLLMの出力揺らぎが大きいためチェック対象外
             # 実際に更新されて意味がある status, resolved_at のみで判定
             has_changed = (
-                db_record.status != matched_ai_record.status
-                or db_record.resolved_at != matched_ai_record.resolved_at
+                db_record.status != matched_ai_record.status or db_record.resolved_at != matched_ai_record.resolved_at
             )
 
             if has_changed:
@@ -290,7 +284,7 @@ class DbWriter:
             # 新規作成
             generated_record_dict = ai_record.model_dump(exclude={"mountain_name_raw", "trail_name"})
             new_record = TrailCondition(
-                source=self.source_record,
+                source_id=self.source_schema_single.id,
                 mountain_name_raw=ai_record.mountain_name_raw,
                 trail_name=ai_record.trail_name,
                 disabled=is_first_sync,  # 新規情報源の初回のみTrue
@@ -310,10 +304,10 @@ class DbWriter:
                 else:
                     logger.info(f"所定の閾値{self.SIMILARITY_THRESHOLD}を超えるレコードは見つかりません")
 
-        logger.info(f"--- データ照合終了: {self.source_record.name}")
+        logger.info(f"--- データ照合終了: {self.source_schema_single.name}")
         return to_update, to_create
 
-    def _calculate_similarity(self, existing: TrailCondition, new_data: TrailConditionSchemaInternal) -> float:
+    def _calculate_similarity(self, existing: TrailCondition, new_data: ConditionSchemaAiInternal) -> float:
         """
         複数フィールドを組み合わせた類似度スコア（0.0 ~ 1.0）
 

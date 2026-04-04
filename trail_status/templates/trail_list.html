@@ -1,4 +1,5 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{# djlint: off #}
 {% block title %}
   {% if current_area %}
     {{ conditions.0.get_area_display }}の登山道状況 - トレイルインフォ
@@ -10,7 +11,6 @@
     トレイルインフォ - 登山道状況まとめ
   {% endif %}
 {% endblock title %}
-{# djlint:off #}
 {% block meta_description %}{% if current_area %}{{ conditions.0.get_area_display }}周辺の登山道状況。通行止め・通行注意等の情報の一覧。{% elif current_source %}{{
   conditions.0.source.name }}が公表する登山道状況の一覧です。{% elif current_status %}東京近郊の登山道{{ conditions.0.get_status_display|slice:"2:" }}の一覧です。{% else %}奥多摩・丹沢周辺の登山道状況。通行止め・通行注意等の情報の一覧。{% endif %}{% endblock meta_description %}
 {% block canonical_url %}{% if current_area %}https://trail-info.jp/?area={{ current_area }}{% elif current_source %}https://trail-info.jp/?source={{ current_source }}{% else %}https://trail-info.jp/{% endif %}{% endblock canonical_url %}
@@ -177,4 +177,4 @@
       {% endfor %}
     </tbody>
   </table>
-{% endblock %}
+{% endblock content %}

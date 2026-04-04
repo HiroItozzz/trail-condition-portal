@@ -4,7 +4,7 @@
 
 import pytest
 
-from trail_status.services.schema import TrailConditionSchemaList
+from trail_status.services.types import ConditionSchemaAiList
 
 
 def test_valid_schema_validation():
@@ -25,7 +25,7 @@ def test_valid_schema_validation():
     }
     """
 
-    validated = TrailConditionSchemaList.model_validate_json(valid_json)
+    validated = ConditionSchemaAiList.model_validate_json(valid_json)
     assert len(validated.trail_condition_records) == 1
     assert validated.trail_condition_records[0].trail_name == "鴨沢ルート"
 
@@ -45,13 +45,13 @@ def test_invalid_schema_validation():
     """
 
     with pytest.raises(Exception):
-        TrailConditionSchemaList.model_validate_json(invalid_json)
+        ConditionSchemaAiList.model_validate_json(invalid_json)
 
 
 def test_empty_conditions_list():
     """空のconditionsリストでの検証"""
     empty_json = '{"trail_condition_records": []}'
 
-    validated = TrailConditionSchemaList.model_validate_json(empty_json)
+    validated = ConditionSchemaAiList.model_validate_json(empty_json)
     assert len(validated.trail_condition_records) == 0
     assert isinstance(validated.trail_condition_records, list)

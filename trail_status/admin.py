@@ -1,11 +1,6 @@
 from django.contrib import admin
 
-from .models.condition import TrailCondition
-from .models.llm_usage import LlmUsage
-from .models.mountain import MountainAlias, MountainGroup
-from .models.prompt_backup import PromptBackup
-from .models.source import DataSource
-from .models.feed import BlogFeed
+from .models import BlogFeed, DataSource, LlmUsage, MountainAlias, MountainGroup, PromptBackup, TrailCondition
 
 
 @admin.register(DataSource)
@@ -27,9 +22,20 @@ class DataSourceAdmin(admin.ModelAdmin):
     readonly_fields = ["last_scraped_at", "last_checked_at", "created_at", "updated_at"]
 
     fieldsets = (
-        ("基本情報", {"fields": ("name", "organization_type", "prefecture_code", "prompt_key", "description")}),
+        (
+            "基本情報",
+            {"fields": ("name", "organization_type", "prefecture_code", "prompt_key", "data_format")},
+        ),
         ("URL", {"fields": ("url1", "url2")}),
-        ("データ形式", {"fields": ("data_format",)}),
+        (
+            "付加情報",
+            {
+                "fields": (
+                    "area_name",
+                    "description",
+                )
+            },
+        ),
         ("ハッシュ追跡", {"fields": ("content_hash", "last_scraped_at", "last_checked_at")}),
         ("メタデータ", {"fields": ("created_at", "updated_at")}),
     )
@@ -55,6 +61,17 @@ class MountainAliasAdmin(admin.ModelAdmin):
     list_display = ["alias_name", "mountain_group"]
     list_filter = ["mountain_group"]
     search_fields = ["alias_name", "mountain_group__name"]
+
+
+# 一括更新リストの設置絵
+@admin.action(description="情報の無効化の解除")
+def unable_disabled(modeladmin, request, queryset):
+    queryset.update(disabled=False)
+
+
+@admin.action(description="情報の無効化")
+def enable_disabled(modeladmin, request, queryset):
+    queryset.update(disabled=False)
 
 
 @admin.register(TrailCondition)
@@ -97,6 +114,7 @@ class TrailConditionAdmin(admin.ModelAdmin):
                     "reported_at",
                     "resolved_at",
                     "comment",
+                    "reference_URL",
                 )
             },
         ),
@@ -105,6 +123,8 @@ class TrailConditionAdmin(admin.ModelAdmin):
         ("管理", {"fields": ("disabled",)}),
         ("メタデータ", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
     )
+
+    actions = [unable_disabled, enable_disabled]
 
     @admin.display(description="報告日", ordering="reported_at")
     def reported_date(self, obj):
@@ -132,6 +152,7 @@ class BlogFeedAdmin(admin.ModelAdmin):
         ("管理", {"fields": ("disabled",)}),
         ("メタデータ", {"fields": ("created_at",), "classes": ("collapse",)}),
     )
+
 
 @admin.register(LlmUsage)
 class LlmUsageAdmin(admin.ModelAdmin):

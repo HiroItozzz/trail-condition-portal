@@ -5,11 +5,10 @@ from pathlib import Path
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from trail_status.models.source import DataSource
+from trail_status.models import DataSource, TrailCondition
 from trail_status.services.db_writer import DbWriter
 from trail_status.services.llm_client import LlmConfig
-from trail_status.services.pipeline import ResultSingle, SourceSchemaSingle
-from trail_status.services.schema import TrailConditionSchemaInternal
+from trail_status.services.types import ConditionSchemaAiInternal, ResultSingle, SourceSchemaSingle
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +136,9 @@ class Command(BaseCommand):
             source = DataSource.objects.get(id=source_id)
             if source.data_format != "WEB":
                 logger.error(f"情報源のデータ形式が'WEB'ではありません: {source_id}: {source.data_format}")
-                self.stdout.write(self.style.ERROR(f"情報源のデータ形式が'WEB'ではありません: {source_id}: {source.data_format}"))
+                self.stdout.write(
+                    self.style.ERROR(f"情報源のデータ形式が'WEB'ではありません: {source_id}: {source.data_format}")
+                )
                 return
             self.stdout.write(f"データソース: {source.name}\n")
         except DataSource.DoesNotExist:
@@ -211,7 +212,7 @@ class Command(BaseCommand):
 
         # TrailConditionSchemaInternalリストを作成
         internal_data_list = [
-            TrailConditionSchemaInternal(**record, url1=source.url1, ai_config=ai_config, ai_model=model_name)
+            ConditionSchemaAiInternal(**record, url1=source.url1, ai_config=ai_config, ai_model=model_name)
             for record in ai_conditions
         ]
 
@@ -238,7 +239,9 @@ class Command(BaseCommand):
 
         # DbWriterで照合ロジックを実行（DB保存なし）
         writer = DbWriter(source_schema, result)
-        to_update, to_create = writer.reconcile_records(internal_data_list)
+
+        existing_records = TrailCondition.objects.filter(source_id=source.id)
+        to_update, to_create = writer._reconcile_records(existing_records, internal_data_list)
         if force_sync:
             # 強制的にDB保存も実行
             with transaction.atomic():

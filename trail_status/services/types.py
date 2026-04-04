@@ -1,14 +1,22 @@
+from __future__ import annotations
+
+import typing
+from dataclasses import dataclass
 from datetime import date
 
 from pydantic import BaseModel, Field
 
-from ..models.condition import StatusType
-from ..models.mountain import AreaName
+from ..models import AreaName, StatusType
+
+if typing.TYPE_CHECKING:
+    from .llm_client import LlmConfig
+    from .llm_stats import LlmStats
+
 
 area_help_text = " / ".join([f"{label}:{name}" for name, label in AreaName.choices])
 
 
-class TrailConditionSchemaAi(BaseModel):
+class ConditionSchemaAi(BaseModel):
     """
     AIに構造化出力を指定するスキーマの各項目
     ※重要：descriptionはAIが読むプロンプト部分
@@ -44,13 +52,16 @@ class TrailConditionSchemaAi(BaseModel):
     comment: str = Field(default="", description="備考欄 / 状況詳細説明から漏れる情報があれば自由記述")
 
 
-class TrailConditionSchemaList(BaseModel):
-    """AIでの構造化出力を指定するスキーマ"""
+class ConditionSchemaAiList(BaseModel):
+    """
+    AIでの構造化出力を指定するスキーマ
+    descriptionをAIが読む
+    """
 
-    trail_condition_records: list[TrailConditionSchemaAi] = Field(description="登山道状況のリスト")
+    trail_condition_records: list[ConditionSchemaAi] = Field(description="登山道状況のリスト")
 
 
-class TrailConditionSchemaInternal(TrailConditionSchemaAi):
+class ConditionSchemaAiInternal(ConditionSchemaAi):
     """DjangoのTrailConditionモデルに保存する内容と完全に一致するクラス"""
 
     url1: str
@@ -58,3 +69,28 @@ class TrailConditionSchemaInternal(TrailConditionSchemaAi):
     ai_model: str = ""
     prompt_file: str = ""
     mountain_group: str | None = Field(default=None, description="山グループ / 後で手動入力")
+
+
+@dataclass
+class SourceSchemaSingle:
+    """DjangoモデルのDataSourceから取り出したデータ"""
+
+    id: int
+    name: str
+    url1: str
+    prompt_key: str
+    content_hash: str | None = None
+
+
+@dataclass
+class ResultSingle:
+    """AI出力のサマリー"""
+
+    success: bool
+    message: str
+    new_hash: str | None = None
+    scraped_length: int = 0
+    content_changed: bool | None = None
+    extracted_trail_conditions: ConditionSchemaAiList | None = None
+    stats: LlmStats | None = None
+    config: LlmConfig | None = None
