@@ -147,7 +147,7 @@ def blog_list(request: HttpRequest) -> HttpResponse:
         .prefetch_related(
             Prefetch(
                 "blogfeed_set",
-                queryset=BlogFeed.objects.filter(disabled=False).order_by("-published_at")[:3],
+                queryset=BlogFeed.objects.filter(disabled=False).order_by("-published_at")[:4],
                 to_attr="recent_feeds",
             )
         )
