@@ -75,6 +75,19 @@ steps:
       - "--region=asia-northeast1"
       - "--command=uv"
       - "--args=run,--frozen,--no-dev,manage.py,trail_sync"
+  - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
+    id: "deploy-sync-job"
+    waitFor: ["push-batch"]
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "jobs"
+      - "deploy"
+      - "trail-info-$BRANCH_NAME-run-blog-sync"
+      - "--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA"
+      - "--region=asia-northeast1"
+      - "--command=uv"
+      - "--args=run,--frozen,--no-dev,manage.py,blog_sync"
 
   - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
     id: "execute-migrate"

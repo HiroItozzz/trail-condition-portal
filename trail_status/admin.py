@@ -3,6 +3,17 @@ from django.contrib import admin
 from .models import BlogFeed, DataSource, LlmUsage, MountainAlias, MountainGroup, PromptBackup, TrailCondition
 
 
+# 一括操作の設定
+@admin.action(description="情報の無効化の解除")
+def unable_disabled(modeladmin, request, queryset):
+    queryset.update(disabled=False)
+
+
+@admin.action(description="情報の無効化")
+def enable_disabled(modeladmin, request, queryset):
+    queryset.update(disabled=True)
+
+
 @admin.register(DataSource)
 class DataSourceAdmin(admin.ModelAdmin):
     list_display = [
@@ -40,6 +51,13 @@ class DataSourceAdmin(admin.ModelAdmin):
         ("メタデータ", {"fields": ("created_at", "updated_at")}),
     )
 
+    # 一括削除アクションを非表示
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+        return actions
+
 
 @admin.register(MountainGroup)
 class MountainGroupAdmin(admin.ModelAdmin):
@@ -55,6 +73,13 @@ class MountainGroupAdmin(admin.ModelAdmin):
     def aliases_count(self, obj):
         return obj.aliases.count()
 
+    # 一括削除アクションを非表示
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+        return actions
+
 
 @admin.register(MountainAlias)
 class MountainAliasAdmin(admin.ModelAdmin):
@@ -62,16 +87,12 @@ class MountainAliasAdmin(admin.ModelAdmin):
     list_filter = ["mountain_group"]
     search_fields = ["alias_name", "mountain_group__name"]
 
-
-# 一括更新リストの設置絵
-@admin.action(description="情報の無効化の解除")
-def unable_disabled(modeladmin, request, queryset):
-    queryset.update(disabled=False)
-
-
-@admin.action(description="情報の無効化")
-def enable_disabled(modeladmin, request, queryset):
-    queryset.update(disabled=False)
+    # 一括削除アクションを非表示
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+        return actions
 
 
 @admin.register(TrailCondition)
@@ -126,9 +147,17 @@ class TrailConditionAdmin(admin.ModelAdmin):
 
     actions = [unable_disabled, enable_disabled]
 
+    # カスタム報告日を表示
     @admin.display(description="報告日", ordering="reported_at")
     def reported_date(self, obj):
         return obj.reported_at.strftime("%m/%d %H:%M")
+
+    # 一括削除アクションを非表示
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+        return actions
 
 
 @admin.register(BlogFeed)
@@ -152,6 +181,15 @@ class BlogFeedAdmin(admin.ModelAdmin):
         ("管理", {"fields": ("disabled",)}),
         ("メタデータ", {"fields": ("created_at",), "classes": ("collapse",)}),
     )
+
+    actions = [unable_disabled, enable_disabled]
+
+    # 一括削除アクションを非表示
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+        return actions
 
 
 @admin.register(LlmUsage)
@@ -196,6 +234,13 @@ class LlmUsageAdmin(admin.ModelAdmin):
     def cost_per_item(self, obj):
         return f"${obj.cost_per_condition:.4f}" if obj.conditions_extracted > 0 else "-"
 
+    # 一括削除アクションを非表示
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+        return actions
+
 
 @admin.register(PromptBackup)
 class PromptBackupAdmin(admin.ModelAdmin):
@@ -224,3 +269,10 @@ class PromptBackupAdmin(admin.ModelAdmin):
     @admin.display(description="プロンプト内容")
     def content_preview_short(self, obj):
         return obj.content_preview
+
+    # 一括削除アクションを非表示
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+        return actions

@@ -50,7 +50,7 @@ async def test_deepseek_generate_success(config, monkeypatch, mock_openai_respon
     from trail_status.services.types import ConditionSchemaAiList
 
     mock_validated_data = ConditionSchemaAiList(trail_condition_records=[])
-    monkeypatch.setattr(client, "validate_response", lambda x: mock_validated_data)
+    monkeypatch.setattr(client, "_get_validated_data", lambda x: mock_validated_data)
     monkeypatch.setattr(client, "save_sample_data", lambda x: None)
 
     validated_data, token_stats = await client.generate()
