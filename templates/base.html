@@ -39,9 +39,10 @@
     <meta property="og:site_name" content="トレイルインフォ - 登山道状況まとめ">
     <meta property="og:locale" content="ja_JP">
     <meta property="og:image"
-          content="https://trail-info.jp{% static 'og_image.png' %}">
+          content="{% block og_image %}https://trail-info.jp/static/og_image.png{% endblock og_image %}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
     <meta property="og:image:alt" content="トレイルインフォ - 登山道状況まとめ">
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
@@ -50,12 +51,12 @@
     <meta name="twitter:description"
           content="奥多摩・丹沢等の登山道状況を公的機関から自動収集。通行止め・通行注意等の最新状況をまとめて確認できます。">
     <meta name="twitter:image"
-          content="https://trail-info.jp{% static 'og_image.png' %}">
+          content="https://trail-info.jp/static/og_image.png">
     <link rel="stylesheet"
           href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link rel="stylesheet"
           href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
-    <link rel="shortcut icon"
+    <link rel="icon"
           type="image/png"
           href="{% static 'icons/favicon.png' %}">
     <link rel="stylesheet" href="{% static 'dist/main.css' %}">
