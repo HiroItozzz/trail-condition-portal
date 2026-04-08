@@ -8,10 +8,6 @@ urlpatterns = [
     path("", views.trail_list, name="trail-list"),
     # 詳細画面: /trail/1/ や /trail/2/ など
     path("trails/<int:pk>/", views.trail_detail, name="trail-detail"),
-    # このサイトについて
-    path("about/", TemplateView.as_view(template_name="about.html"), name="about"),
-    # サイトポリシー
-    path("site-policy/", TemplateView.as_view(template_name="site-policy.html"), name="site-policy"),
     # 情報源一覧
     path("sources/", views.sources_list, name="sources-list"),
     # リダイレクト
