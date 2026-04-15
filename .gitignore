@@ -1,28 +1,37 @@
+# env
 .env
 .env*
 !.env.example
 .env.production
+
+# python
 .venv/
 **/__pycache__/
 .mypy_cache/
 *.pyc
 help/
-*.log
-Claude Conversations/
 .pytest_cache
-*sample.json
-
 *.egg-info/
 dist/
 build/
 temp/
 .ipynb_checkpoints/
 
-outputs/
-
+# log
+*.log
 logs/*
 !logs/.gitkeep
+
+# documents
 backups/
 my_docs/
 reports/
+outputs/
+*sample.json
+
+# Claude
 /CLAUDE.md
+Claude Conversations/
+
+# pycharm
+.idea/
