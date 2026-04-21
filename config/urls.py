@@ -24,7 +24,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path("", include("trail_status.urls")),
-    path("admin/", admin.site.urls),
+    path("trail-p0rtal-dashboard/", admin.site.urls),
     path("scheduler/", include("scheduler.urls")),
 
     # このサイトについて
