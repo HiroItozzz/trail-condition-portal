@@ -1,6 +1,7 @@
 import logging
 from datetime import timedelta
 
+from django.views.generic import ListView
 from django.db.models import Count, F, Max
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
@@ -126,14 +127,12 @@ def trail_redirect(request: HttpRequest) -> HttpResponseRedirect:
     return redirect("trail-list")
 
 
-def sources_list(request: HttpRequest) -> HttpResponse:
-    """情報源一覧ページ"""
+class SourceListView(ListView):
+    model = DataSource
     sources = DataSource.objects.filter(data_format="WEB").order_by("organization_type", "id")
-    context = {
-        "sources": sources,
-        **_get_sidebar_context(),
-    }
-    return render(request, "sources.html", context)
+    template_name = "sources.html"
+    context_object_name = "sources"
+    extra_context = {**_get_sidebar_context()}
 
 
 def blog_list(request: HttpRequest) -> HttpResponse:

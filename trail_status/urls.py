@@ -9,7 +9,7 @@ urlpatterns = [
     # 詳細画面: /trail/1/ や /trail/2/ など
     path("trails/<int:pk>/", views.trail_detail, name="trail-detail"),
     # 情報源一覧
-    path("sources/", views.sources_list, name="sources-list"),
+    path("sources/", views.SourceListView.as_view(), name="sources-list"),
     # リダイレクト
     path("trails", views.trail_redirect, name="trail-redirect"),
     # 巡視ブログ一覧
