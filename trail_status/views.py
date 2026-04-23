@@ -25,8 +25,89 @@ class SideBarMixin:
         return context
 
 
+class TrailListView(SideBarMixin, ListView):
+    """登山道状況一覧ページ（トップページ）のビュー"""
+    model = TrailCondition
+    queryset = TrailCondition.objects.filter(disabled=False).prefetch_related("source")
+    template_name = "trail_list.html"
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.source_filter = request.GET.get("source")
+        self.area_filter = request.GET.get("area")
+        self.status_filter = request.GET.get("status")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        filtered_data = self.get_queryset()
+        datasource = DataSource.objects.filter(data_format="WEB")
+
+        # クエリパラメータによる絞り込み
+        if self.source_filter:
+            filtered_data = filtered_data.filter(source=self.source_filter)
+        if self.area_filter:
+            filtered_data = filtered_data.filter(area=self.area_filter)
+        if self.status_filter:
+            filtered_data = filtered_data.filter(status=self.status_filter)
+        # 報告日の降順で並べ替え（updated_atは表示用のみ）
+        context["conditions"] = filtered_data.order_by("-reported_at", "-created_at")
+
+        context["current_source"] = self.source_filter
+        context["current_area"] = self.area_filter
+        context["current_status"] = self.status_filter
+
+        # 最新の内容更新日（全情報源含む）
+        context["latest_update_date"] = self.get_queryset().aggregate(Max("updated_at"))["updated_at__max"]
+
+        # 1週間以内の更新リスト（新規追加情報源は除外）
+        # 新規追加情報源 = DataSource.created_atとTrailCondition.updated_atの差が1日以内
+        # @formatter:off
+        updated_sources_query = (self.get_queryset()
+                                     .values("source__name", "source__url1")
+                                     .annotate(
+                                         latest_date=Max("updated_at"),
+                                        source_created_at=F("source__created_at"),
+                                     ).order_by("-latest_date")
+                                )
+        # @formatter:on
+        # DataSourceの作成日とTrailConditionの最新更新日の差が1日以内のものを除外
+        context["updated_sources"] = [
+            item for item in updated_sources_query if
+            item["latest_date"] - item["source_created_at"] > timedelta(days=1)
+        ]
+        context["last_checked_at"] = datasource.aggregate(Max("last_checked_at"))["last_checked_at__max"]
+        context["seven_days_ago"] = timezone.now().date() - timedelta(days=7)
+
+        return context
+
+
+class TrailDetailView(SideBarMixin, DetailView):
+    """登山道状況個別詳細ページのビュー"""
+    model = TrailCondition
+    template_name = "detail.html"
+    context_object_name = "item"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # ヤマレコ検索リンク生成
+        yamareco_base_url = "https://www.yamareco.com/modules/yamareco/search_record.php"
+        yamareco_fixed_params = {'isphoto': 1, 'request': 1, 'submit': 'submit'}
+
+        yamareco_area_id = AreaName.get_yamareco_area_id(self.object.area)
+        params = {
+            'place': self.object.mountain_name_raw,
+            'area': yamareco_area_id,
+            **yamareco_fixed_params,
+        }
+        context["yamareco_url"] = f"{yamareco_base_url}?{urllib.parse.urlencode(params, encoding='euc-jp')}"
+
+        return context
+
+
 class SourceListView(SideBarMixin, ListView):
-    """情報源一覧ページ"""
+    """情報源一覧ページのビュー"""
     model = DataSource
     query_set = DataSource.objects.filter(data_format="WEB").order_by("organization_type", "id")
     template_name = "sources.html"
@@ -34,7 +115,7 @@ class SourceListView(SideBarMixin, ListView):
 
 
 class BlogListView(SideBarMixin, ListView):
-    """巡視ブログ一覧ページ"""
+    """巡視ブログ一覧ページのビュー"""
     model = DataSource
     template_name = "blogs.html"
 
@@ -83,8 +164,8 @@ class BlogListView(SideBarMixin, ListView):
 
 
 def _get_sidebar_context() -> dict:
-    """サイドバー用のフィルター選択肢を取得（データがある項目のみ表示）"""
-    base_conditions = TrailCondition.objects.filter(disabled=False)
+    """サイドバー用のフィルター選択肢を取得する（データがある項目のみ表示）"""
+    base_conditions = TrailCondition.objects.filter(disabled=False).select_related("source")
 
     # 最近追加された情報源（1週間以内、最新5件）
     seven_days_ago = timezone.now() - timedelta(days=7)
@@ -116,85 +197,3 @@ def _get_sidebar_context() -> dict:
         "status_choices": status_choices,
         "recent_sources": list(recent_sources),
     }
-
-
-class TrailDetailView(SideBarMixin, DetailView):
-    model = TrailCondition
-    template_name = "detail.html"
-    context_object_name = "item"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-
-        # ヤマレコ検索リンク生成
-        yamareco_base_url = "https://www.yamareco.com/modules/yamareco/search_record.php"
-        yamareco_fixed_params = {'isphoto': 1, 'request': 1, 'submit': 'submit'}
-
-        yamareco_area_id = AreaName.get_yamareco_area_id(self.object.area)
-        params = {
-            'place': self.object.mountain_name_raw,
-            'area': yamareco_area_id,
-            **yamareco_fixed_params,
-        }
-        context["yamareco_url"] = f"{yamareco_base_url}?{urllib.parse.urlencode(params, encoding='euc-jp')}"
-
-        return context
-
-def trail_list(request: HttpRequest) -> HttpResponse:
-    base_conditions = TrailCondition.objects.filter(disabled=False).prefetch_related("source")
-    base_datasources = DataSource.objects.filter(data_format="WEB")
-
-    # クエリパラメータによる絞り込み
-    source_filter = request.GET.get("source")
-    area_filter = request.GET.get("area")
-    status_filter = request.GET.get("status")
-
-    conditions = base_conditions
-    if source_filter:
-        conditions = conditions.filter(source=source_filter)
-    if area_filter:
-        conditions = conditions.filter(area=area_filter)
-    if status_filter:
-        conditions = conditions.filter(status=status_filter)
-
-    # 報告日の降順で並べ替え（updated_atは表示用のみ）
-    conditions = conditions.order_by("-reported_at", "-created_at")
-
-    # 最新の内容更新日（全情報源含む）
-    latest_update_date = TrailCondition.objects.filter(source__isnull=False).aggregate(Max("updated_at"))[
-        "updated_at__max"
-    ]
-
-    # 1週間以内の更新リスト（新規追加情報源は除外）
-    # 新規追加情報源 = DataSource.created_atとTrailCondition.updated_atの差が1日以内
-    updated_sources_query = (
-        TrailCondition.objects.filter(source__isnull=False)
-        .values("source__name", "source__url1")
-        .annotate(
-            latest_date=Max("updated_at"),
-            source_created_at=F("source__created_at"),
-        )
-        .order_by("-latest_date")
-    )
-    # DataSourceの作成日とTrailConditionの最新更新日の差が1日以内のものを除外
-    updated_sources = [
-        item for item in updated_sources_query if item["latest_date"] - item["source_created_at"] > timedelta(days=1)
-    ]
-
-    last_checked_at = base_datasources.aggregate(Max("last_checked_at"))["last_checked_at__max"]
-    seven_days_ago = timezone.now().date() - timedelta(days=7)
-
-    context = {
-        "conditions": conditions,
-        "current_source": source_filter,
-        "current_area": area_filter,
-        "current_status": status_filter,
-        "latest_update_date": latest_update_date,
-        "updated_sources": updated_sources,
-        "last_checked_at": last_checked_at,
-        "seven_days_ago": seven_days_ago,
-        **_get_sidebar_context(),
-    }
-    return render(request, "trail_list.html", context)
-

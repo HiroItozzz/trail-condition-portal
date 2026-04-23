@@ -5,7 +5,7 @@ from . import views
 
 urlpatterns = [
     # 一覧画面: /
-    path("", views.trail_list, name="trail-list"),
+    path("", views.TrailListView.as_view(), name="trail-list"),
     # 詳細画面: /trail/1/ や /trail/2/ など
     path("trails/<int:pk>/", views.TrailDetailView.as_view(), name="trail-detail"),
     # 情報源一覧
