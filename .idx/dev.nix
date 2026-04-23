@@ -10,7 +10,7 @@
   ];
 
   env = {
-    DJANGO_SETTINGS_MODULE = "config.settings";
+    DJANGO_SETTINGS_MODULE = "config.settings.development";
   };
 
   idx = {
