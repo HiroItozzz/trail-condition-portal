@@ -4,7 +4,7 @@ import django
 
 os.environ.setdefault(
     "DJANGO_SETTINGS_MODULE",
-    "config.settings",
+    "config.settings.production",
 )
 django.setup()
 
