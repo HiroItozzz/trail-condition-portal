@@ -1,9 +1,5 @@
 User-agent: *
-Allow: /
 
-Crawl-delay: 1
-
-Disallow: /admin/
 Disallow: /api/internal/
-Disallow: /static/
-Disallow: /.well-known/
+
+# Sitemap: https://trail-info.jp/sitemap.xml
