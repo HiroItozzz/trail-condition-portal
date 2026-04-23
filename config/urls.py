@@ -23,12 +23,15 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    # メインコンテンツをトップに
     path("", include("trail_status.urls")),
-    path("admin/", admin.site.urls),
+    path("trail-p0rtal-dashboard/", admin.site.urls),
     path("scheduler/", include("scheduler.urls")),
-    
-    # SEO関連
+
+    # このサイトについて
+    path("about/", TemplateView.as_view(template_name="about.html"), name="about"),
+    # サイトポリシー
+    path("site-policy/", TemplateView.as_view(template_name="site-policy.html"), name="site-policy"),
+    # robots.txt
     path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),
 ]
 

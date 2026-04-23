@@ -5,6 +5,9 @@
 {% endblock title %}
 {% block meta_description %}{{ item.trail_name }}の登山道状況。{{ item.title }} {{ item.description|truncatechars:50 }}{% endblock meta_description %}
 {% block canonical_url %}https://trail-info.jp/trails/{{ item.id }}/{% endblock canonical_url %}
+{% block og_title %}{{ item.mountain_name_raw }} {{ item.trail_name }} {{ item.get_status_display|slice:"2:" }} - トレイルインフォ{% endblock og_title %}
+{% block og_url %}https://trail-info.jp/trails/{{ item.id }}/{% endblock og_url %}
+{% block twitter_title %}{{ item.mountain_name_raw }} {{ item.trail_name }} {{ item.get_status_display|slice:"2:" }} - トレイルインフォ{% endblock twitter_title %}
 {# djlint:on #}
 {% block content %}
   <style>

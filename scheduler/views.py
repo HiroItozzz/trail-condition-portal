@@ -7,12 +7,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-@csrf_exempt  # ← 外部からのPOSTなのでCSRF除外
+@csrf_exempt  # 外部からのPOSTなのでCSRF除外
 @require_POST
 def run_trail_sync(request):
+    secret = os.environ.get('SCHEDULER_SECRET')
+    if not secret:
+        logger.error("SCHEDULER_SECRET is not configured")
+        return JsonResponse({'error': 'server misconfiguration'}, status=500)
+
     # Cloud Schedulerからのトークン確認
     auth_header = request.headers.get('Authorization', '')
-    expected_token = f"Bearer {os.environ.get('SCHEDULER_SECRET')}"
+    expected_token = f"Bearer {secret}"
     
     if auth_header != expected_token:
         logger.warning(f"Unauthorized scheduler request from {request.META.get('REMOTE_ADDR')}")
