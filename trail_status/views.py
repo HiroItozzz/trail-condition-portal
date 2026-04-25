@@ -109,7 +109,7 @@ class TrailDetailView(SideBarMixin, DetailView):
 class SourceListView(SideBarMixin, ListView):
     """情報源一覧ページのビュー"""
     model = DataSource
-    query_set = DataSource.objects.filter(data_format="WEB").order_by("organization_type", "id")
+    queryset = DataSource.objects.filter(data_format="WEB").order_by("organization_type", "id")
     template_name = "sources.html"
     context_object_name = "sources"
 
@@ -121,7 +121,7 @@ class BlogListView(SideBarMixin, ListView):
 
     def get_queryset(self):
         # @formatter:off
-        query_set = (DataSource.objects.filter(data_format="BLOG")
+        queryset = (DataSource.objects.filter(data_format="BLOG")
                      .prefetch_related(
             Prefetch(
                 "blogfeed_set",
@@ -131,7 +131,7 @@ class BlogListView(SideBarMixin, ListView):
         ).order_by("area_name", "id")
                      )
         # @formatter:on
-        return query_set
+        return queryset
 
     def get_context_data(self, **kwargs):
 

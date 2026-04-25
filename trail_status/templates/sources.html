@@ -45,6 +45,8 @@
                 <p class="text-xs text-gray-400 italic">※ 説明欄は準備中です</p>
               </div>
             </div>
+          {% empty %}
+             <p class="text-gray-500">現在、登録されている巡視ブログはありません。</p>
           {% endfor %}
         </div>
       </section>
