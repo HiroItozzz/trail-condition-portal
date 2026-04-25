@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-import dj_database_url
+from urllib.parse import urlparse
 
 # 環境判定
 IS_PRODUCTION = os.environ.get("IS_PRODUCTION") == "True"
@@ -39,13 +39,22 @@ INSTALLED_APPS = [
 # データベース設定
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 # env("DATABASE_URL") を使用
-DATABASES = {
-    "default": dj_database_url.config(
-        conn_max_age=600,
-        conn_health_checks=False,
-    ),
-}
-if not DATABASES["default"]:
+
+if url := os.environ.get("DATABASE_URL"):
+    parsed = urlparse(url)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "NAME": parsed.path.lstrip("/"),  # データベース名
+            "USER": parsed.username,  # ユーザー名
+            "PASSWORD": parsed.password,  # パスワード
+            "HOST": parsed.hostname,
+            "PORT": parsed.port,
+            "CONN_MAX_AGE": 600,
+            "CONN_HEALTH_CHECKS": False,
+        }
+    }
+else:
     raise ValueError("DATABASE_URL 環境変数が設定されていません。")
 
 # ミドルウェア
@@ -64,22 +73,7 @@ MIDDLEWARE = [
 # URL設定
 ROOT_URLCONF = "config.urls"
 
-# テンプレート設定
-TEMPLATES = [
-    {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],
-        "APP_DIRS": True,
-        "OPTIONS": {
-            "context_processors": [
-                "django.template.context_processors.request",
-                "django.contrib.auth.context_processors.auth",
-                "django.contrib.messages.context_processors.messages",
-            ],
-        },
-    },
-]
-
+# 静的ファイル設定
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 STATIC_URL = "static/"
