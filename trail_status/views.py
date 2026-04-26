@@ -45,31 +45,31 @@ class TrailListView(SideBarMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        filtered_data = self.get_queryset()
+        base_conditions = self.get_queryset()
         datasource = DataSource.objects.filter(data_format="WEB")
 
         # クエリパラメータによる絞り込み
         if self.source_filter:
-            filtered_data = filtered_data.filter(source=self.source_filter)
+            base_conditions = base_conditions.filter(source=self.source_filter)
         if self.area_filter:
-            filtered_data = filtered_data.filter(area=self.area_filter)
+            base_conditions = base_conditions.filter(area=self.area_filter)
         if self.status_filter:
-            filtered_data = filtered_data.filter(status=self.status_filter)
+            base_conditions = base_conditions.filter(status=self.status_filter)
         # 報告日の降順で並べ替え（updated_atは表示用のみ）
-        context["conditions"] = filtered_data.order_by("-reported_at", "-created_at")
+        filtered_conditions = base_conditions.order_by("-reported_at", "-created_at")
 
-        context["current_source"] = self.source_filter
-        context["current_area"] = self.area_filter
-        context["current_status"] = self.status_filter
+        current_source = self.source_filter
+        current_area = self.area_filter
+        current_status = self.status_filter
 
         # 最新の内容更新日（全情報源含む）
-        context["latest_update_date"] = self.get_queryset().aggregate(Max("updated_at"))["updated_at__max"]
+        latest_update_date = self.get_queryset().aggregate(Max("updated_at"))["updated_at__max"]
 
         # 1週間以内の更新リスト（新規追加情報源は除外）
         # 新規追加情報源 = DataSource.created_atとTrailCondition.updated_atの差が1日以内
         seven_days_ago = timezone.now().date() - timedelta(days=7)
         # @formatter:off
-        context["recent_updated_sources"] = (self.get_queryset()
+        recent_updated_sources = (self.get_queryset()
                                    .values("source__name", "source__url1")
                                    .annotate(
                                        latest_date=Max("updated_at"),
@@ -81,10 +81,17 @@ class TrailListView(SideBarMixin, ListView):
                                 )
         # @formatter:on
 
-        context["last_checked_at"] = datasource.aggregate(Max("last_checked_at"))["last_checked_at__max"]
+        last_checked_at = datasource.aggregate(Max("last_checked_at"))["last_checked_at__max"]
 
+        context.update({"conditions": filtered_conditions,
+                "current_source": current_source,
+                "current_area": current_area,
+                "current_status": current_status,
+                "latest_update_date": latest_update_date,
+                "recent_updated_sources": recent_updated_sources,
+                "last_checked_at": last_checked_at,
+                })
         return context
-
 
 class TrailDetailView(SideBarMixin, DetailView):
     """登山道状況個別詳細ページのビュー"""
@@ -106,8 +113,8 @@ class TrailDetailView(SideBarMixin, DetailView):
             'area': yamareco_area_id,
             **yamareco_fixed_params,
         }
-        context["yamareco_url"] = f"{yamareco_base_url}?{urllib.parse.urlencode(params, encoding='euc-jp')}"
 
+        context["yamareco_url"] = f"{yamareco_base_url}?{urllib.parse.urlencode(params, encoding='euc-jp')}"
         return context
 
 
@@ -124,8 +131,8 @@ class SourceListView(SideBarMixin, ListView):
 
         for source in self.get_queryset():
             sources_by_type[source.organization_type].append(source)
-        context["sources_by_type"] = dict(sources_by_type)  # Not work in template if defaultdict
 
+        context["sources_by_type"] = dict(sources_by_type)  # Not work in template if defaultdict
         return context
 
 
