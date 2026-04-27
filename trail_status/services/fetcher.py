@@ -43,7 +43,7 @@ class DataFetcher:
         logger.debug(f"コンテンツ抽出開始: {self.url}")
 
         # HTMLボディから本文のみを抽出（メニューやフッターを自動で削る）
-        # include_links=True: AIがreference_URLを抽出できるように
+        # include_links=True: AIがreference_urlを抽出できるように
         content = self._extract_content(response_text, include_links=True)
 
         if not content:
@@ -111,7 +111,7 @@ class DataFetcher:
             str: 抽出されたテキスト（空の場合は空文字列）
 
         Notes:
-            - include_links=True: リンクテキストとURLを含める（AI用、reference_URL抽出のため）
+            - include_links=True: リンクテキストとURLを含める（AI用、reference_url抽出のため）
             - include_links=False: 純粋なテキストのみ（ハッシュ計算用、URL変更を無視）
         """
         content = trafilatura.extract(
