@@ -9,7 +9,7 @@
       "resolved_at": "2027-09-24",
       "status": "CLOSURE",
       "area": "SAGAMIKO",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
       "comment": ""
     },
     {
@@ -21,7 +21,7 @@
       "resolved_at": "2027-09-24",
       "status": "CLOSURE",
       "area": "SAGAMIKO",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
       "comment": ""
     },
     {
@@ -33,7 +33,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "SAGAMIKO",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
       "comment": "迂回推奨"
     }
   ]

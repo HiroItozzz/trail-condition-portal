@@ -9,7 +9,7 @@
       "resolved_at": "2027-09-24",
       "status": "CLOSURE",
       "area": "SAGAMIKO",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
       "comment": "送電線建替工事のため令和9年9月24日まで通行止め予定（期間は予定）"
     },
     {
@@ -21,7 +21,7 @@
       "resolved_at": "2027-09-24",
       "status": "CLOSURE",
       "area": "SAGAMIKO",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
       "comment": "送電線建替工事のため令和9年9月24日まで通行止め予定（期間は予定）"
     },
     {
@@ -33,7 +33,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "SAGAMIKO",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
       "comment": "登山道崩落のため当面の間、迂回が必要"
     }
   ]

@@ -9,7 +9,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "TANZAWA",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
       "comment": "天神尾根：通行止め。山林火災発生中のため当面の間。"
     },
     {
@@ -21,7 +21,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "TANZAWA",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
       "comment": "登山道崩落のため当面通行止め。安全確認中。"
     },
     {
@@ -33,7 +33,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "TANZAWA",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
       "comment": "登山道の安全確認中。"
     },
     {
@@ -45,7 +45,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "TANZAWA",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
       "comment": "登山道の安全確認中。"
     },
     {
@@ -57,7 +57,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "TANZAWA",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
       "comment": "通行再開：2025-02-12より。"
     },
     {
@@ -69,7 +69,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "TANZAWA",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
       "comment": "2026-01-06より通行可（一部ルート変更）。接続する大棚沢林道・水ノ木幹線は通行止めのためルート注意。"
     },
     {
@@ -81,7 +81,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "TANZAWA",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
       "comment": "林道の通り抜け禁止（徒歩含む）。詳細は林道管理者へ問い合わせ。"
     },
     {
@@ -93,7 +93,7 @@
       "resolved_at": "2025-06-01",
       "status": "FACILITY",
       "area": "TANZAWA",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/68091/map.pdf",
       "comment": "供用再開日：2025-06-01。利用時はルールとマナーを順守してください。"
     }
   ]

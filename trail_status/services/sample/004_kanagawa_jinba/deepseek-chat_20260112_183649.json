@@ -9,7 +9,7 @@
       "resolved_at": "2027-09-24",
       "status": "CLOSURE",
       "area": "SAGAMIKO",
-      "reference_URL": "https://example.com/documents/69291/oshirase.pdf",
+      "reference_url": "https://example.com/documents/69291/oshirase.pdf",
       "comment": "区間: 県道517号線～顕鏡寺付近"
     },
     {
@@ -21,7 +21,7 @@
       "resolved_at": "2027-09-24",
       "status": "CLOSURE",
       "area": "SAGAMIKO",
-      "reference_URL": "https://example.com/documents/69291/oshirase.pdf",
+      "reference_url": "https://example.com/documents/69291/oshirase.pdf",
       "comment": "区間: 大明神展望台～箕石橋"
     },
     {
@@ -33,7 +33,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "SAGAMIKO",
-      "reference_URL": "https://example.com/documents/69291/oshirase.pdf",
+      "reference_url": "https://example.com/documents/69291/oshirase.pdf",
       "comment": "区間: 城山周辺"
     }
   ]

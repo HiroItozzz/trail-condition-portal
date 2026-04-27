@@ -9,7 +9,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "OKUCHICHIBU",
-      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/kawamatajyuumonjitouge2.pdf",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/kawamatajyuumonjitouge2.pdf",
       "comment": ""
     },
     {
@@ -21,7 +21,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "OKUCHICHIBU",
-      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/tyuuikannki2.pdf",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/tyuuikannki2.pdf",
       "comment": ""
     },
     {
@@ -33,7 +33,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "OKUCHICHIBU",
-      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/hptuukoudome2.pdf",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/hptuukoudome2.pdf",
       "comment": ""
     },
     {
@@ -45,7 +45,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "OKUCHICHIBU",
-      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/kuroiwaonesen4.pdf",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/kuroiwaonesen4.pdf",
       "comment": ""
     }
   ]
