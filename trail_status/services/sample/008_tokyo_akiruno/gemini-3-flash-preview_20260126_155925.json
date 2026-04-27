@@ -9,7 +9,7 @@
       "resolved_at": "2026-03-31",
       "status": "CLOSURE",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "林道工事のため。令和8年3月下旬頃まで通行止め予定。"
     },
     {
@@ -21,7 +21,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "道路崩壊のため当面の間通行止め。"
     },
     {
@@ -33,7 +33,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "落石の危険があるため当面の間一部通行止め。"
     },
     {
@@ -45,7 +45,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "間伐事業または落石の恐れによる規制。"
     },
     {
@@ -57,7 +57,7 @@
       "resolved_at": "2026-09-25",
       "status": "CLOSURE",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "間伐事業のため。令和8年9月25日まで。"
     },
     {
@@ -69,7 +69,7 @@
       "resolved_at": "2027-08-13",
       "status": "CLOSURE",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "間伐事業のため。令和9年8月13日まで。"
     },
     {
@@ -81,7 +81,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "2019年（令和元年）東日本台風による橋梁損傷のため当面の間通行止め。"
     }
   ]

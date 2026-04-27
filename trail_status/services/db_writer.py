@@ -255,7 +255,7 @@ class DbWriter:
             )
 
             # 内容変更チェック
-            # title/description/reported_at/reference_URL はLLMの出力揺らぎが大きいためチェック対象外
+            # title/description/reported_at/reference_url はLLMの出力揺らぎが大きいためチェック対象外
             # 実際に更新されて意味がある status, resolved_at のみで判定
             has_changed = (
                 db_record.status != matched_ai_record.status or db_record.resolved_at != matched_ai_record.resolved_at

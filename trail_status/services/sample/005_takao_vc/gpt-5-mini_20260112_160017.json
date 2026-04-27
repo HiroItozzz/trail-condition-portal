@@ -9,7 +9,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TANZAWA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "広域で土砂崩れ・通行止めが継続しています。個別区間の情報を必ず確認してください。"
     },
     {
@@ -21,7 +21,7 @@
       "resolved_at": "2026-01-14",
       "status": "CLOSURE",
       "area": "TAKAO",
-      "reference_URL": "https://takaovc.ces-net.jp/?p=7761",
+      "reference_url": "https://takaovc.ces-net.jp/?p=7761",
       "comment": "通行止めは日中（8:00～17:00）の実施。予備日：2026-01-15～2026-01-16。詳細は掲載URL参照。"
     },
     {
@@ -33,7 +33,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -45,7 +45,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -57,7 +57,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "TANZAWA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "神奈川県側の情報も参照してください（下段リンク参照）。"
     },
     {
@@ -69,7 +69,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "倒木あり。通行の際は十分注意してください。"
     },
     {
@@ -81,7 +81,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "土砂崩れ箇所あり。状況により通行止めとなる可能性があります。"
     },
     {
@@ -93,7 +93,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "林道のため通行止め表示ではないが崩落あり。歩行注意。"
     },
     {
@@ -105,7 +105,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "崩落箇所あり。十分な装備と注意が必要。"
     },
     {
@@ -117,7 +117,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "道の荒れあり。滑りやすい箇所があるため注意。"
     },
     {
@@ -129,7 +129,7 @@
       "resolved_at": null,
       "status": "OTHER",
       "area": "TANZAWA",
-      "reference_URL": "http://info-fujino.com/ http://www.pref.kanagawa.jp/docs/f4y/02yama/kanagawaparkranger/pr-jinnbatoukaisizennhodou.html",
+      "reference_url": "http://info-fujino.com/ http://www.pref.kanagawa.jp/docs/f4y/02yama/kanagawaparkranger/pr-jinnbatoukaisizennhodou.html",
       "comment": "藤野観光協会、かながわパークレンジャーの最新情報を参照してください。"
     }
   ]

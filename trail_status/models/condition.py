@@ -50,7 +50,7 @@ class TrailCondition(models.Model):
     )
     area = models.CharField("山域", max_length=20, choices=AreaName.choices)  # 例: 奥多摩
 
-    reference_URL = models.URLField("補足URL（pdf等）", blank=True, max_length=500)
+    reference_url = models.URLField("補足URL（pdf等）", blank=True, max_length=500)
     comment = models.TextField("備考欄", blank=True)
     mountain_group = models.ForeignKey(
         MountainGroup,

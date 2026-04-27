@@ -9,7 +9,7 @@
       "resolved_at": "2027-09-24",
       "status": "CLOSURE",
       "area": "SAGAMIKO",
-      "reference_URL": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/005.html",
+      "reference_url": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/005.html",
       "comment": "県道517号線～顕鏡寺付近は送電線建替工事に伴い通行止め。相模湖観光協会の案内で迂回路あり。顕鏡寺は石老山周辺の施設のため山名は石老山としました。"
     },
     {
@@ -21,7 +21,7 @@
       "resolved_at": "2027-09-24",
       "status": "CLOSURE",
       "area": "SAGAMIKO",
-      "reference_URL": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/005.html",
+      "reference_url": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/005.html",
       "comment": "大明神展望台～箕石橋区間は送電線建替工事に伴い通行止め。相模湖観光協会の案内で迂回路あり。"
     },
     {
@@ -33,7 +33,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "SAGAMIKO",
-      "reference_URL": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/005/001.html",
+      "reference_url": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/005/001.html",
       "comment": "城山周辺で登山道崩落のため迂回路が設置されています。迂回路に沿って通行してください（令和5年12月5日付の迂回路情報に変更あり）。"
     },
     {
@@ -45,7 +45,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "SAGAMIKO",
-      "reference_URL": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/005.html",
+      "reference_url": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/005.html",
       "comment": "小仏峠～景信山間は通行可と表記。詳細ページを参照してください。"
     }
   ]

@@ -35,7 +35,7 @@ export interface TrailCondition {
   resolved_at: string | null
   status: StatusType
   area: AreaName
-  reference_URL: string
+  reference_url: string
   comment: string
   mountain_group: number | null
   ai_model: string

@@ -9,7 +9,7 @@
       "resolved_at": null,
       "status": "FACILITY",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "男性用トイレのみ使用不可。女性用については言及なし。"
     },
     {
@@ -21,7 +21,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "大きな倒木による通行止め。"
     },
     {
@@ -33,7 +33,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "舗装路。"
     },
     {
@@ -45,7 +45,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -57,7 +57,7 @@
       "resolved_at": null,
       "status": "FACILITY",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "登山道自体は通行可だが、トイレ施設に制限あり。"
     },
     {
@@ -69,7 +69,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -81,7 +81,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -93,7 +93,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -105,7 +105,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -117,7 +117,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -129,7 +129,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -141,7 +141,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -153,7 +153,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "落石の危険による通行止め。"
     },
     {
@@ -165,7 +165,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -177,7 +177,7 @@
       "resolved_at": "2026-08-13",
       "status": "CLOSURE",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "伐採作業による通行止め。2026年8月13日解消予定。"
     },
     {
@@ -189,7 +189,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -201,7 +201,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -213,7 +213,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "崩落および土砂崩落による通行止め。"
     },
     {
@@ -225,7 +225,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -237,7 +237,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "海沢三滝方面が一部通行止め。林道は車両不可。"
     },
     {
@@ -249,7 +249,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "災害復旧工事による全面通行止め。"
     },
     {
@@ -261,7 +261,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "OKUTAMA",
-      "reference_URL": "https://www.ces-net.jp/okutamavc/info/52",
+      "reference_url": "https://www.ces-net.jp/okutamavc/info/52",
       "comment": "詳細は奥多摩ビジターセンターのページを参照。"
     },
     {
@@ -273,7 +273,7 @@
       "resolved_at": "2026-05-31",
       "status": "FACILITY",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "御岳小橋欠損。鵜の瀬橋は2026年5月下旬まで工事通行止め予定。"
     },
     {
@@ -285,7 +285,7 @@
       "resolved_at": null,
       "status": "ANIMAL",
       "area": "OKUTAMA",
-      "reference_URL": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html",
+      "reference_url": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html",
       "comment": "1頭目撃。"
     },
     {
@@ -297,7 +297,7 @@
       "resolved_at": null,
       "status": "ANIMAL",
       "area": "OKUTAMA",
-      "reference_URL": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html",
+      "reference_url": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html",
       "comment": "親子2頭目撃。"
     },
     {
@@ -309,7 +309,7 @@
       "resolved_at": null,
       "status": "ANIMAL",
       "area": "OKUTAMA",
-      "reference_URL": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html",
+      "reference_url": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html",
       "comment": "1頭目撃。"
     },
     {
@@ -321,7 +321,7 @@
       "resolved_at": null,
       "status": "ANIMAL",
       "area": "OKUTAMA",
-      "reference_URL": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html",
+      "reference_url": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html",
       "comment": "1頭目撃。"
     },
     {
@@ -333,7 +333,7 @@
       "resolved_at": null,
       "status": "ANIMAL",
       "area": "OKUTAMA",
-      "reference_URL": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html",
+      "reference_url": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html",
       "comment": "1頭目撃。"
     },
     {
@@ -345,7 +345,7 @@
       "resolved_at": null,
       "status": "ANIMAL",
       "area": "OKUTAMA",
-      "reference_URL": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html",
+      "reference_url": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html",
       "comment": "真新しいクマ剥ぎ跡。"
     },
     {
@@ -357,7 +357,7 @@
       "resolved_at": null,
       "status": "ANIMAL",
       "area": "OKUTAMA",
-      "reference_URL": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html",
+      "reference_url": "https://www.kankyo.metro.tokyo.lg.jp/nature/animals_plants/bear/index.html",
       "comment": "夜間に1頭目撃。"
     }
   ]
