@@ -236,7 +236,7 @@ class ConversationalAi(ABC):
         self.websearch: bool = config.allow_websearch
         self._config: LlmConfig | None = config
 
-    async def generate(self) -> tuple[dict, TokenStats]:
+    async def generate(self) -> tuple[ConditionSchemaAiList, TokenStats]:
         @traceable(
             run_type="llm",
             name=f"{self.prompt_filename}_{self.model.capitalize()}",
