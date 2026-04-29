@@ -52,45 +52,48 @@ steps:
     id: "deploy-migrate-job"
     waitFor: ["push-server"]
     secretEnv: ["DJANGO_SECRET_KEY", "DATABASE_URL"]
-    entrypoint: "bash"
+    entrypoint: "gcloud"
     args:
-      - "-c"
-      - |
-        gcloud run jobs deploy trail-info-$BRANCH_NAME-migrate \
-          --image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA \
-          --region=asia-northeast1 \
-          --task-timeout=1200s \
-          --update-env-vars=DJANGO_SECRET_KEY=$$DJANGO_SECRET_KEY,DATABASE_URL=$$DATABASE_URL \
-          --command=uv \
-          --args=run,--frozen,--no-dev,manage.py,migrate
+      - "run"
+      - "jobs"
+      - "deploy"
+      - "trail-info-$BRANCH_NAME-migrate"
+      - "--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
+      - "--region=asia-northeast1"
+      - "--task-timeout=1200s"
+      - "--update-env-vars=DJANGO_SECRET_KEY=$$DJANGO_SECRET_KEY,DATABASE_URL=$$DATABASE_URL"
+      - "--command=uv"
+      - "--args=run,--frozen,--no-dev,manage.py,migrate"
   - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
     id: "deploy-sync-job"
     waitFor: ["push-batch"]
     secretEnv: ["DJANGO_SECRET_KEY", "DATABASE_URL", "GEMINI_API_KEY", "LANGSMITH_API_KEY", "SLACK_WEBHOOK_URL"]
-    entrypoint: "bash"
+    entrypoint: "gcloud"
     args:
-      - "-c"
-      - | 
-        gcloud run jobs deploy trail-info-$BRANCH_NAME-run-sync \
-          --image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA \
-          --region=asia-northeast1 \
-          --update-env-vars=DJANGO_SECRET_KEY=$$DJANGO_SECRET_KEY,DATABASE_URL=$$DATABASE_URL,GEMINI_API_KEY=$$GEMINI_API_KEY,LANGSMITH_API_KEY=$$LANGSMITH_API_KEY,SLACK_WEBHOOK_URL=$$SLACK_WEBHOOK_URL \
-          --command=uv \
-          --args=run,--frozen,--no-dev,manage.py,trail_sync
+      - "run"
+      - "jobs"
+      - "deploy"
+      - "trail-info-$BRANCH_NAME-run-sync"
+      - "--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA"
+      - "--region=asia-northeast1"
+      - "--update-env-vars=DJANGO_SECRET_KEY=$$DJANGO_SECRET_KEY,DATABASE_URL=$$DATABASE_URL,GEMINI_API_KEY=$$GEMINI_API_KEY,LANGSMITH_API_KEY=$$LANGSMITH_API_KEY,SLACK_WEBHOOK_URL=$$SLACK_WEBHOOK_URL"
+      - "--command=uv"
+      - "--args=run,--frozen,--no-dev,manage.py,trail_sync"
   - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
     id: "deploy-blog-sync-job"
     waitFor: ["push-batch"]
     secretEnv: ["DJANGO_SECRET_KEY", "DATABASE_URL"]
-    entrypoint: "bash"
+    entrypoint: "gcloud"
     args:
-      - "-c"
-      - |
-        gcloud run jobs deploy trail-info-$BRANCH_NAME-run-blog-sync \
-          --image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA \
-          --region=asia-northeast1 \
-          --update-env-vars=DJANGO_SECRET_KEY=$$DJANGO_SECRET_KEY,DATABASE_URL=$$DATABASE_URL \
-          --command=uv \
-          --args=run,--frozen,--no-dev,manage.py,blog_sync
+      - "run"
+      - "jobs"
+      - "deploy"
+      - "trail-info-$BRANCH_NAME-run-blog-sync"
+      - "--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA"
+      - "--region=asia-northeast1"
+      - "--update-env-vars=DJANGO_SECRET_KEY=$$DJANGO_SECRET_KEY,DATABASE_URL=$$DATABASE_URL"
+      - "--command=uv"
+      - "--args=run,--frozen,--no-dev,manage.py,blog_sync"
 
   - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
     id: "execute-migrate"
@@ -109,14 +112,14 @@ steps:
     id: "deploy-service"
     waitFor: ["execute-migrate"]
     secretEnv: ["DJANGO_SECRET_KEY", "DATABASE_URL"]
-    entrypoint: "bash"
+    entrypoint: "gcloud"
     args:
-      - "-c"
-      - |
-        gcloud run deploy ${_SERVICE_NAME} \
-          --image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA \
-          --region=asia-northeast1 \
-          --update-env-vars=DJANGO_SECRET_KEY=$$DJANGO_SECRET_KEY,DATABASE_URL=$$DATABASE_URL
+      - "run"
+      - "deploy"
+      - "${_SERVICE_NAME}"
+      - "--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
+      - "--region=asia-northeast1"
+      - "--update-env-vars=DJANGO_SECRET_KEY=$$DJANGO_SECRET_KEY,DATABASE_URL=$$DATABASE_URL"
 
 images:
   - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
