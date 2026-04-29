@@ -12,10 +12,10 @@
   {% endif %}
 {% endblock title %}
 {% block meta_description %}
-  {% if current_area %}{{ conditions.0.get_area_display }}周辺の登山道状況。通行止め・通行注意等の情報の一覧。
+  {% if current_area %}{{ conditions.0.get_area_display }}周辺の登山道状況。通行止め・通行注意等の情報の一覧です。
   {% elif current_source %}{{ conditions.0.source.name }}が公表する登山道状況の一覧です。
   {% elif current_status %}東京近郊の登山道{{ conditions.0.get_status_display|slice:"2:" }}の一覧です。
-  {% else %}奥多摩・丹沢周辺の登山道状況。通行止め・通行注意等の情報の一覧。
+  {% else %}奥多摩・丹沢周辺の登山道状況。通行止め・通行注意等の情報の一覧です。
   {% endif %}
 {% endblock meta_description %}
 {% block canonical_url %}
