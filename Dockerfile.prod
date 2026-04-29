@@ -6,8 +6,7 @@ COPY ./frontend/package*.json ./
 RUN npm ci
 
 COPY ./frontend/ .
-COPY ./templates ./base_templates
-COPY ./trail_status/templates ./trail_status_templates
+COPY ./templates ./templates
 RUN npx vite build
 
 

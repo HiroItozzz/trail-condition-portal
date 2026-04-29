@@ -30,8 +30,7 @@ services:
       - ./frontend:/code
       - /code/node_modules
       - ./static/dist:/code/dist
-      - ./templates:/code/base_templates:ro
-      - ./trail_status/templates:/code/trail_status_templates:ro
+      - ./templates:/code/templates:ro
     env_file:
       - .env.local
     depends_on:
