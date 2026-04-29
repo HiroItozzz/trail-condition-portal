@@ -1,19 +1,14 @@
 import logging
+import urllib.parse
+from collections import defaultdict, OrderedDict
 from datetime import timedelta
 from typing import override
 
-from django.views.generic import ListView, DetailView
-from django.db.models import Count, F, Max, Q
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, redirect, render
-from collections import defaultdict
+from django.db.models import Count, F, Max, Prefetch
 from django.utils import timezone
+from django.views.generic import ListView, DetailView
 
 from .models import AreaName, BlogFeed, DataSource, StatusType, TrailCondition
-import urllib.parse
-
-from django.db.models import Prefetch
-from collections import OrderedDict
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +27,7 @@ class TrailListView(SideBarMixin, ListView):
     """登山道状況一覧ページ（トップページ）のビュー"""
     model = TrailCondition
     queryset = TrailCondition.objects.filter(disabled=False).prefetch_related("source")
-    template_name = "trail_list.html"
+    template_name = "trail_status/trail_list.html"
 
     @override
     def setup(self, request, *args, **kwargs):
@@ -84,19 +79,20 @@ class TrailListView(SideBarMixin, ListView):
         last_checked_at = datasource.aggregate(Max("last_checked_at"))["last_checked_at__max"]
 
         context.update({"conditions": filtered_conditions,
-                "current_source": current_source,
-                "current_area": current_area,
-                "current_status": current_status,
-                "latest_update_date": latest_update_date,
-                "recent_updated_sources": recent_updated_sources,
-                "last_checked_at": last_checked_at,
-                })
+                        "current_source": current_source,
+                        "current_area": current_area,
+                        "current_status": current_status,
+                        "latest_update_date": latest_update_date,
+                        "recent_updated_sources": recent_updated_sources,
+                        "last_checked_at": last_checked_at,
+                        })
         return context
+
 
 class TrailDetailView(SideBarMixin, DetailView):
     """登山道状況個別詳細ページのビュー"""
     model = TrailCondition
-    template_name = "detail.html"
+    template_name = "trail_status/detail.html"
     context_object_name = "item"
 
     @override
@@ -122,7 +118,7 @@ class SourceListView(SideBarMixin, ListView):
     """情報源一覧ページのビュー"""
     model = DataSource
     queryset = DataSource.objects.filter(data_format="WEB").order_by("organization_type", "id")
-    template_name = "sources.html"
+    template_name = "trail_status/sources.html"
 
     @override
     def get_context_data(self, **kwargs):
@@ -139,7 +135,7 @@ class SourceListView(SideBarMixin, ListView):
 class BlogListView(SideBarMixin, ListView):
     """巡視ブログ一覧ページのビュー"""
     model = DataSource
-    template_name = "blogs.html"
+    template_name = "trail_status/blogs.html"
 
     @override
     def get_queryset(self):

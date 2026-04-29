@@ -1,5 +1,5 @@
-{% extends "base.html" %}
 {# djlint: off #}
+{% extends 'trail_status/base.html' %}
 {% block title %}
   {% if current_area %}
     {{ conditions.0.get_area_display }}の登山道状況 - トレイルインフォ
@@ -126,9 +126,9 @@
             <span class="date-full">{{ item.updated_at|date:"Y/m/d" }}</span>
             <span class="date-short">{{ item.updated_at|date:"y/m/d" }}</span>
           </td>
-          <td data-detail-url="{% url 'trail-detail' item.id %}"
+          <td data-detail-url="{% url 'trail_status:trail-detail' item.id %}"
               data-order="{{ item.mountain_name_raw }}">
-            <a href="{% url 'trail-detail' item.id %}"
+            <a href="{% url 'trail_status:trail-detail' item.id %}"
                class="hidden md:inline"
                style="font-weight: bold;
                       color: #000;
