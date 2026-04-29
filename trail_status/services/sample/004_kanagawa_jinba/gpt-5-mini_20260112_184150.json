@@ -9,7 +9,7 @@
       "resolved_at": "2027-09-24",
       "status": "CLOSURE",
       "area": "SAGAMIKO",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
       "comment": ""
     },
     {
@@ -21,7 +21,7 @@
       "resolved_at": "2027-09-24",
       "status": "CLOSURE",
       "area": "SAGAMIKO",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
       "comment": ""
     },
     {
@@ -33,7 +33,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "SAGAMIKO",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
       "comment": "登山道崩落のため、指定区間は迂回を推奨。復旧時期未定。"
     },
     {
@@ -45,7 +45,7 @@
       "resolved_at": null,
       "status": "OTHER",
       "area": "SAGAMIKO",
-      "reference_URL": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/kouenhodou_top.html",
+      "reference_url": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/kouenhodou_top.html",
       "comment": ""
     },
     {
@@ -57,7 +57,7 @@
       "resolved_at": null,
       "status": "OTHER",
       "area": "SAGAMIKO",
-      "reference_URL": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/69291/oshirase.pdf",
       "comment": "PDFは令和7年（2025年）12月23日更新。林道情報は各センターのページを参照してください。"
     }
   ]

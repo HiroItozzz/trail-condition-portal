@@ -9,7 +9,7 @@
       "resolved_at": "2026-01-14",
       "status": "CLOSURE",
       "area": "TAKAO",
-      "reference_URL": "https://takaovc.ces-net.jp/?p=7761",
+      "reference_url": "https://takaovc.ces-net.jp/?p=7761",
       "comment": "作業日時は2026-01-13～2026-01-14の8:00～17:00。予備日：2026-01-15～2026-01-16。現地作業による日次通行止め（時間帯あり）。"
     },
     {
@@ -21,7 +21,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "2019年台風19号および2024年台風10号の影響による土砂崩れ等のため通行止め。復旧時期は未確定のため現地情報を確認のこと。"
     },
     {
@@ -33,7 +33,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -45,7 +45,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -57,7 +57,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "倒木あり。通過時は足元・頭上に注意。大型装備や迂回検討を推奨。"
     },
     {
@@ -69,7 +69,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "土砂崩れ箇所あり。通行には十分注意。まき道の通行止め区間と合わせて事前確認を。"
     },
     {
@@ -81,7 +81,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "林道のため公式には通行止めではないが複数の崩落箇所あり。徒歩でも通行注意。"
     },
     {
@@ -93,7 +93,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "崩落箇所あり。通行時は十分な注意と必要に応じた迂回を検討してください。"
     },
     {
@@ -105,7 +105,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "道が荒れているため足元注意。悪天候時は通行を見合わせることを推奨。"
     },
     {
@@ -117,7 +117,7 @@
       "resolved_at": null,
       "status": "OTHER",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "台風による土砂崩れ・倒木等の影響が残存。個別区間の情報を必ず確認のこと。"
     },
     {
@@ -129,7 +129,7 @@
       "resolved_at": null,
       "status": "OTHER",
       "area": "TANZAWA",
-      "reference_URL": "http://info-fujino.com/ http://www.pref.kanagawa.jp/docs/f4y/02yama/kanagawaparkranger/pr-jinnbatoukaisizennhodou.html",
+      "reference_url": "http://info-fujino.com/ http://www.pref.kanagawa.jp/docs/f4y/02yama/kanagawaparkranger/pr-jinnbatoukaisizennhodou.html",
       "comment": "最新の現地情報は各ホームページで確認してください（藤野観光協会、かながわパークレンジャー）。"
     }
   ]

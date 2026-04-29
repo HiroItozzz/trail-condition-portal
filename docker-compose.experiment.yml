@@ -12,7 +12,8 @@ services:
     ports:
       - "${PORT:-8000}:8000"
     environment:
-      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONDONTWRITEBYTECODE=
+      - PYTHONUNBUFFERED=1
     env_file:
       - .env.experiment
     restart: unless-stopped

@@ -36,11 +36,11 @@ COPY --from=builder /frontend/dist ./static/dist
 # collectstatic用のダミー設定
 ENV DATABASE_URL=sqlite:///dummy.db
 ENV DJANGO_SETTINGS_MODULE=config.settings.production
-ENV IS_PRODUCTION=False
+ENV DJANGO_SECRET_KEY=dummy123
 RUN uv run --frozen --no-dev manage.py collectstatic --noinput
 # 本番用の環境変数をリセット
 ENV DATABASE_URL= \
-    IS_PRODUCTION=
+    DJANGO_SECRET_KEY=
 
 CMD ["uv", "run", "--frozen", "--no-dev", "gunicorn", "config.wsgi:application", "--workers=1", "--threads=8", "--timeout=120"]
 

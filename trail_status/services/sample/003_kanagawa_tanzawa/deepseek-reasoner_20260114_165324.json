@@ -9,7 +9,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TANZAWA",
-      "reference_URL": "/documents/68091/map.pdf",
+      "reference_url": "/documents/68091/map.pdf",
       "comment": "天神尾根：通行止め"
     },
     {
@@ -21,7 +21,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TANZAWA",
-      "reference_URL": "/documents/68091/map.pdf",
+      "reference_url": "/documents/68091/map.pdf",
       "comment": ""
     },
     {
@@ -33,7 +33,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TANZAWA",
-      "reference_URL": "/documents/68091/map.pdf",
+      "reference_url": "/documents/68091/map.pdf",
       "comment": ""
     },
     {
@@ -45,7 +45,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TANZAWA",
-      "reference_URL": "/documents/68091/map.pdf",
+      "reference_url": "/documents/68091/map.pdf",
       "comment": ""
     },
     {
@@ -57,7 +57,7 @@
       "resolved_at": "2025-02-12",
       "status": "CLEAR",
       "area": "TANZAWA",
-      "reference_URL": "/documents/68091/map.pdf",
+      "reference_url": "/documents/68091/map.pdf",
       "comment": ""
     },
     {
@@ -69,7 +69,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TANZAWA",
-      "reference_URL": "/documents/68091/map.pdf",
+      "reference_url": "/documents/68091/map.pdf",
       "comment": "一部ルートの変更"
     }
   ]

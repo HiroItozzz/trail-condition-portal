@@ -9,7 +9,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "DAIBOSATSU",
-      "reference_URL": "http://www.vill.kosuge.yamanashi.jp/living/shinko/news/20240607135113.html",
+      "reference_url": "http://www.vill.kosuge.yamanashi.jp/living/shinko/news/20240607135113.html",
       "comment": "土砂崩れ発生のため。小永田集落から松姫峠の区間。"
     },
     {
@@ -21,7 +21,7 @@
       "resolved_at": "2025-09-08",
       "status": "CLEAR",
       "area": "DAIBOSATSU",
-      "reference_URL": "http://www.vill.kosuge.yamanashi.jp/living/shinko/news/20250904135404.html",
+      "reference_url": "http://www.vill.kosuge.yamanashi.jp/living/shinko/news/20250904135404.html",
       "comment": "白糸の滝駐車場から先の道。雄滝、大菩薩峠赤沢登山口方面、フルコンバ経由の下山道に関連。"
     },
     {
@@ -33,7 +33,7 @@
       "resolved_at": "2025-10-01",
       "status": "CLEAR",
       "area": "DAIBOSATSU",
-      "reference_URL": "http://www.vill.kosuge.yamanashi.jp/living/shinko/20240905175649.html",
+      "reference_url": "http://www.vill.kosuge.yamanashi.jp/living/shinko/20240905175649.html",
       "comment": "倒木や土砂崩れの影響により通行止めとなっていたが解除。"
     },
     {
@@ -45,7 +45,7 @@
       "resolved_at": null,
       "status": "CLEAR",
       "area": "OKUTAMA",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": "雨量規制による通行止め。小菅村ハイマゼから上野原市西原飯尾の間。最終更新日の記述に基づきreported_atを特定。"
     }
   ]

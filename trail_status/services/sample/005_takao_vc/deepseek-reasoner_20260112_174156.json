@@ -9,7 +9,7 @@
       "resolved_at": "2026-01-14",
       "status": "CLOSURE",
       "area": "TAKAO",
-      "reference_URL": "https://takaovc.ces-net.jp/?p=7761",
+      "reference_url": "https://takaovc.ces-net.jp/?p=7761",
       "comment": ""
     },
     {
@@ -21,7 +21,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -33,7 +33,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -45,7 +45,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -57,7 +57,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -69,7 +69,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     },
     {
@@ -81,7 +81,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "TAKAO",
-      "reference_URL": "",
+      "reference_url": "",
       "comment": ""
     }
   ]

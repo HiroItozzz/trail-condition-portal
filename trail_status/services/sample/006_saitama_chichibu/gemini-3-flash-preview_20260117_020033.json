@@ -9,7 +9,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "OKUCHICHIBU",
-      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/kawamatajyuumonjitouge2.pdf",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/kawamatajyuumonjitouge2.pdf",
       "comment": "秩父市大滝地内での土砂崩落・路肩崩落報告"
     },
     {
@@ -21,7 +21,7 @@
       "resolved_at": null,
       "status": "HAZARD",
       "area": "OKUCHICHIBU",
-      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/tyuuikannki2.pdf",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/tyuuikannki2.pdf",
       "comment": "三峯神社表参道コースの通行注意"
     },
     {
@@ -33,7 +33,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "OKUCHICHIBU",
-      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/hptuukoudome2.pdf",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/hptuukoudome2.pdf",
       "comment": "一部区間通行止め"
     },
     {
@@ -45,7 +45,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "OKUCHICHIBU",
-      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/kuroiwaonesen4.pdf",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/kuroiwaonesen4.pdf",
       "comment": "木橋破損による通行止め"
     },
     {
@@ -57,7 +57,7 @@
       "resolved_at": null,
       "status": "CLOSURE",
       "area": "OKUCHICHIBU",
-      "reference_URL": "https://www.pref.saitama.lg.jp/documents/36382/20231201tozandou.pdf",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/20231201tozandou.pdf",
       "comment": "公園内全体の通行不能区間まとめ"
     },
     {
@@ -69,7 +69,7 @@
       "resolved_at": null,
       "status": "SNOW",
       "area": "OKUCHICHIBU",
-      "reference_URL": "https://www.pref.saitama.lg.jp/b0504/tozan_winter.html",
+      "reference_url": "https://www.pref.saitama.lg.jp/b0504/tozan_winter.html",
       "comment": "冬季装備・積雪への注意喚起"
     },
     {
@@ -81,7 +81,7 @@
       "resolved_at": null,
       "status": "OTHER",
       "area": "OKUCHICHIBU",
-      "reference_URL": "https://www.pref.saitama.lg.jp/a1006/oshirase/kokudou140gounorakuseki.html",
+      "reference_url": "https://www.pref.saitama.lg.jp/a1006/oshirase/kokudou140gounorakuseki.html",
       "comment": "登山口へのアクセス道路情報。大滝トンネル暫定供用中。"
     }
   ]
