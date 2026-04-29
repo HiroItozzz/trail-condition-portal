@@ -414,7 +414,7 @@ class DeepseekClient(ConversationalAi):
 
     async def _handle_exceptions(self, e: Exception, retry_count: int, max_retries: int) -> None:
         if any(code in str(e) for code in ["500", "502", "503"]):
-            await self.handle_server_error(retry_count, max_retries)
+            await self.handle_server_error(e, retry_count, max_retries)
         elif "429" in str(e):
             logger.error("APIレート制限。しばらく経ってから再実行してください。")
             raise e
@@ -484,7 +484,7 @@ class GeminiClient(ConversationalAi):
         from google.genai.errors import ClientError, ServerError
 
         if isinstance(e, ServerError):
-            await self.handle_server_error(retry_count, max_retries)
+            await self.handle_server_error(e, retry_count, max_retries)
         elif isinstance(e, ClientError):
             self.handle_client_error(e)
         else:
@@ -589,7 +589,7 @@ class GptClient(ConversationalAi):
 
     async def _handle_exceptions(self, e: Exception, retry_count: int, max_retries: int) -> None:
         if any(code in str(e) for code in ["500", "502", "503"]):
-            await self.handle_server_error(retry_count, max_retries)
+            await self.handle_server_error(e, retry_count, max_retries)
         elif "429" in str(e):
             logger.error("APIレート制限。しばらく経ってから再実行してください。")
             raise e
