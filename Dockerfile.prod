@@ -1,7 +1,7 @@
+
+# ========== ステージ1: JSのビルド ==========
 FROM node:24-slim AS builder
-
 WORKDIR /frontend
-
 COPY ./frontend/package*.json ./
 RUN npm ci
 
@@ -11,6 +11,7 @@ COPY ./trail_status/templates ./trail_status_templates
 RUN npx vite build
 
 
+# ========== ステージ2: Pythonイメージ作成 ==========
 FROM python:3.13.11-slim AS python-base
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -19,32 +20,32 @@ WORKDIR /code
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock* ./
 
-# ========== Stage 3: Server Dependencies ==========
+# ========== ステージ3: サーバー用Python依存関係のインストール ==========
 FROM python-base AS server-deps
 RUN uv sync --frozen --no-dev
 
 
-# ========== Stage 4: Batch Dependencies ==========
-FROM python-base AS batch-deps
+# ========== ステージ4: バッチ用Python依存関係の追加インストール ==========
+FROM server-deps AS batch-deps
 RUN uv sync --frozen --no-dev --extra batch
 
-# ========== Stage 5: Server (本番用) ==========
+# ========== ステージ5: Server (本番用) ==========
 FROM python-base AS server
 COPY --from=server-deps /code/.venv /code/.venv
 COPY . .
 COPY --from=builder /frontend/dist ./static/dist
-# collectstatic用のダミー設定
-ENV DATABASE_URL=sqlite:///dummy.db
+# collectstatic用のダミー環境変数を設定
 ENV DJANGO_SETTINGS_MODULE=config.settings.production
+ENV DATABASE_URL=sqlite:///dummy.db
 ENV DJANGO_SECRET_KEY=dummy123
 RUN uv run --frozen --no-dev manage.py collectstatic --noinput
-# 本番用の環境変数をリセット
+# ダミー環境変数をリセット/ジャンゴ設定モジュール環境変数はリセット不要
 ENV DATABASE_URL= \
     DJANGO_SECRET_KEY=
 
 CMD ["uv", "run", "--frozen", "--no-dev", "gunicorn", "config.wsgi:application", "--workers=1", "--threads=8", "--timeout=120"]
 
-# ========== Stage 6: Batch (バッチジョブ用) ==========
+# ========== ステージ6: Batch (バッチジョブ用) ==========
 FROM python-base AS batch
 RUN apt-get update && \
     apt-get install -y postgresql-client && \
