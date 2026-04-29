@@ -88,7 +88,7 @@ steps:
       - "trail-info-$BRANCH_NAME-run-blog-sync"
       - "--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA"
       - "--region=asia-northeast1"
-      - "--set-secrets=DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY:latest,DATABASE_URL=$_DATABASE_URL:latest"
+      - "--set-secrets=DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY:latest,DATABASE_URL=$_DATABASE_URL:latest,SLACK_WEBHOOK_URL=SLACK_WEBHOOK_URL:latest"
       - "--command=uv"
       - "--args=run,--frozen,--no-dev,manage.py,blog_sync"
 
