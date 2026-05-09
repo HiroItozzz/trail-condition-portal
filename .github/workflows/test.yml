@@ -1,0 +1,30 @@
+name: Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: test
+    env:
+      DEBUG: ${{ vars.DEBUG }}
+      DJANGO_SETTINGS_MODULE: ${{ vars.DJANGO_SETTINGS_MODULE }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Build
+        run: docker compose build
+
+      - name: Up
+        run: docker compose up -d --wait
+
+      - name: Execute test
+        run: docker compose exec web uv run pytest
