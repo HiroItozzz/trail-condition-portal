@@ -7,9 +7,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-# pytest設定
-pytest_plugins = ["pytest_asyncio", "pytest_django"]
-
 
 @pytest.fixture
 def mock_api_keys(monkeypatch):
