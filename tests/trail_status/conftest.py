@@ -7,16 +7,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-# pytest設定
-pytest_plugins = ["pytest_asyncio", "pytest_django"]
-
-@pytest.fixture(autouse=True)
-def override_staticfiles(settings):
-    settings.STORAGES = {
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        }
-    }
 
 @pytest.fixture
 def mock_api_keys(monkeypatch):

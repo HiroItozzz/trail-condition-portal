@@ -36,7 +36,8 @@ class DataSource(models.Model):
         default="WEB",
     )
 
-    area_name = models.CharField("山域", max_length=20, choices=AreaName.choices, default="", blank=True, help_text="""巡視ブログのエリア名分類用に使用""")  # 例: 奥多摩
+    area_name = models.CharField("山域", max_length=20, choices=AreaName.choices, default="", blank=True,
+                                 help_text="""巡視ブログのエリア名分類用に使用""")  # 例: 奥多摩
 
     # ハッシュベース重複検出
     content_hash = models.CharField(
