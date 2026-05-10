@@ -1,5 +1,5 @@
 {# djlint: off #}
-{% extends "base.html" %}
+{% extends 'trail_status/base.html' %}
 {% block title %}ページが見つかりません - トレイルインフォ{% endblock title %}
 {# djlint: on #}
 {% block content %}
@@ -14,16 +14,16 @@
       <p>URLをご確認いただくか、以下のリンクをご利用ください。</p>
     </div>
     <div class="space-y-4">
-      <a href="{% url 'trail-list' %}"
+      <a href="{% url 'trail_status:trail-list' %}"
          class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
         🏠 トップページに戻る
       </a>
       <div class="flex flex-col sm:flex-row gap-4 text-sm">
-        <a href="{% url 'trail-list' %}?status=CLOSURE"
+        <a href="{% url 'trail_status:trail-list' %}?status=CLOSURE"
            class="text-blue-600 hover:text-blue-800 underline">通行止め情報を確認</a>
-        <a href="{% url 'trail-list' %}?status=HAZARD"
+        <a href="{% url 'trail_status:trail-list' %}?status=HAZARD"
            class="text-blue-600 hover:text-blue-800 underline">危険情報を確認</a>
-        <a href="{% url 'trail-list' %}?area=OKUTAMA"
+        <a href="{% url 'trail_status:trail-list' %}?area=OKUTAMA"
            class="text-blue-600 hover:text-blue-800 underline">奥多摩情報を確認</a>
       </div>
     </div>

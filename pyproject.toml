@@ -7,7 +7,6 @@ requires-python = "==3.13.11"
 authors = [{ name = "HiroItozzz" }]
 license = { text = "All rights reserved" }
 dependencies = [
-    "dj-database-url>=3.0.1",
     "django>=6.0",
     "django-cors-headers>=4.9.0",
     "feedparser>=6.0.12",
@@ -64,7 +63,7 @@ django_settings_module = "config.settings.development"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.development"
 pythonpath = ["."]
-testpaths = ["trail_status/tests"]
+testpaths = ["tests", "trail_status/tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

@@ -1,3 +1,9 @@
+# Github
+.github/
+
+# Tests
+**/tests/
+
 # Python
 .venv/
 __pycache__/
@@ -58,6 +64,3 @@ feed_samples/
 outputs/
 Claude Conversations/
 tools/
-
-# Tests (optional: remove if you want tests in image)
-**/tests/

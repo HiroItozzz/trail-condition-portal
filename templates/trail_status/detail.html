@@ -1,5 +1,5 @@
 {# djlint: off #}
-{% extends "base.html" %}
+{% extends 'trail_status/base.html' %}
 {% block title %}
   {{ item.mountain_name_raw }} {{ item.trail_name }} {{ item.get_status_display|slice:"2:" }} - トレイルインフォ
 {% endblock title %}
@@ -132,7 +132,7 @@
     </div>
     <!-- 戻るリンク -->
     <div class="mt-8">
-      <a href="{% url 'trail-list' %}"
+      <a href="{% url 'trail_status:trail-list' %}"
          class="inline-flex items-center text-gray-600 hover:text-blue-600 transition-colors">← 一覧へ戻る</a>
     </div>
   </div>

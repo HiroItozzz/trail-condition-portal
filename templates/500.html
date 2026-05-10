@@ -1,5 +1,5 @@
 {# djlint: off #}
-{% extends "base.html" %}
+{% extends 'trail_status/base.html' %}
 {% block title %}サーバーエラー - トレイルインフォ{% endblock title %}
 {# djlint: on #}
 {% block content %}
@@ -18,7 +18,7 @@
               class="inline-flex items-center px-6 py-3 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition-colors">
         🔄 ページを再読み込み
       </button>
-      <a href="{% url 'trail-list' %}"
+      <a href="{% url 'trail_status:trail-list' %}"
          class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
         🏠 トップページに戻る
       </a>

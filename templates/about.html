@@ -1,5 +1,5 @@
 {# djlint: off #}
-{% extends "base.html" %}
+{% extends 'trail_status/base.html' %}
 {% block title %}このサイトについて - トレイルインフォ{% endblock title %}
 {% block meta_description %}トレイルインフォは、自治体・省庁・ビジターセンターといった各機関が公開している登山道の危険情報を集約し、一覧で確認できるようにしたサービスです。複数のサイトに散らばっている通行止め・通行注意などの情報を、ひとつの画面でまとめてチェックできます。{% endblock meta_description %}
 {# djlint: on #}
@@ -94,7 +94,7 @@
       </p>
     </section>
     <div class="mt-8 text-md text-gray-600">
-      <a href="{% url 'trail-list' %}" class="text-blue-600 hover:underline">← トップページに戻る</a>
+      <a href="{% url 'trail_status:trail-list' %}" class="text-blue-600 hover:underline">← トップページに戻る</a>
     </div>
   </div>
 {% endblock content %}

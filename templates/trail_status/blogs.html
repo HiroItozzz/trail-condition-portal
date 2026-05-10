@@ -1,5 +1,5 @@
 {# djlint: off #}
-{% extends 'base.html' %}
+{% extends 'trail_status/base.html' %}
 {% block title %}登山道巡視ブログ集 - トレイルインフォ{% endblock title %}
 {% block meta_description %}
   奥多摩・丹沢周辺の登山道を定期的に巡視し調査報告しているブログのリンク集です。最新の記事も確認できます。
@@ -70,7 +70,7 @@
       <p class="text-gray-500">現在、登録されている巡視ブログはありません。</p>
     {% endfor %}
     <div class="mt-8 text-md text-gray-600">
-      <a href="{% url 'trail-list' %}" class="text-blue-600 hover:underline">← トップページに戻る</a>
+      <a href="{% url 'trail_status:trail-list' %}" class="text-blue-600 hover:underline">← トップページに戻る</a>
     </div>
   </div>
 {% endblock content %}
