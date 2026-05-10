@@ -1,0 +1,122 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build-server"
+    waitFor: [ "-" ]
+    args:
+      - "build"
+      - "--cache-from"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:latest"
+      - "--target=server"
+      - "-t"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
+      - "-t"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:latest"
+      - "-f"
+      - "Dockerfile.prod"
+      - "."
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build-batch"
+    waitFor: [ "-" ]
+    args:
+      - "build"
+      - "--cache-from"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:latest"
+      - "--target=batch"
+      - "-t"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA"
+      - "-t"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:latest"
+      - "-f"
+      - "Dockerfile.prod"
+      - "."
+
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push-server"
+    waitFor: [ "build-server" ]
+    args:
+      - "push"
+      - "--all-tags"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME"
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push-batch"
+    waitFor: [ "build-batch" ]
+    args:
+      - "push"
+      - "--all-tags"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch"
+
+  - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
+    id: "deploy-migrate-job"
+    waitFor: [ "push-server" ]
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "jobs"
+      - "deploy"
+      - "trail-info-$BRANCH_NAME-migrate"
+      - "--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
+      - "--region=asia-northeast1"
+      - "--task-timeout=1200s"
+      - "--set-secrets=DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY:latest,DATABASE_URL=$_DATABASE_URL:latest"
+      - "--command=uv"
+      - "--args=run,--frozen,--no-dev,manage.py,migrate"
+  - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
+    id: "deploy-sync-job"
+    waitFor: [ "push-batch" ]
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "jobs"
+      - "deploy"
+      - "trail-info-$BRANCH_NAME-run-sync"
+      - "--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA"
+      - "--region=asia-northeast1"
+      - "--set-secrets=DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY:latest,DATABASE_URL=$_DATABASE_URL:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,LANGSMITH_API_KEY=LANGSMITH_API_KEY:latest,SLACK_WEBHOOK_URL=SLACK_WEBHOOK_URL:latest"
+      - "--command=uv"
+      - "--args=run,--frozen,--no-dev,manage.py,trail_sync"
+  - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
+    id: "deploy-blog-sync-job"
+    waitFor: [ "push-batch" ]
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "jobs"
+      - "deploy"
+      - "trail-info-$BRANCH_NAME-run-blog-sync"
+      - "--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA"
+      - "--region=asia-northeast1"
+      - "--set-secrets=DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY:latest,DATABASE_URL=$_DATABASE_URL:latest,SLACK_WEBHOOK_URL=SLACK_WEBHOOK_URL:latest"
+      - "--command=uv"
+      - "--args=run,--frozen,--no-dev,manage.py,blog_sync"
+
+  - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
+    id: "execute-migrate"
+    waitFor: [ "deploy-migrate-job" ]
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "jobs"
+      - "execute"
+      - "trail-info-$BRANCH_NAME-migrate"
+      - "--region=asia-northeast1"
+      - "--wait"
+      - "--task-timeout=20m"
+
+  - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
+    id: "deploy-service"
+    waitFor: [ "execute-migrate" ]
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "deploy"
+      - "${_SERVICE_NAME}"
+      - "--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
+      - "--region=asia-northeast1"
+      - "--set-secrets=DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY:latest,DATABASE_URL=$_DATABASE_URL:latest"
+
+images:
+  - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
+  - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:latest"
+
+options:
+  logging: CLOUD_LOGGING_ONLY

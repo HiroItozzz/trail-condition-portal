@@ -16,5 +16,5 @@ services:
       - PYTHONUNBUFFERED=1
       - UV_COMPILE_BYTECODE=1
     env_file:
-      - .env.experiment
+      - .env.staging
     restart: unless-stopped
