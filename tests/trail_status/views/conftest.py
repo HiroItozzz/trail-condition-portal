@@ -1,6 +1,10 @@
+from datetime import datetime, timedelta, date, timezone
+
 import pytest
+
 from trail_status.models import TrailCondition, DataSource, OrganizationType, StatusType, AreaName
-from datetime import datetime, timedelta, date
+
+JST = timezone(timedelta(hours=+9), "JST")
 
 
 @pytest.fixture(autouse=True)
@@ -24,8 +28,8 @@ def create_sample_data_source(n: int | str = "", **kwargs) -> DataSource:
         data_format="WEB",
         area_name=AreaName.OKUTAMA,
         content_hash="",
-        last_scraped_at=datetime.today() - timedelta(days=2),
-        last_checked_at=datetime.today(),
+        last_scraped_at=datetime.now(tz=JST) - timedelta(days=2),
+        last_checked_at=datetime.now(tz=JST),
     )
     defaults.update(kwargs)
     return DataSource.objects.create(**defaults)
@@ -38,14 +42,14 @@ def create_sample_condition(n: int | str = "", data_source=None, **kwargs) -> Tr
         source=data_source,
         url1=f"https://sample{n}.com/",
         trail_name=f"テスト道{n}",
-        mountain_name_raw=f"テスト山{1}",
-        title=f"テスト通行止め{1}",
-        description=f"テスト詳細説明{1}",
+        mountain_name_raw=f"テスト山{n}",
+        title=f"テスト通行止め{n}",
+        description=f"テスト詳細説明{n}",
         reported_at=date.today() - timedelta(days=2),
         resolved_at=None,
         status=StatusType.CLOSURE,
         area=AreaName.OKUTAMA,
-        reference_url=f"https://sample{1}.com/ref",
+        reference_url=f"https://sample{n}.com/ref",
         comment="テストコメント",
         mountain_group=None,
         ai_model="gemini-3-flash",
@@ -59,12 +63,12 @@ def create_sample_condition(n: int | str = "", data_source=None, **kwargs) -> Tr
 
 
 @pytest.fixture
-def data_source():
+def sample_data_source_1():
     s = create_sample_data_source(1)
     yield s
 
 
 @pytest.fixture
-def sample_condition(data_source):
-    t = create_sample_condition()
+def sample_condition_1():
+    t = create_sample_condition(1)
     yield t
