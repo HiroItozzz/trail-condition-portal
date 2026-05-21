@@ -18,6 +18,9 @@ temp/
 .ipynb_checkpoints/
 .coverage
 
+# tests
+/.coverage
+
 # log
 *.log
 logs/*

@@ -3,6 +3,7 @@
 
 # Tests
 **/tests/
+.coverage
 
 # Python
 .venv/

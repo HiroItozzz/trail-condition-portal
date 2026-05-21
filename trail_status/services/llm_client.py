@@ -35,7 +35,7 @@ class LlmConfig(BaseModel):
     site_prompt: str | None = Field(default="", description="サイト固有プロンプト")
     use_template: bool = Field(default=True, description="template.yamlを使用するか")
     model: str = Field(
-        pattern=r"^(gemini|deepseek|gpt)-.+", default="gemini-flash-latest", description="使用するLLMモデル"
+        pattern=r"^(gemini|deepseek|gpt)-.+", default="gemini-3-flash-preview", description="使用するLLMモデル"
     )
     data: str = Field(description="解析するテキスト")
     temperature: float = Field(
