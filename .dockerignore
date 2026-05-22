@@ -3,6 +3,7 @@
 
 # Tests
 **/tests/
+.coverage
 
 # Python
 .venv/
@@ -18,6 +19,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .python-version
+.coverage
 
 # Environment
 .env

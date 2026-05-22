@@ -16,6 +16,10 @@ dist/
 build/
 temp/
 .ipynb_checkpoints/
+.coverage
+
+# tests
+/.coverage
 
 # log
 *.log
