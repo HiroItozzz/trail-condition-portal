@@ -61,6 +61,9 @@ class DbWriter:
 
     # ========================================
 
+    # 形態素解析器（遅延ロード）
+    _analyzer = None
+
     def __init__(
         self,
         source_schema_single: SourceSchemaSingle,
@@ -407,12 +410,14 @@ class DbWriter:
 
         - token_set_ratio, token_sort_ratio用
         """
+
         # 形態素解析器の初期化
-        analyzer = Dictionary(dict="core").create()
+        if self._analyzer is None:
+            self._analyzer = Dictionary(dict="core").create()
 
         normalized = self.normalize_text(text)
         tokens = []
-        for m in analyzer.tokenize(normalized, self.SPLIT_MODE):
+        for m in self._analyzer.tokenize(normalized, self.SPLIT_MODE):
             pos = m.part_of_speech()
             if noun_only and pos[0] != "名詞":
                 continue
