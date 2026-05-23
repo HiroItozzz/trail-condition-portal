@@ -21,7 +21,7 @@ jobs:
         run: echo "${{ secrets.ENV_LOCAL }}" > .env.local
 
       - name: Up
-        run: docker compose up -d --wait
+        run: docker compose up -d --wait web db
 
       - name: Execute test
         run: docker compose exec web uv run pytest
