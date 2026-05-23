@@ -61,6 +61,7 @@ docs/
 *.md
 .claude/
 sample/
+samples/
 backups/
 feed_samples/
 outputs/

@@ -1,0 +1,146 @@
+
+---対象データ---
+('奥の院口トイレ', '御岳山')
+---候補データ---
+ptid=348 title='御岳山' content='' lat=35.782853 lng=139.149514 elevation=929.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=348' スコア: 1.0
+
+---対象データ---
+('神苑の森コース', '御岳山')
+---候補データ---
+ptid=348 title='御岳山' content='' lat=35.782853 lng=139.149514 elevation=929.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=348' スコア: 1.0
+
+---対象データ---
+('表参道 （ケーブルカー滝本駅～武蔵御嶽神社 間）', '御岳山')
+---候補データ---
+ptid=348 title='御岳山' content='' lat=35.782853 lng=139.149514 elevation=929.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=348' スコア: 1.0
+
+---対象データ---
+('ロックガーデン', '御岳山')
+---候補データ---
+ptid=348 title='御岳山' content='' lat=35.782853 lng=139.149514 elevation=929.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=348' スコア: 1.0
+
+---対象データ---
+('御岳山～大岳山', '御岳山・大岳山')
+---候補データ---
+
+---対象データ---
+('大岳山～鋸山～奥多摩駅', '大岳山・鋸山')
+---候補データ---
+ptid=125 title='大岳山' content='' lat=35.765167 lng=139.130444 elevation=1267.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=125' スコア: 0.8888888888888888
+ptid=13278 title='大むぞ山' content='' lat=35.764582885362 lng=139.03657650928 elevation=1102.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=13278' スコア: 0.75
+
+---対象データ---
+('大岳山～馬頭刈尾根～軍道', '大岳山')
+---候補データ---
+ptid=125 title='大岳山' content='' lat=35.765167 lng=139.130444 elevation=1267.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=125' スコア: 1.0
+ptid=13278 title='大むぞ山' content='' lat=35.764582885362 lng=139.03657650928 elevation=1102.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=13278' スコア: 0.8571428571428572
+ptid=318 title='倉岳山' content='' lat=35.583964 lng=139.019786 elevation=990.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=318' スコア: 0.75
+
+---対象データ---
+('千足～天狗滝～馬頭刈尾根分岐', '馬頭刈尾根')
+---候補データ---
+
+---対象データ---
+('大岳鍾乳洞～大滝～馬頭刈尾根分岐', '大岳山')
+---候補データ---
+ptid=125 title='大岳山' content='' lat=35.765167 lng=139.130444 elevation=1267.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=125' スコア: 1.0
+ptid=13278 title='大むぞ山' content='' lat=35.764582885362 lng=139.03657650928 elevation=1102.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=13278' スコア: 0.8571428571428572
+ptid=318 title='倉岳山' content='' lat=35.583964 lng=139.019786 elevation=990.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=318' スコア: 0.75
+
+---対象データ---
+('御岳山～日の出山', '御岳山・日の出山')
+---候補データ---
+
+---対象データ---
+('日の出山～つるつる温泉', '日の出山')
+---候補データ---
+ptid=2277 title='日の出山' content='' lat=35.781210888896 lng=139.16742510355 elevation=902.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=2277' スコア: 1.0
+
+---対象データ---
+('麻生山～白岩の滝', '麻生山')
+---候補データ---
+ptid=3748 title='麻生山' content='' lat=35.769607777577 lng=139.1796643155 elevation=794.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=3748' スコア: 1.0
+ptid=11832 title='麻生山' content='' lat=35.671243263758 lng=138.99924726538 elevation=1267.5 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=11832' スコア: 1.0
+ptid=313 title='生藤山' content='' lat=35.67241 lng=139.13242 elevation=990.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=313' スコア: 0.75
+
+---対象データ---
+('日の出山～上養沢', '日の出山')
+---候補データ---
+ptid=2277 title='日の出山' content='' lat=35.781210888896 lng=139.16742510355 elevation=902.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=2277' スコア: 1.0
+
+---対象データ---
+('日の出山～三室山～梅の公園（日向和田駅）', '日の出山・三室山')
+---候補データ---
+
+---対象データ---
+('日の出山～三室山～ 愛宕山～二俣尾駅', '日の出山・三室山・愛宕山')
+---候補データ---
+
+---対象データ---
+('御岳山～大塚山', '御岳山・大塚山')
+---候補データ---
+
+---対象データ---
+('大塚山～古里駅', '大塚山')
+---候補データ---
+ptid=3271 title='大塚山' content='' lat=35.792759535533 lng=139.14683370031 elevation=920.3 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=3271' スコア: 1.0
+ptid=20238 title='大塚山' content='' lat=35.624888983804 lng=139.34886845125 elevation=213.5 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=20238' スコア: 1.0
+
+---対象データ---
+('御岳山～大楢峠～鳩ノ巣駅', '御岳山')
+---候補データ---
+ptid=348 title='御岳山' content='' lat=35.782853 lng=139.149514 elevation=929.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=348' スコア: 1.0
+
+---対象データ---
+('金比羅尾根(日の出山～五日市)', '日の出山')
+---候補データ---
+ptid=2277 title='日の出山' content='' lat=35.781210888896 lng=139.16742510355 elevation=902.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=2277' スコア: 1.0
+
+---対象データ---
+('海沢林道', '大楢峠')
+---候補データ---
+
+---対象データ---
+('御岳林道（七代の滝から上養沢方面）', '御岳山')
+---候補データ---
+ptid=348 title='御岳山' content='' lat=35.782853 lng=139.149514 elevation=929.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=348' スコア: 1.0
+
+---対象データ---
+('高水三山', '高水山・岩茸石山・惣岳山')
+---候補データ---
+
+---対象データ---
+('御岳渓谷遊歩道', '御岳山')
+---候補データ---
+ptid=348 title='御岳山' content='' lat=35.782853 lng=139.149514 elevation=929.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=348' スコア: 1.0
+
+---対象データ---
+('ケーブルカー線路上', '御岳山')
+---候補データ---
+ptid=348 title='御岳山' content='' lat=35.782853 lng=139.149514 elevation=929.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=348' スコア: 1.0
+
+---対象データ---
+('奥の院口トイレ付近', '御岳山')
+---候補データ---
+ptid=348 title='御岳山' content='' lat=35.782853 lng=139.149514 elevation=929.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=348' スコア: 1.0
+
+---対象データ---
+('天狗の腰掛け杉～天狗岩間', '御岳山')
+---候補データ---
+ptid=348 title='御岳山' content='' lat=35.782853 lng=139.149514 elevation=929.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=348' スコア: 1.0
+
+---対象データ---
+('古里～大塚山間', '大塚山')
+---候補データ---
+ptid=3271 title='大塚山' content='' lat=35.792759535533 lng=139.14683370031 elevation=920.3 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=3271' スコア: 1.0
+ptid=20238 title='大塚山' content='' lat=35.624888983804 lng=139.34886845125 elevation=213.5 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=20238' スコア: 1.0
+
+---対象データ---
+('アクバ峠から上高岩山間', '上高岩山')
+---候補データ---
+ptid=39890 title='上高岩山' content='' lat=35.771252873553 lng=139.14504289627 elevation=1012.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=39890' スコア: 1.0
+
+---対象データ---
+('御岳山駅付近', '御岳山')
+---候補データ---
+ptid=348 title='御岳山' content='' lat=35.782853 lng=139.149514 elevation=929.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=348' スコア: 1.0
