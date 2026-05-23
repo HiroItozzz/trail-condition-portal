@@ -23,14 +23,5 @@ jobs:
       - name: Up
         run: docker compose up -d --wait web db
 
-      - name: Check containers
-        run: docker compose ps
-        
-      - name: Memory check
-        run: docker stats --no-stream
-
       - name: Execute test
         run: docker compose exec web uv run pytest
-
-      - name: Memory check
-        run: docker stats --no-stream
