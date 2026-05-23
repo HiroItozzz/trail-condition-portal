@@ -32,6 +32,8 @@ my_docs/
 reports/
 outputs/
 *sample.json
+tools/grid/samples/*
+!tools/grid/samples/All_places_*
 
 # Claude
 CLAUDE.md

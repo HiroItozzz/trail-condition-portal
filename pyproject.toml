@@ -71,7 +71,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.djlint]
-ignore = "H021"
+ignore = "H021,H014"
 profile = "django"
 reformat = true
 use_gitignore = true
