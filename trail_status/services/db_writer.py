@@ -61,9 +61,6 @@ class DbWriter:
 
     # ========================================
 
-    # 形態素解析器の初期化
-    sudachi = Dictionary(dict="core").create()
-
     def __init__(
         self,
         source_schema_single: SourceSchemaSingle,
@@ -410,9 +407,12 @@ class DbWriter:
 
         - token_set_ratio, token_sort_ratio用
         """
+        # 形態素解析器の初期化
+        analyzer = Dictionary(dict="core").create()
+
         normalized = self.normalize_text(text)
         tokens = []
-        for m in self.sudachi.tokenize(normalized, self.SPLIT_MODE):
+        for m in analyzer.tokenize(normalized, self.SPLIT_MODE):
             pos = m.part_of_speech()
             if noun_only and pos[0] != "名詞":
                 continue
