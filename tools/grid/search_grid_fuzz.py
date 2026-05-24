@@ -20,7 +20,7 @@ trail_status/services/sample/002_mitake_vc/gemini-3-flash-preview_20260317_14070
 """.strip()
 
 GRIDDATA_DIR = Path.cwd() / """
-tools/grid/samples/Okutama_mountaintop.json
+tools/grid/samples/Trails_OKUTAMA.json
 """.strip()
 
 # fmt: on
@@ -77,7 +77,7 @@ class GridSearch:
                     con.mountain_name_raw,
                     grid.title,
                     processor=lambda s: self.decompose_text(s, noun_only=True),
-                    score_cutoff=0,
+                    score_cutoff=0.6,
                 )
                 / 100.0
             )
@@ -93,29 +93,6 @@ class GridSearch:
                 / 100.0
             )
 
-            """
-            # 詳細説明の長さで場合分け
-            if len(_existing_des) <= 20 and len(_new_des) <= 20:
-                desc_score = (
-                    fuzz.token_set_ratio(
-                        _existing_des,
-                        _new_des,
-                        processor=lambda s: self.decompose_text(s, noun_only=False),
-                        score_cutoff=0.8,
-                    )
-                    / 100.0
-                )
-            else:
-                desc_score = (
-                    fuzz.partial_token_set_ratio(
-                        _existing_des,
-                        _new_des,
-                        processor=lambda s: self.decompose_text(s, noun_only=False),
-                        score_cutoff=0.6,
-                    )
-                    / 100.0
-                )
-            """
             score = (
                 mountain_score * self.FIELD_WEIGHT_MOUNTAIN  # + trail_score * self.FIELD_WEIGHT_TRAIL
                 # + desc_score * self.FIELD_WEIGHT_DESC
@@ -149,7 +126,7 @@ class GridSearch:
         """全角半角・空白を揃えて比較の精度を上げる"""
         if not text:
             return ""
-        return unicodedata.normalize("NFKC", text).strip().replace(" ", "").replace("　", "")
+        return unicodedata.normalize("NFKC", text).strip().replace(" ", "").replace("　", "").replace("・", "")
 
 
 def get_result():
