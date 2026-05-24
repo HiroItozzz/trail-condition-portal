@@ -32,10 +32,7 @@ my_docs/
 reports/
 outputs/
 *sample.json
-tools/grid/samples/raw/*
-!tools/grid/samples/*mountaintop.json
-!tools/grid/samples/**/All_places_*
-!tools/grid/samples/*mountaintop.json
+tools/grid/samples/
 
 # Claude
 CLAUDE.md
