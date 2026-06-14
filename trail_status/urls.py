@@ -12,5 +12,11 @@ urlpatterns = [
     path("sources/", views.SourceListView.as_view(), name="source-list"),
     # 巡視ブログ一覧
     path("blogs/", views.BlogListView.as_view(), name="blog-list"),
-    path("prompts/<int:source_id>/", views.get_prompt, name="prompt-edit"),
+    # プロンプト編集画面
+    path("prompts/edit/<int:source_id>/", views.get_prompt, name="prompt-edit"),
+    # プロンプトAPI
+    path("api/prompts/", views.get_prompt_json, name="prompt-api"),
+    path("api/prompts/<int:source_id>/", views.get_prompt_json, name="prompt-api"),
+    # 情報源API
+    path("api/source/<int:source_id>/", views.get_data_source, name="prompt-api"),
 ]

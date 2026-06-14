@@ -38,7 +38,7 @@ class PromptForm(forms.Form):
         super().__init__(*args, **kwargs)
         try:
             if data_source:
-                filename = utils.get_prompt_filename_from_data(data_source)
+                filename = data_source.prompt_filename
                 prompt_path = PROMPT_DIR / filename
                 prompt_data = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
                 model_config = prompt_data.get("config", {}) or {}
