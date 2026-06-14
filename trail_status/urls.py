@@ -1,7 +1,8 @@
 from django.urls import path
+
 from . import views
 
-app_name = 'trail_status'
+app_name = "trail_status"
 urlpatterns = [
     # 一覧画面: /
     path("", views.TrailListView.as_view(), name="trail-list"),
@@ -11,4 +12,5 @@ urlpatterns = [
     path("sources/", views.SourceListView.as_view(), name="source-list"),
     # 巡視ブログ一覧
     path("blogs/", views.BlogListView.as_view(), name="blog-list"),
+    path("prompts/<int:source_id>/", views.get_prompt, name="prompt-edit"),
 ]

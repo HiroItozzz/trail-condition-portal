@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <meta charset="utf-8">
+  <head>
+    <title>プロンプト編集</title>
+  </head>
+  <body>
+    <h1>プロンプト編集</h1>
+    <form action="{% url 'trail_status:prompt-edit' pk %}" method="post">
+      {% csrf_token %}
+      {{ form }}
+      <input type="submit" value="Submit">
+    </form>
+  </body>
+</html>

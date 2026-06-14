@@ -5,6 +5,8 @@ from datetime import timedelta
 from typing import override
 
 from django.db.models import Count, F, Max, Prefetch
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.views.generic import DetailView, ListView
 
@@ -192,6 +194,27 @@ class BlogListView(SideBarMixin, ListView):
 
         context["grouped_sources"] = sorted_grouped
         return context
+
+
+def get_prompt(request, source_id):
+    # if this is a POST request we need to process the form data
+    if request.method == "POST":
+        # create a form instance and populate it with data from the request:
+        form = PromptForm(request.POST)
+        logger.debug(form.data)
+        # check whether it's valid:
+        if form.is_valid():
+            # process the data in form.cleaned_data as required
+            # ...
+            # redirect to a new URL:
+            return HttpResponseRedirect("/")
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        data_source: DataSource = get_object_or_404(DataSource, pk=source_id)
+        form = PromptForm(data_source=data_source)
+
+    return render(request, "trail_status/prompt/edit.html", {"form": form, "pk": data_source.id})
 
 
 def _get_sidebar_context() -> dict:
