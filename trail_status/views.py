@@ -1,12 +1,18 @@
 import logging
 import urllib.parse
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict, defaultdict
 from datetime import timedelta
 from typing import override
 
 from django.db.models import Count, F, Max, Prefetch
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
-from django.views.generic import ListView, DetailView
+from django.views.generic import DetailView, FormView, ListView, UpdateView
+from django.views.generic.detail import SingleObjectMixin, SingleObjectTemplateResponseMixin
+from django.views.generic.edit import FormMixin, ProcessFormView
+
+from trail_status.forms import PromptForm
 
 from .models import AreaName, BlogFeed, DataSource, StatusType, TrailCondition
 
@@ -25,6 +31,7 @@ class SideBarMixin:
 
 class TrailListView(SideBarMixin, ListView):
     """登山道状況一覧ページ（トップページ）のビュー"""
+
     model = TrailCondition
     queryset = TrailCondition.objects.filter(disabled=False).prefetch_related("source")
     template_name = "trail_status/trail_list.html"
@@ -64,33 +71,39 @@ class TrailListView(SideBarMixin, ListView):
         # 新規追加情報源 = DataSource.created_atとTrailCondition.updated_atの差が1日以内
         seven_days_ago = timezone.now().date() - timedelta(days=7)
         # @formatter:off
-        recent_updated_sources = (self.get_queryset()
-                                   .values("source__name", "source__url1")
-                                   .annotate(
-                                       latest_date=Max("updated_at"),
-                                       source_created_at=F("source__created_at"),
-                                   # DataSourceの作成日とTrailConditionの最新更新日の差が1日以内のものを除外
-                                   ).filter(latest_date__gt=F("source_created_at") + timedelta(days=1))
-                                   .filter(latest_date__date__gte=seven_days_ago)
-                                   .order_by("-latest_date")
-                                )
+        recent_updated_sources = (
+            self.get_queryset()
+            .values("source__name", "source__url1")
+            .annotate(
+                latest_date=Max("updated_at"),
+                source_created_at=F("source__created_at"),
+                # DataSourceの作成日とTrailConditionの最新更新日の差が1日以内のものを除外
+            )
+            .filter(latest_date__gt=F("source_created_at") + timedelta(days=1))
+            .filter(latest_date__date__gte=seven_days_ago)
+            .order_by("-latest_date")
+        )
         # @formatter:on
 
         last_checked_at = datasource.aggregate(Max("last_checked_at"))["last_checked_at__max"]
 
-        context.update({"conditions": filtered_conditions,
-                        "current_source": current_source,
-                        "current_area": current_area,
-                        "current_status": current_status,
-                        "latest_update_date": latest_update_date,
-                        "recent_updated_sources": recent_updated_sources,
-                        "last_checked_at": last_checked_at,
-                        })
+        context.update(
+            {
+                "conditions": filtered_conditions,
+                "current_source": current_source,
+                "current_area": current_area,
+                "current_status": current_status,
+                "latest_update_date": latest_update_date,
+                "recent_updated_sources": recent_updated_sources,
+                "last_checked_at": last_checked_at,
+            }
+        )
         return context
 
 
 class TrailDetailView(SideBarMixin, DetailView):
     """登山道状況個別詳細ページのビュー"""
+
     model = TrailCondition
     template_name = "trail_status/detail.html"
     context_object_name = "item"
@@ -101,12 +114,12 @@ class TrailDetailView(SideBarMixin, DetailView):
 
         # ヤマレコ検索リンク生成
         yamareco_base_url = "https://www.yamareco.com/modules/yamareco/search_record.php"
-        yamareco_fixed_params = {'isphoto': 1, 'request': 1, 'submit': 'submit'}
+        yamareco_fixed_params = {"isphoto": 1, "request": 1, "submit": "submit"}
 
         yamareco_area_id = AreaName.get_yamareco_area_id(self.object.area)
         params = {
-            'place': self.object.mountain_name_raw,
-            'area': yamareco_area_id,
+            "place": self.object.mountain_name_raw,
+            "area": yamareco_area_id,
             **yamareco_fixed_params,
         }
 
@@ -116,6 +129,7 @@ class TrailDetailView(SideBarMixin, DetailView):
 
 class SourceListView(SideBarMixin, ListView):
     """情報源一覧ページのビュー"""
+
     model = DataSource
     queryset = DataSource.objects.filter(data_format="WEB").order_by("organization_type", "id")
     template_name = "trail_status/sources.html"
@@ -134,21 +148,24 @@ class SourceListView(SideBarMixin, ListView):
 
 class BlogListView(SideBarMixin, ListView):
     """巡視ブログ一覧ページのビュー"""
+
     model = DataSource
     template_name = "trail_status/blogs.html"
 
     @override
     def get_queryset(self):
         # @formatter:off
-        queryset = (DataSource.objects.filter(data_format="BLOG")
-                     .prefetch_related(
-                         Prefetch(
-                             "blogfeed_set",
-                             queryset=BlogFeed.objects.filter(disabled=False).order_by("-published_at")[:4],
-                             to_attr="recent_feeds",
-                         )
-                     ).order_by("area_name", "id")
-                   )
+        queryset = (
+            DataSource.objects.filter(data_format="BLOG")
+            .prefetch_related(
+                Prefetch(
+                    "blogfeed_set",
+                    queryset=BlogFeed.objects.filter(disabled=False).order_by("-published_at")[:4],
+                    to_attr="recent_feeds",
+                )
+            )
+            .order_by("area_name", "id")
+        )
         # @formatter:on
         return queryset
 
@@ -181,6 +198,27 @@ class BlogListView(SideBarMixin, ListView):
 
         context["grouped_sources"] = sorted_grouped
         return context
+
+
+def get_prompt(request, source_id):
+    # if this is a POST request we need to process the form data
+    if request.method == "POST":
+        # create a form instance and populate it with data from the request:
+        form = PromptForm(request.POST)
+        logger.debug(form.data)
+        # check whether it's valid:
+        if form.is_valid():
+            # process the data in form.cleaned_data as required
+            # ...
+            # redirect to a new URL:
+            return HttpResponseRedirect("/")
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        data_source: DataSource = get_object_or_404(DataSource, pk=source_id)
+        form = PromptForm(data_source=data_source)
+
+    return render(request, "trail_status/prompt/edit.html", {"form": form, "pk": data_source.id})
 
 
 def _get_sidebar_context() -> dict:

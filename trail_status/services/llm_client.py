@@ -14,6 +14,7 @@ from django.conf import settings
 from langsmith import traceable
 from pydantic import BaseModel, Field, ValidationError, computed_field
 
+from . import utils
 from .llm_stats import TokenStats
 from .types import ConditionSchemaAiList
 
@@ -21,14 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 # ヘルパー関数
-def get_sample_dir() -> Path:
-    """sampleディレクトリのパスを取得"""
-    return settings.BASE_DIR / "trail_status" / "services" / "sample"
-
-
-def get_prompts_dir() -> Path:
-    """promptsディレクトリのパスを取得"""
-    return settings.BASE_DIR / "trail_status" / "services" / "prompts"
 
 
 class LlmConfig(BaseModel):
@@ -150,7 +143,7 @@ class LlmConfig(BaseModel):
             FileNotFoundError: ファイルが存在しない場合
             ValueError: プロンプトが設定されていない場合
         """
-        template_dir = get_prompts_dir()
+        template_dir = utils.get_prompts_dir()
         template_path = template_dir / filename
 
         if not template_path.exists():
@@ -174,7 +167,7 @@ class LlmConfig(BaseModel):
         Returns:
             dict: 取得したYAMLファイルの辞書 / 値がない場合: `{}`
         """
-        prompts_dir = get_prompts_dir()
+        prompts_dir = utils.get_prompts_dir()
         prompt_path = prompts_dir / filename
 
         if not prompt_path.exists():
@@ -337,7 +330,7 @@ class ConversationalAi(ABC):
         # デバッグ用：サンプル出力を保存
         from datetime import datetime
 
-        output_dir = get_sample_dir() / Path(self.prompt_filename or "").stem
+        output_dir = utils.get_sample_dir() / Path(self.prompt_filename or "").stem
         output_dir.mkdir(exist_ok=True)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
