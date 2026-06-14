@@ -4,17 +4,18 @@ from collections import OrderedDict, defaultdict
 from datetime import timedelta
 from typing import override
 
+import yaml
 from django.db.models import Count, F, Max, Prefetch
-from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.forms import model_to_dict
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.generic import DetailView, FormView, ListView, UpdateView
-from django.views.generic.detail import SingleObjectMixin, SingleObjectTemplateResponseMixin
-from django.views.generic.edit import FormMixin, ProcessFormView
+from django.views.generic import DetailView, ListView
 
 from trail_status.forms import PromptForm
 
 from .models import AreaName, BlogFeed, DataSource, StatusType, TrailCondition
+from .services import utils
 
 logger = logging.getLogger(__name__)
 
@@ -211,7 +212,7 @@ def get_prompt(request, source_id):
             # process the data in form.cleaned_data as required
             # ...
             # redirect to a new URL:
-            return HttpResponseRedirect("/")
+            return redirect("/")
 
     # if a GET (or any other method) we'll create a blank form
     else:
@@ -219,6 +220,39 @@ def get_prompt(request, source_id):
         form = PromptForm(data_source=data_source)
 
     return render(request, "trail_status/prompt/edit.html", {"form": form, "pk": data_source.id})
+
+
+def get_data_source(request, source_id):
+    """情報源レコードをJSONで返却"""
+    if request.method == "POST":
+        return JsonResponse({"error": "Invalid query."})
+
+    try:
+        data_source: DataSource = DataSource.objects.get(pk=source_id)
+    except DataSource.DoesNotExist:
+        return JsonResponse({"error": "No resources found."})
+    return JsonResponse(model_to_dict(data_source))
+
+
+def get_prompt_json(request, source_id=None):
+    """プロンプトファイルをJSONで返却"""
+    if request.method == "POST":
+        return JsonResponse({})
+
+    prompt_dir = utils.get_prompts_dir()
+    if source_id is None:
+        prompt_filename = "template.yaml"
+    else:
+        try:
+            data_source = DataSource.objects.get(pk=source_id)
+            prompt_filename = data_source.prompt_filename
+        except DataSource.DoesNotExist:
+            return JsonResponse({"error": "No resources found."})
+
+    path = prompt_dir / prompt_filename
+    prompt_dict = yaml.safe_load(path.read_text(encoding="utf-8"))
+
+    return JsonResponse(prompt_dict)
 
 
 def _get_sidebar_context() -> dict:
