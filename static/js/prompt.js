@@ -1,3 +1,19 @@
+class PromptFile {
+  constructor(prompt, model, temperature, thinking_budget, use_template = null) {
+    this.prompt = prompt;
+    this.model = model;
+    this.temperature = temperature;
+    this.thinkingBudget = thinking_budget;
+    this.useTemplate = use_template;
+  }
+}
+
+class PromptFile2 {
+  constructor(data) {
+    Object.assign(this, data);
+  }
+}
+
 const path = window.location.pathname;
 const pk = path.split("/").at(-2);
 const sourceData = await getDataSource(pk);
@@ -7,6 +23,9 @@ console.log(pk);
 console.log(sourceData);
 console.log(promptData);
 console.log(templateData);
+
+const pf2 = new PromptFile2(promptData);
+console.log(pf2);
 
 const sourceName = document.getElementById("source-name");
 const filename = document.getElementById("filename");
@@ -22,7 +41,7 @@ prompt.value = promptData.prompt;
 model.value = promptData.model;
 temperature.value = promptData.temperature;
 thinkingBudget.value = promptData.thinking_budget;
-useTemplate.checked = true ? promptData.use_template : false;
+useTemplate.checked = promptData.use_template ? true : false;
 
 async function getDataSource(pk) {
   const res = await fetch(`http://localhost:8000/api/source/${pk}/`);
