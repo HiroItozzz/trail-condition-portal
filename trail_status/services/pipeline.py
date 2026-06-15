@@ -4,6 +4,7 @@ from typing import Callable
 
 import httpx
 
+from . import prompt_utils
 from .fetcher import DataFetcher
 from .llm_client import ConversationalAi, LlmConfig
 from .llm_stats import LlmStats
@@ -111,7 +112,7 @@ class AiPipeline:
         """AI解析処理"""
         import time
 
-        prompt_filename = self._get_prompt_filename_from_data(source_data)
+        prompt_filename = prompt_utils.get_prompt_filename_from_data(source_data.id, source_data.prompt_key)
 
         try:
             config = LlmConfig.from_file(prompt_filename, data=scraped_text, model=self.ai_model)
@@ -139,10 +140,3 @@ class AiPipeline:
         llm_stats.execution_time = execution_time
 
         return config, ai_result, llm_stats
-
-    def _get_prompt_filename_from_data(self, source_data: SourceSchemaSingle) -> str:
-        """ソースデータからプロンプトファイル名を取得"""
-        # 形式: {id:03d}_{prompt_key}.yaml
-        source_id = source_data.id
-        prompt_key = source_data.prompt_key
-        return f"{source_id:03d}_{prompt_key}.yaml"

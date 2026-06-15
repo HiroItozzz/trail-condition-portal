@@ -3,32 +3,19 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-import shutil
 from abc import ABC, abstractmethod
-from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-import yaml
 from django.conf import settings
 from langsmith import traceable
 from pydantic import BaseModel, Field, ValidationError, computed_field
 
+from . import prompt_utils
 from .llm_stats import TokenStats
 from .types import ConditionSchemaAiList
 
 logger = logging.getLogger(__name__)
-
-
-# ヘルパー関数
-def get_sample_dir() -> Path:
-    """sampleディレクトリのパスを取得"""
-    return settings.BASE_DIR / "trail_status" / "services" / "sample"
-
-
-def get_prompts_dir() -> Path:
-    """promptsディレクトリのパスを取得"""
-    return settings.BASE_DIR / "trail_status" / "services" / "prompts"
 
 
 class LlmConfig(BaseModel):
@@ -51,7 +38,7 @@ class LlmConfig(BaseModel):
         """テンプレートとサイト固有プロンプトを結合"""
         parts = []
         if self.use_template:
-            parts.append(self._load_template())
+            parts.append(prompt_utils.load_template())
         if self.site_prompt:
             parts.append(self.site_prompt)
         return "\n\n".join(parts) if parts else ""
@@ -99,12 +86,12 @@ class LlmConfig(BaseModel):
         Returns:
             LlmConfig: 設定がマージされたインスタンス
         """
-        all_config = cls._load_site_config(prompt_filename)
+        all_config = prompt_utils.load_site_config(prompt_filename)
 
         # None値を持つキーを完全に洗浄
-        all_config = cls._to_safe_dict(all_config)
+        all_config = prompt_utils.to_safe_dict(all_config)
         site_config = all_config.get("config", {})
-        site_config = cls._to_safe_dict(site_config)
+        site_config = prompt_utils.to_safe_dict(site_config)
 
         # CLI > promptファイル > デフォルト の優先度
         # Noneの場合はPydanticデフォルト値を使用するため、引数から除外
@@ -133,80 +120,6 @@ class LlmConfig(BaseModel):
             kwargs["thinking_budget"] = budget_value
 
         return cls(**kwargs)
-
-    @staticmethod
-    @lru_cache
-    def _load_template(filename: str = "template.yaml") -> str:
-        """
-        template.yamlを読み込み辞書で返却
-
-        Args:
-            filename: テンプレートプロンプトファイル名（template.yaml）
-
-        Returns:
-            str: プロンプト文字列
-
-        Raises:
-            FileNotFoundError: ファイルが存在しない場合
-            ValueError: プロンプトが設定されていない場合
-        """
-        template_dir = get_prompts_dir()
-        template_path = template_dir / filename
-
-        if not template_path.exists():
-            raise FileNotFoundError(f"テンプレートファイルが見つかりません: {template_path}")
-
-        prompt_dict = yaml.safe_load(template_path.read_text(encoding="utf-8"))
-
-        if "prompt" not in prompt_dict:
-            raise ValueError(f"テンプレートプロンプトが設定されていません: {template_path}")
-
-        return prompt_dict["prompt"]
-
-    @staticmethod
-    def _load_site_config(filename: str) -> dict:
-        """個別プロンプトファイルをファイル名から安全に読み込み辞書で返却
-            ファイルがなければ作成をする
-
-        Args:
-            filename (str): YAMLファイル名（例：001_okutama_vc.yaml）
-
-        Returns:
-            dict: 取得したYAMLファイルの辞書 / 値がない場合: `{}`
-        """
-        prompts_dir = get_prompts_dir()
-        prompt_path = prompts_dir / filename
-
-        if not prompt_path.exists():
-            logger.warning(f"サイト別プロンプトファイルが見つかりません: {prompt_path}")
-            try:
-                shutil.copy(prompts_dir / "example.yaml", prompt_path)
-                logger.warning(f"プロンプトファイルを作成しました。ファイル名: {filename}")
-            except Exception:
-                logger.error("サイト別プロンプトファイルの作成に失敗。example.yamlを確認してください")
-            return {}
-
-        config_dict = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
-
-        if config_dict is None:
-            logger.warning(f"サイト別プロンプトに記載がありません。ファイル名: {filename}")
-            return {}
-
-        return config_dict
-
-    @staticmethod
-    def _to_safe_dict(config_dict: dict) -> dict:
-        """Noneを値に持つ辞書のキーを完全排除
-
-        Args:
-            config_dict (dict): キーはあるが値未設定の辞書（getメソッドでエラー）
-
-        Returns:
-            dict: 安全にgetできる辞書
-        """
-        if config_dict:
-            config_dict = {k: v for k, v in config_dict.items() if v is not None}
-        return config_dict
 
     def __str__(self) -> str:
         """デバッグ用に重要な情報を表示"""
@@ -337,7 +250,7 @@ class ConversationalAi(ABC):
         # デバッグ用：サンプル出力を保存
         from datetime import datetime
 
-        output_dir = get_sample_dir() / Path(self.prompt_filename or "").stem
+        output_dir = prompt_utils.get_sample_dir() / Path(self.prompt_filename or "").stem
         output_dir.mkdir(exist_ok=True)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
