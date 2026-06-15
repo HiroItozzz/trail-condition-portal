@@ -21,6 +21,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
 ]
 CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
@@ -51,7 +52,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ],
-            "string_if_invalid": "存在しない変数: %s"
+            "string_if_invalid": "存在しない変数: %s",
         },
     },
 ]

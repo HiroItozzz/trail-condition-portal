@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>プロンプト編集</title>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+          integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
+          crossorigin="anonymous" />
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/prompt.css' %}" />
+  </head>
+  <body>
+    <h1>プロンプト編集</h1>
+    <div class="container"
+         style="display: flex;
+                justify-content: space-evenly">
+      <div class="col-8">
+        <div class="form-group">
+          <label for="source-name">情報源の名前</label>
+          <span id="source-name" class="form-control-plaintext">奥多摩VC</span>
+        </div>
+        <div class="form-group">
+          <label for="filename">プロンプトファイル名</label>
+          <span id="filename" class="form-control-plaintext">prompt.yaml</span>
+        </div>
+        <div class="form-group">
+          <label class="form-control-label" for="prompt">プロンプト入力欄</label>
+          <textarea name="prompt"
+                    id="prompt"
+                    class="form-control"
+                    value=""
+                    rows="20"
+                    cols="80"></textarea>
+        </div>
+        <div>
+          <label class="form-group" for="model">使用するモデル</label>
+          <select name="model" id="model">
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+            <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview</option>
+            <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite</option>
+            <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+            <option value="gemini-flash-latest">Gemini Flash Latest</option>
+            <option value="deepseek-chat">DeepSeek Chat</option>
+            <option value="deepseek-reasoner">DeepSeek Reasoner</option>
+            <option value="gpt-5-mini">GPT-5 Mini</option>
+            <option value="gpt-5-nano">GPT-5 Nano</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-group" for="temperature">温度</label>
+          <input type="range" id="temperature" class="form-control-range" value="1.0" />
+        </div>
+        <div>
+          <label for="thinking-budget">Gemini思考予算</label>
+          <input type="range"
+                 id="thinking-budget"
+                 class="form-control-range"
+                 value="6000" />
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="use-template" class="form-check-input" checked />
+          <label class="form-check-label" for="use-template">テンプレートプロンプトの使用</label>
+        </div>
+      </div>
+      <div></div>
+    </div>
+    <script type="module" src="{% static 'js/prompt.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+            integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+            integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+            crossorigin="anonymous"></script>
+  </body>
+</html>
