@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, ValidationError, computed_field
 
 from . import prompt_utils
 from .llm_stats import TokenStats
+from .prompt_utils import PromptFile
 from .types import ConditionSchemaAiList
 
 logger = logging.getLogger(__name__)
@@ -38,8 +39,8 @@ class LlmConfig(BaseModel):
         """テンプレートとサイト固有プロンプトを結合"""
         parts = []
         if self.use_template:
-            template_config = prompt_utils.load_template()
-            parts.append(template_config["prompt"])
+            template_config = PromptFile.load_template()
+            parts.append(template_config.prompt)
         if self.site_prompt:
             parts.append(self.site_prompt)
         return "\n\n".join(parts) if parts else ""
@@ -87,17 +88,13 @@ class LlmConfig(BaseModel):
         Returns:
             LlmConfig: 設定がマージされたインスタンス
         """
-        all_config = prompt_utils.load_site_config(prompt_filename)
-
-        # None値を持つキーを完全に洗浄
-        all_config = prompt_utils.to_safe_dict(all_config)
-        site_config = all_config.get("config", {})
-        site_config = prompt_utils.to_safe_dict(site_config)
+        prompt_file = PromptFile.load_site_config(prompt_filename)
+        site_config = prompt_file.config.model_dump(exclude_none=True) if prompt_file.config else {}
 
         # CLI > promptファイル > デフォルト の優先度
         # Noneの場合はPydanticデフォルト値を使用するため、引数から除外
         kwargs = {
-            "site_prompt": all_config.get("prompt", ""),
+            "site_prompt": prompt_file.prompt,
             "use_template": site_config.get("use_template", True),
             "data": data,
             "prompt_filename": prompt_filename,

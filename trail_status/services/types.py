@@ -5,8 +5,7 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
-from pydantic.alias_generators import to_camel
+from pydantic import BaseModel, Field
 
 from ..models import AreaName, StatusType
 
@@ -31,20 +30,6 @@ class LlmModel(StrEnum):
     GPT_5_MINI              = "gpt-5-mini"
     GPT_5_NANO              = "gpt-5-nano"
 # fmt:on
-
-
-class PromptFileConfig(BaseModel):
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, )
-
-    model: LlmModel | str | None = None
-    temperature: float | None = None
-    thinking_budget: int | None = None
-    use_template: bool | None = None
-
-
-class PromptFile(BaseModel):
-    prompt: str
-    config: PromptFileConfig | None = None
 
 
 class ConditionSchemaAi(BaseModel):

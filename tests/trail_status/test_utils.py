@@ -4,6 +4,7 @@ import pytest
 import yaml
 
 from trail_status.services import prompt_utils
+from trail_status.services.prompt_utils import PromptFile
 
 
 class SetUp:
@@ -17,6 +18,10 @@ class SetUp:
             "config": {"model": "gpt-test-individual", "temperature": 0.2, "thinking_budget": 50, "use_template": True},
         }
 
+    def teardown_method(self):
+
+        PromptFile.load_template.cache_clear()
+
 
 class TestUtils(SetUp):
     def test_load_site_and_template_confg(self, tmp_path, monkeypatch):
@@ -27,8 +32,8 @@ class TestUtils(SetUp):
         individual_path = tmp_path / "individual.yaml"
         individual_path.write_text(yaml.safe_dump(self.individual_config), encoding="utf-8")
 
-        individual_result = prompt_utils.load_site_config(individual_path.name)
-        template_result = prompt_utils.load_template()
+        individual_result = PromptFile.load_site_config(individual_path.name)
+        template_result = PromptFile.load_template(template_path)
 
-        assert individual_result == self.individual_config
-        assert template_result == self.template_config
+        assert individual_result == PromptFile(**self.individual_config)
+        assert template_result == PromptFile(**self.template_config)

@@ -7,6 +7,10 @@ from functools import lru_cache
 
 import yaml
 from django.conf import settings
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
+
+from .types import LlmModel
 
 if typing.TYPE_CHECKING:
     from pathlib import Path
@@ -30,75 +34,101 @@ def get_prompt_filename_from_data(source_id: int, prompt_key: str) -> str:
     return f"{source_id:03d}_{prompt_key}.yaml"
 
 
-@lru_cache
-def load_template(filename: str = "template.yaml") -> str:
-    """
-    template.yamlを読み込み辞書で返却
+class PromptFileConfig(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
-    Args:
-        filename: テンプレートプロンプトファイル名（template.yaml）
-
-    Returns:
-        str: プロンプト文字列
-
-    Raises:
-        FileNotFoundError: ファイルが存在しない場合
-        ValueError: プロンプトが設定されていない場合
-    """
-    template_dir = get_prompt_dir()
-    template_path = template_dir / filename
-
-    if not template_path.exists():
-        raise FileNotFoundError(f"テンプレートファイルが見つかりません: {template_path}")
-
-    prompt_dict = yaml.safe_load(template_path.read_text(encoding="utf-8"))
-
-    if "prompt" not in prompt_dict:
-        raise ValueError(f"テンプレートプロンプトが設定されていません: {template_path}")
-
-    return prompt_dict
+    model: LlmModel | str | None = None
+    temperature: float | None = None
+    thinking_budget: int | None = None
+    use_template: bool | None = None
 
 
-def load_site_config(filename: str) -> dict:
-    """個別プロンプトファイルをファイル名から安全に読み込み辞書で返却
-        ファイルがなければ作成をする
+class PromptFile(BaseModel):
+    prompt: str | None = None
+    config: PromptFileConfig
 
-    Args:
-        filename (str): YAMLファイル名（例：001_okutama_vc.yaml）
+    @classmethod
+    def load_merged_config(cls, filename: str) -> PromptFile:
+        template_file = cls.load_template().model_copy(deep=True)
+        individual_file = cls.load_site_config(filename)
 
-    Returns:
-        dict: 取得したYAMLファイルの辞書 / 値がない場合: `{}`
-    """
-    prompts_dir = get_prompt_dir()
-    prompt_path = prompts_dir / filename
+        if not individual_file.config.use_template:
+            return individual_file
 
-    if not prompt_path.exists():
-        logger.warning(f"サイト別プロンプトファイルが見つかりません: {prompt_path}")
-        try:
-            shutil.copy(prompts_dir / "example.yaml", prompt_path)
-            logger.warning(f"プロンプトファイルを作成しました。ファイル名: {filename}")
-        except Exception:
-            logger.error("サイト別プロンプトファイルの作成に失敗。example.yamlを確認してください")
-        return {}
+        template_file.prompt += "\n\n" + individual_file.prompt if individual_file.prompt else ""
 
-    config_dict = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
+        template_config, individual_config = template_file.config, individual_file.config
+        template_config.model = individual_config.model if individual_config.model else template_config.model
+        template_config.temperature = (
+            individual_config.temperature if individual_config.temperature is not None else template_config.temperature
+        )
+        template_config.thinking_budget = (
+            individual_config.thinking_budget
+            if individual_config.thinking_budget is not None
+            else template_config.thinking_budget
+        )
 
-    if config_dict is None:
-        logger.warning(f"サイト別プロンプトに記載がありません。ファイル名: {filename}")
-        return {}
+        return template_file
 
-    return config_dict
+    @classmethod
+    @lru_cache
+    def load_template(cls, filename: str = "template.yaml") -> PromptFile:  # TODO: エラーハンドリングの返却型変更
+        """
+        template.yamlを読み込み辞書で返却
 
+        Args:
+            filename: テンプレートプロンプトファイル名（template.yaml）
 
-def to_safe_dict(config_dict: dict) -> dict:
-    """Noneを値に持つ辞書のキーを完全排除
+        Returns:
+            str: プロンプト文字列
 
-    Args:
-        config_dict (dict): キーはあるが値未設定の辞書（getメソッドでエラー）
+        Raises:
+            FileNotFoundError: ファイルが存在しない場合
+            ValueError: プロンプトが設定されていない場合
+        """
+        template_dir = get_prompt_dir()
+        template_path = template_dir / filename
 
-    Returns:
-        dict: 安全にgetできる辞書
-    """
-    if config_dict:
-        config_dict = {k: v for k, v in config_dict.items() if v is not None}
-    return config_dict
+        if not template_path.exists():
+            raise FileNotFoundError(f"テンプレートファイルが見つかりません: {template_path}")
+
+        config_dict = yaml.safe_load(template_path.read_text(encoding="utf-8"))
+
+        if "prompt" not in config_dict:
+            raise ValueError(f"テンプレートプロンプトが設定されていません: {template_path}")
+
+        return cls(**config_dict)
+
+    @classmethod
+    def load_site_config(cls, filename: str) -> PromptFile:
+        """個別プロンプトファイルをファイル名から安全に読み込み辞書で返却
+            ファイルがなければ作成をする
+
+        Args:
+            filename (str): YAMLファイル名（例：001_okutama_vc.yaml）
+
+        Returns:
+            dict: 取得したYAMLファイルの辞書 / 値がない場合: `{}`
+        """
+        prompt_dir = get_prompt_dir()
+        prompt_path = prompt_dir / filename
+
+        if not prompt_path.exists():
+            logger.warning(f"サイト別プロンプトファイルが見つかりません: {prompt_path}")
+            try:
+                shutil.copy(prompt_dir / "example.yaml", prompt_path)
+                logger.warning(f"プロンプトファイルを作成しました。ファイル名: {filename}")
+            except Exception:
+                logger.error("サイト別プロンプトファイルの作成に失敗。example.yamlを確認してください")
+            return cls(prompt="")
+
+        config_dict = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
+
+        if config_dict is None:
+            logger.warning(f"サイト別プロンプトに記載がありません。ファイル名: {filename}")
+            return cls(prompt="")
+
+        return cls(**config_dict)

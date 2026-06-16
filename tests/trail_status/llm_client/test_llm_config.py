@@ -9,6 +9,7 @@ import yaml
 
 from trail_status.services import prompt_utils
 from trail_status.services.llm_client import LlmConfig
+from trail_status.services.prompt_utils import PromptFile
 
 
 def test_valid_config(mock_api_keys):
@@ -66,16 +67,14 @@ class SetUp:
             "prompt": "個別プロンプト",
             "config": {"model": "gpt-test-individual", "temperature": 0.2, "thinking_budget": 50, "use_template": True},
         }
-        self.mock_config = MagicMock(return_value=self.individual_config)
-        self.mock_template = MagicMock(return_value=self.template_config)
+        self.mock_config = MagicMock(return_value=PromptFile(**self.individual_config))
+        self.mock_template = MagicMock(return_value=PromptFile(**self.template_config))
         self.data = "テスト登山道A: 通行止め"
 
 
 class TestFromFile(SetUp):
     def test_from_file_load_config(self, monkeypatch):
-        monkeypatch.setattr(prompt_utils, "load_site_config", self.mock_config)
-        monkeypatch.setattr(prompt_utils, "to_safe_dict", MagicMock(side_effect=lambda x: x))
-
+        monkeypatch.setattr(PromptFile, "load_site_config", self.mock_config)
         filename = "test_config.yaml"
 
         result = LlmConfig.from_file(filename, self.data)
