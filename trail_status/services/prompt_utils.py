@@ -56,7 +56,7 @@ def load_template(filename: str = "template.yaml") -> str:
     if "prompt" not in prompt_dict:
         raise ValueError(f"テンプレートプロンプトが設定されていません: {template_path}")
 
-    return prompt_dict["prompt"]
+    return prompt_dict
 
 
 def load_site_config(filename: str) -> dict:

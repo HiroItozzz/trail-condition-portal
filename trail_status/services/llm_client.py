@@ -38,7 +38,8 @@ class LlmConfig(BaseModel):
         """テンプレートとサイト固有プロンプトを結合"""
         parts = []
         if self.use_template:
-            parts.append(prompt_utils.load_template())
+            template_config = prompt_utils.load_template()
+            parts.append(template_config["prompt"])
         if self.site_prompt:
             parts.append(self.site_prompt)
         return "\n\n".join(parts) if parts else ""

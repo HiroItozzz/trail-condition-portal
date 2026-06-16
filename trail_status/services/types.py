@@ -3,8 +3,10 @@ from __future__ import annotations
 import typing
 from dataclasses import dataclass
 from datetime import date
+from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+from pydantic.alias_generators import to_camel
 
 from ..models import AreaName, StatusType
 
@@ -14,6 +16,35 @@ if typing.TYPE_CHECKING:
 
 
 area_help_text = " / ".join([f"{label}:{name}" for name, label in AreaName.choices])
+
+
+# fmt: off
+class LlmModel(StrEnum):
+    GEMINI_2_5_FLASH        = "gemini-2.5-flash"
+    GEMINI_2_5_PRO          = "gemini-2.5-pro"
+    GEMINI_3_FLASH_PREVIEW  = "gemini-3-flash-preview"
+    GEMINI_3_1_FLASH_LITE   = "gemini-3.1-flash-lite"
+    GEMINI_3_5_FLASH        = "gemini-3.5-flash"
+    GEMINI_FLASH_LATEST     = "gemini-flash-latest"
+    DEEPSEEK_CHAT           = "deepseek-chat"
+    DEEPSEEK_REASONER       = "deepseek-reasoner"
+    GPT_5_MINI              = "gpt-5-mini"
+    GPT_5_NANO              = "gpt-5-nano"
+# fmt:on
+
+
+class PromptFileConfig(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, )
+
+    model: LlmModel | str | None = None
+    temperature: float | None = None
+    thinking_budget: int | None = None
+    use_template: bool | None = None
+
+
+class PromptFile(BaseModel):
+    prompt: str
+    config: PromptFileConfig | None = None
 
 
 class ConditionSchemaAi(BaseModel):
