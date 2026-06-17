@@ -48,14 +48,15 @@ class PromptFileConfig(BaseModel):
 
 class PromptFile(BaseModel):
     prompt: str | None = None
-    config: PromptFileConfig
+    config: PromptFileConfig = PromptFileConfig(use_template=True)
 
     @classmethod
     def load_merged_config(cls, filename: str) -> PromptFile:
         template_file = cls.load_template().model_copy(deep=True)
         individual_file = cls.load_site_config(filename)
 
-        if not individual_file.config.use_template:
+        use_template = individual_file.config.use_template
+        if use_template is False:
             return individual_file
 
         template_file.prompt += "\n\n" + individual_file.prompt if individual_file.prompt else ""
@@ -123,12 +124,12 @@ class PromptFile(BaseModel):
                 logger.warning(f"プロンプトファイルを作成しました。ファイル名: {filename}")
             except Exception:
                 logger.error("サイト別プロンプトファイルの作成に失敗。example.yamlを確認してください")
-            return cls(prompt="")
+            return cls()
 
         config_dict = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
 
         if config_dict is None:
             logger.warning(f"サイト別プロンプトに記載がありません。ファイル名: {filename}")
-            return cls(prompt="")
+            return cls()
 
         return cls(**config_dict)
