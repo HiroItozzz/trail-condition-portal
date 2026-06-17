@@ -58,8 +58,8 @@ class TestUtils:
 
         expected_config = copy.deepcopy(config.individual)
         expected_config["prompt"] = expected_prompt
-        expected_config["config"]["use_template"] = None
+        expected_config["filename"] = paths.individual.name
 
-        result = PromptFile.load_merged_config(paths.individual)
+        result = PromptFile.load_merged_config(paths.individual.name)
 
         assert result == PromptFile(**expected_config)

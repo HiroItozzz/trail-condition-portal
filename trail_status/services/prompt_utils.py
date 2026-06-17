@@ -7,7 +7,7 @@ from functools import lru_cache
 
 import yaml
 from django.conf import settings
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 from .types import LlmModel
@@ -43,12 +43,13 @@ class PromptFileConfig(BaseModel):
     model: LlmModel | str | None = None
     temperature: float | None = None
     thinking_budget: int | None = None
-    use_template: bool | None = None
+    use_template: bool | None = Field(default=None, exclude=True)
 
 
 class PromptFile(BaseModel):
     prompt: str | None = None
     config: PromptFileConfig = PromptFileConfig(use_template=True)
+    filename: str | None = Field(default=None, exclude=True)
 
     @classmethod
     def load_merged_config(cls, filename: str) -> PromptFile:
@@ -56,6 +57,7 @@ class PromptFile(BaseModel):
         individual_file = cls.load_site_config(filename)
 
         use_template = individual_file.config.use_template
+        # (use_template=Noneの場合はtemplateへフォールバック)
         if use_template is False:
             return individual_file
 
@@ -71,6 +73,13 @@ class PromptFile(BaseModel):
             if individual_config.thinking_budget is not None
             else template_config.thinking_budget
         )
+
+        ####### メタデータ #######
+        template_file.filename = filename
+
+        # use_template: 生成過程確認用途。外部では使用されない
+        # ここに到達している時点でTrue
+        template_config.use_template = True
 
         return template_file
 
@@ -133,3 +142,25 @@ class PromptFile(BaseModel):
             return cls()
 
         return cls(**config_dict)
+
+    def __str__(self):
+        prompt = self.prompt
+        filename = self.filename
+        model = self.config.model
+        temperature = self.config.temperature
+        thinking_budget = self.config.thinking_budget
+        use_template = self.config.use_template
+
+        width, _ = shutil.get_terminal_size()
+        left = 6
+        return (
+            f"ファイル名: {filename}".center(width - 5, "─")
+            + f"\nAIのモデル: {model}"
+            + f"\n温度: {temperature}"
+            + f"\n思考予算: {thinking_budget}"
+            + f"\nテンプレートの使用: {use_template}"
+            + "\n"
+            + "─" * left
+            + "プロンプト".ljust(width - left - 5, "─")
+            + f"\n{prompt}"
+        )
