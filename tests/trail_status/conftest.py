@@ -3,16 +3,71 @@ pytest設定とテスト共通フィクスチャ
 """
 
 import os
+from collections import namedtuple
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+import yaml
+
+from trail_status.services import prompt_utils
+from trail_status.services.prompt_utils import PromptFile
+
+
+@pytest.fixture(autouse=True)
+def clear_cache():
+    PromptFile.load_template.cache_clear()
+    yield
 
 
 @pytest.fixture
+def _mock_config():
+    template_config = {
+        "prompt": "テストプロンプト",
+        "config": {"model": "gemini-test-template", "temperature": 1.8, "thinking_budget": 20000},
+    }
+    individual_config = {
+        "prompt": "個別プロンプト",
+        "config": {"model": "gpt-test-individual", "temperature": 0.2, "thinking_budget": 50, "use_template": True},
+    }
+    Config = namedtuple("Config", ["template", "individual"])
+
+    return Config(template_config, individual_config)
+
+
+@pytest.fixture
+def mock_config(_mock_config, tmp_path, monkeypatch):
+    monkeypatch.setattr(prompt_utils, "get_prompt_dir", MagicMock(return_value=tmp_path))
+    template_path = tmp_path / "template.yaml"
+    template_path.write_text(yaml.safe_dump(_mock_config.template), encoding="utf-8")
+    individual_path = tmp_path / "individual.yaml"
+    individual_path.write_text(yaml.safe_dump(_mock_config.individual), encoding="utf-8")
+
+    Paths = namedtuple("Paths", ["template", "individual"])
+
+    return _mock_config, Paths(template_path, individual_path)
+
+
+@pytest.fixture
+def mock_config_template_False(_mock_config, tmp_path, monkeypatch):
+    _mock_config.individual["config"]["use_template"] = False
+
+    monkeypatch.setattr(prompt_utils, "get_prompt_dir", MagicMock(return_value=tmp_path))
+    template_path = tmp_path / "template.yaml"
+    template_path.write_text(yaml.safe_dump(_mock_config.template), encoding="utf-8")
+    individual_path = tmp_path / "individual.yaml"
+    individual_path.write_text(yaml.safe_dump(_mock_config.individual), encoding="utf-8")
+
+    Paths = namedtuple("Paths", ["template", "individual"])
+
+    return _mock_config, Paths(template_path, individual_path)
+
+
+@pytest.fixture()
 def mock_api_keys(monkeypatch):
     """API キーをモック設定（全テスト共通）"""
     monkeypatch.setenv("DEEPSEEK_API_KEY", "test-deepseek-key")
     monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
 
 
 @pytest.fixture
@@ -20,6 +75,7 @@ def no_api_keys(monkeypatch):
     """環境変数をクリア"""
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
 
 @pytest.fixture(autouse=True)
@@ -62,8 +118,7 @@ def sample_url():
 def sample_llm_config():
     """共通のLLM設定"""
     return {
-        "site_prompt": "テスト用プロンプト",
-        "use_template": False,  # テスト用にテンプレートを無効化
+        "prompt": "テスト用プロンプト",
         "model": "deepseek-chat",
         "temperature": 0.3,
         "data": "テスト用データ",

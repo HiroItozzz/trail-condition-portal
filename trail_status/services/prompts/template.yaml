@@ -61,3 +61,21 @@ prompt: |
 
   ### 9. Web検索について
   - `trail_name`及び`mountain_name_raw`が確定困難な場合や、山名/登山道名として相応しくない場合Web検索を許可します。
+# AI設定（オプション）
+config:
+  # 使用するAIモデル（CLI引数で上書き可能）
+  model: gemini-3-flash-preview
+  
+  # 生成の揺らぎ幅（0.0-2.0）
+  # 事実抽出には低めの値を推奨
+  # Gemini専用
+  temperature: 0.5
+  
+  # Gemini思考予算（トークン数）
+  thinking_budget: 10000
+
+# 設定項目の説明：
+# - model: CLI引数なしの場合に使用するモデル
+# - temperature: 0.0=確定的, 0.3=わずかな揺らぎ, 1.0=創造的
+# - thinking_budget: Geminiの思考予算（-1=無制限）
+# - use_template: template.yamlの内容を前置するか

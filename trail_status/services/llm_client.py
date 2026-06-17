@@ -3,37 +3,24 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-import shutil
 from abc import ABC, abstractmethod
-from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-import yaml
 from django.conf import settings
 from langsmith import traceable
 from pydantic import BaseModel, Field, ValidationError, computed_field
 
+from . import prompt_utils
 from .llm_stats import TokenStats
+from .prompt_utils import PromptFile
 from .types import ConditionSchemaAiList
 
 logger = logging.getLogger(__name__)
 
 
-# ヘルパー関数
-def get_sample_dir() -> Path:
-    """sampleディレクトリのパスを取得"""
-    return settings.BASE_DIR / "trail_status" / "services" / "sample"
-
-
-def get_prompts_dir() -> Path:
-    """promptsディレクトリのパスを取得"""
-    return settings.BASE_DIR / "trail_status" / "services" / "prompts"
-
-
 class LlmConfig(BaseModel):
-    site_prompt: str | None = Field(default="", description="サイト固有プロンプト")
-    use_template: bool = Field(default=True, description="template.yamlを使用するか")
+    prompt: str = Field(description="LLMへの指示部分")
     model: str = Field(
         pattern=r"^(gemini|deepseek|gpt)-.+", default="gemini-3-flash-preview", description="使用するLLMモデル"
     )
@@ -44,17 +31,6 @@ class LlmConfig(BaseModel):
     thinking_budget: int = Field(default=10000, ge=-1, le=15000, description="Geminiの思考予算（トークン数）")
     prompt_filename: str | None = Field(default=None, description="プロンプトファイル名")
     allow_websearch: bool = Field(default=True, description="Gemini, OpenAIでWeb検索を許可するかどうか")
-
-    @computed_field
-    @property
-    def full_prompt(self) -> str:
-        """テンプレートとサイト固有プロンプトを結合"""
-        parts = []
-        if self.use_template:
-            parts.append(self._load_template())
-        if self.site_prompt:
-            parts.append(self.site_prompt)
-        return "\n\n".join(parts) if parts else ""
 
     @computed_field(repr=False)
     @property
@@ -97,116 +73,39 @@ class LlmConfig(BaseModel):
             **cli_overrides: CLI引数による上書き設定
 
         Returns:
-            LlmConfig: 設定がマージされたインスタンス
+            LlmConfig: マージされた設定のインスタンス
         """
-        all_config = cls._load_site_config(prompt_filename)
-
-        # None値を持つキーを完全に洗浄
-        all_config = cls._to_safe_dict(all_config)
-        site_config = all_config.get("config", {})
-        site_config = cls._to_safe_dict(site_config)
+        prompt_file: PromptFile = PromptFile.load_merged_config(prompt_filename)
+        prompt_config: dict = prompt_file.config.model_dump() if prompt_file.config else {}
 
         # CLI > promptファイル > デフォルト の優先度
         # Noneの場合はPydanticデフォルト値を使用するため、引数から除外
         kwargs = {
-            "site_prompt": all_config.get("prompt", ""),
-            "use_template": site_config.get("use_template", True),
+            "prompt": prompt_file.prompt or "",
             "data": data,
             "prompt_filename": prompt_filename,
         }
 
-        # None以外の値のみ設定（Noneの場合はPydanticデフォルトを使用）
-        model_value = cli_overrides.get("model") or site_config.get("model")
+        # model設定の上書き
+        model_value = cli_overrides.get("model") or prompt_config.get("model")
         if model_value:
             kwargs["model"] = model_value
 
-        # temperature: 0.0対応（is not None チェック）
+        # temperature設定の上書き
         temp_value = cli_overrides.get("temperature")
         if temp_value is None:
-            temp_value = site_config.get("temperature")
+            temp_value = prompt_config.get("temperature")
         if temp_value is not None:
             kwargs["temperature"] = temp_value
 
-        # thinking_budget: 0対応（通常0は無効値なので or 使用）
-        budget_value = cli_overrides.get("thinking_budget") or site_config.get("thinking_budget")
-        if budget_value:
+        # thinking_budget設定の上書き
+        budget_value = cli_overrides.get("thinking_budget")
+        if budget_value is None:
+            budget_value = prompt_config.get("thinking_budget")
+        if budget_value is not None:
             kwargs["thinking_budget"] = budget_value
 
         return cls(**kwargs)
-
-    @staticmethod
-    @lru_cache
-    def _load_template(filename: str = "template.yaml") -> str:
-        """
-        template.yamlを読み込み辞書で返却
-
-        Args:
-            filename: テンプレートプロンプトファイル名（template.yaml）
-
-        Returns:
-            str: プロンプト文字列
-
-        Raises:
-            FileNotFoundError: ファイルが存在しない場合
-            ValueError: プロンプトが設定されていない場合
-        """
-        template_dir = get_prompts_dir()
-        template_path = template_dir / filename
-
-        if not template_path.exists():
-            raise FileNotFoundError(f"テンプレートファイルが見つかりません: {template_path}")
-
-        prompt_dict = yaml.safe_load(template_path.read_text(encoding="utf-8"))
-
-        if "prompt" not in prompt_dict:
-            raise ValueError(f"テンプレートプロンプトが設定されていません: {template_path}")
-
-        return prompt_dict["prompt"]
-
-    @staticmethod
-    def _load_site_config(filename: str) -> dict:
-        """個別プロンプトファイルをファイル名から安全に読み込み辞書で返却
-            ファイルがなければ作成をする
-
-        Args:
-            filename (str): YAMLファイル名（例：001_okutama_vc.yaml）
-
-        Returns:
-            dict: 取得したYAMLファイルの辞書 / 値がない場合: `{}`
-        """
-        prompts_dir = get_prompts_dir()
-        prompt_path = prompts_dir / filename
-
-        if not prompt_path.exists():
-            logger.warning(f"サイト別プロンプトファイルが見つかりません: {prompt_path}")
-            try:
-                shutil.copy(prompts_dir / "example.yaml", prompt_path)
-                logger.warning(f"プロンプトファイルを作成しました。ファイル名: {filename}")
-            except Exception:
-                logger.error("サイト別プロンプトファイルの作成に失敗。example.yamlを確認してください")
-            return {}
-
-        config_dict = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
-
-        if config_dict is None:
-            logger.warning(f"サイト別プロンプトに記載がありません。ファイル名: {filename}")
-            return {}
-
-        return config_dict
-
-    @staticmethod
-    def _to_safe_dict(config_dict: dict) -> dict:
-        """Noneを値に持つ辞書のキーを完全排除
-
-        Args:
-            config_dict (dict): キーはあるが値未設定の辞書（getメソッドでエラー）
-
-        Returns:
-            dict: 安全にgetできる辞書
-        """
-        if config_dict:
-            config_dict = {k: v for k, v in config_dict.items() if v is not None}
-        return config_dict
 
     def __str__(self) -> str:
         """デバッグ用に重要な情報を表示"""
@@ -214,7 +113,7 @@ class LlmConfig(BaseModel):
 
         return (
             f"LlmConfig("
-            f"model={self.model!r}, temp={self.temperature}, prompt_len={len(self.full_prompt)}, "
+            f"model={self.model!r}, temp={self.temperature}, prompt_len={len(self.prompt)}, "
             f"data_len={len(self.data)}, prompt_filename={self.prompt_filename!r}, "
             f"data_preview={data_preview!r}"
             f")"
@@ -227,11 +126,11 @@ class ConversationalAi(ABC):
     def __init__(self, config: LlmConfig):
         self.model: str = config.model
         self.temperature: float = config.temperature
-        self.prompt: str = config.full_prompt  # full_promptを使用
+        self.prompt: str = config.prompt
         self.data: str = config.data
         self.api_key: str = config.api_key
         self.thinking_budget: int = config.thinking_budget
-        self.prompt_filename: str | None = config.prompt_filename
+        self.prompt_filename: str = config.prompt_filename or "No_files"
         self.provider: str | None = config.provider
         self.websearch: bool = config.allow_websearch
         self._config: LlmConfig | None = config
@@ -337,7 +236,7 @@ class ConversationalAi(ABC):
         # デバッグ用：サンプル出力を保存
         from datetime import datetime
 
-        output_dir = get_sample_dir() / Path(self.prompt_filename or "").stem
+        output_dir = prompt_utils.get_sample_dir() / Path(self.prompt_filename).stem
         output_dir.mkdir(exist_ok=True)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

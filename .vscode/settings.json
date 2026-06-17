@@ -1,5 +1,4 @@
 {
-  "djlint.enableLinting": true,
   "editor.formatOnSave": true,
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff",
