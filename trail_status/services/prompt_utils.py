@@ -7,7 +7,7 @@ from functools import lru_cache
 
 import yaml
 from django.conf import settings
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
 from .types import LlmModel
@@ -43,13 +43,13 @@ class PromptFileConfig(BaseModel):
     model: LlmModel | str | None = None
     temperature: float | None = None
     thinking_budget: int | None = None
-    use_template: bool | None = Field(default=None, exclude=True)
+    use_template: bool | None = None
 
 
 class PromptFile(BaseModel):
     prompt: str | None = None
     config: PromptFileConfig = PromptFileConfig(use_template=True)
-    filename: str | None = Field(default=None, exclude=True)
+    filename: str | None = None
 
     @classmethod
     def load_merged_config(cls, filename: str) -> PromptFile:
