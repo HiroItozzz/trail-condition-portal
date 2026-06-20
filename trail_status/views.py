@@ -4,18 +4,15 @@ from collections import OrderedDict, defaultdict
 from datetime import timedelta
 from typing import override
 
-import yaml
 from django.db.models import Count, F, Max, Prefetch
 from django.forms import model_to_dict
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView, ListView, TemplateView
 
-from trail_status.forms import PromptForm
+from trail_status.services.prompt_utils import PromptFile
 
 from .models import AreaName, BlogFeed, DataSource, StatusType, TrailCondition
-from .services import utils
 
 logger = logging.getLogger(__name__)
 
@@ -201,25 +198,13 @@ class BlogListView(SideBarMixin, ListView):
         return context
 
 
-def get_prompt(request, source_id):
-    # if this is a POST request we need to process the form data
-    if request.method == "POST":
-        # create a form instance and populate it with data from the request:
-        form = PromptForm(request.POST)
-        logger.debug(form.data)
-        # check whether it's valid:
-        if form.is_valid():
-            # process the data in form.cleaned_data as required
-            # ...
-            # redirect to a new URL:
-            return redirect("/")
+class PromptEditView(TemplateView):
+    template_name = "trail_status/prompt/edit.html"
 
-    # if a GET (or any other method) we'll create a blank form
-    else:
-        data_source: DataSource = get_object_or_404(DataSource, pk=source_id)
-        form = PromptForm(data_source=data_source)
-
-    return render(request, "trail_status/prompt/edit.html", {"form": form, "pk": data_source.id})
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["source_id"] = self.kwargs["source_id"]
+        return context
 
 
 def get_data_source(request, source_id):
@@ -237,11 +222,12 @@ def get_data_source(request, source_id):
 
 
 def get_prompt_json(request, source_id=None):
-    """プロンプトファイルをJSONで返却"""
+    """プロンプトファイルをJSONで返却
+
+    パラメータなしの場合templateを返す（変更予定）"""
     if request.method == "POST":
         return JsonResponse({})
 
-    prompt_dir = utils.get_prompts_dir()
     if source_id is None:
         prompt_filename = "template.yaml"
     else:
@@ -251,10 +237,9 @@ def get_prompt_json(request, source_id=None):
         except DataSource.DoesNotExist:
             return JsonResponse({"error": "No resources found."})
 
-    path = prompt_dir / prompt_filename
-    prompt_dict = yaml.safe_load(path.read_text(encoding="utf-8"))
+    prompt_file = PromptFile.load_site_config(prompt_filename)
 
-    return JsonResponse(prompt_dict)
+    return JsonResponse(prompt_file.model_dump(by_alias=True))
 
 
 def _get_sidebar_context() -> dict:

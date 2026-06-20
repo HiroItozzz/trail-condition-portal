@@ -1,15 +1,198 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <meta charset="utf-8">
   <head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>プロンプト編集</title>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+          integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
+          crossorigin="anonymous" />
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/prompt.css' %}" />
   </head>
-  <body>
-    <h1>プロンプト編集</h1>
-    <form action="{% url 'trail_status:prompt-edit' pk %}" method="post">
-      {% csrf_token %}
-      {{ form }}
-      <input type="submit" value="Submit">
-    </form>
+  <body data-source-id="{{ source_id }}">
+    <h1 style="text-align: center;">プロンプト編集</h1>
+    <div style="display: flex; justify-content: space-around;">
+      <div class="col-4">
+        <h2>個別プロンプト</h2>
+        <div class="form-group">
+          <label for="source-name">情報源の名前</label>
+          <span id="source-name" class="form-control-plaintext"></span>
+        </div>
+        <form id="prompt-form">
+          <div class="form-group">
+            <label for="filename">プロンプトファイル名</label>
+            <span id="filename-display" class="form-control-plaintext"></span>
+            <input type="hidden" id="filename"  name="filename" value="">
+          </div>
+          <div class="form-check" style="margin-bottom:  10px;">
+            <input type="checkbox"
+                   id="use-template"
+                   name="use-template"
+                   class="form-check-input"
+                   checked />
+            <label class="form-check-label" for="use-template">テンプレートプロンプトの使用</label>
+          </div>
+          <div class="form-group">
+            <label class="form-control-label" for="prompt">プロンプト入力欄</label>
+            <input type="checkbox"
+                   id="prompt-null-check"
+                   name="prompt-null-check"
+                   style="margin-left: 20px">
+            <label for="prompt-null-check" class="form-check-label">個別設定を使用しない</label>
+            <textarea id="prompt"
+                      name="prompt"
+                      class="form-control"
+                      value=""
+                      rows="20"
+                      cols="80"></textarea>
+          </div>
+          <div>
+            <label class="form-group" for="model">使用するモデル</label>
+            <select id="model" name="model">
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+              <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+              <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview</option>
+              <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite</option>
+              <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+              <option value="gemini-flash-latest">Gemini Flash Latest</option>
+              <option value="deepseek-chat">DeepSeek Chat</option>
+              <option value="deepseek-reasoner">DeepSeek Reasoner</option>
+              <option value="gpt-5-mini">GPT-5 Mini</option>
+              <option value="gpt-5-nano">GPT-5 Nano</option>
+            </select>
+            <input type="checkbox"
+                   id="model-null-check"
+                   name="model-null-check"
+                   style="margin-left: 20px">
+            <label for="model-null-check" class="form-check-label">個別設定を使用しない</label>
+          </div>
+          <div>
+            <label class="form-group" for="temperature">温度</label>
+            <input type="number"
+                   id="temperature-number"
+                   min="0"
+                   max="2.0"
+                   step="0.1"
+                   value="">
+            <input type="checkbox"
+                   id="temp-null-check"
+                   name="temp-null-check"
+                   style="margin-left: 20px">
+            <label for="temp-null-check" class="form-check-label">個別設定を使用しない</label>
+            <input type="range"
+                   id="temperature"
+                   name="temperature"
+                   min="0"
+                   max="2.0"
+                   step="0.1"
+                   class="form-control-range"
+                   value="" />
+          </div>
+          <div>
+            <label for="thinking-budget">Gemini思考予算</label>
+            <input type="number"
+                   id="thinking-budget-number"
+                   min="-1"
+                   max="15000"
+                   value="">
+            <input type="checkbox"
+                   id="think-null-check"
+                   name="think-null-check"
+                   style="margin-left: 20px">
+            <label for="think-null-check" class="form-check-label">個別設定を使用しない</label>
+            <input type="range"
+                   id="thinking-budget"
+                   name="thinking-budget"
+                   min="-1"
+                   max="15000"
+                   class="form-control-range"
+                   value="" />
+          </div>
+        </form>
+      </div>
+      <div class="col-4">
+        <h2>出力プロンプト</h2>
+        <div class="form-group">
+          <label for="merged-source-name">情報源の名前</label>
+          <span id="merged-source-name" class="form-control-plaintext"></span>
+        </div>
+        <div class="form-group">
+          <label for="merged-filename">プロンプトファイル名</label>
+          <span id="merged-filename-display" class="form-control-plaintext"></span>
+        </div>
+        <div class="form-group">
+          <label for="merged-prompt" class="form-control-label">プロンプト入力欄</label>
+          <textarea name="merged-prompt"
+                    id="merged-prompt"
+                    class="form-control"
+                    value=""
+                    rows="20"
+                    cols="80"
+                    disabled></textarea>
+        </div>
+        <div>
+          <label class="form-group" for="merged-model">使用するモデル</label>
+          <select name="merged-model" id="merged-model" disabled>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+            <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview</option>
+            <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite</option>
+            <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+            <option value="gemini-flash-latest">Gemini Flash Latest</option>
+            <option value="deepseek-chat">DeepSeek Chat</option>
+            <option value="deepseek-reasoner">DeepSeek Reasoner</option>
+            <option value="gpt-5-mini">GPT-5 Mini</option>
+            <option value="gpt-5-nano">GPT-5 Nano</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-group" for="merged-temperature">温度</label>
+          <input type="number"
+                 id="merged-temperature-number"
+                 min="0"
+                 max="2.0"
+                 step="0.1"
+                 value=""
+                 disabled>
+          <input type="range"
+                 id="merged-temperature"
+                 min="0"
+                 max="2.0"
+                 step="0.1"
+                 class="form-control-range"
+                 value=""
+                 disabled />
+        </div>
+        <div>
+          <label for="merged-thinking-budget">Gemini思考予算</label>
+          <input type="number"
+                 id="merged-thinking-budget-number"
+                 min="-1"
+                 max="15000"
+                 value=""
+                 disabled>
+          <input type="range"
+                 id="merged-thinking-budget"
+                 min="-1"
+                 max="15000"
+                 class="form-control-range"
+                 value=""
+                 disabled />
+        </div>
+      </div>
+    </div>
+    <script type="module" src="{% static 'js/prompt.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+            integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+            integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+            crossorigin="anonymous"></script>
   </body>
 </html>

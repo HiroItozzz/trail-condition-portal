@@ -1,6 +1,7 @@
 from django.urls import path
+
 from . import views
-from django.views.generic import TemplateView
+
 app_name = "trail_status"
 urlpatterns = [
     # 一覧画面: /
@@ -12,7 +13,7 @@ urlpatterns = [
     # 巡視ブログ一覧
     path("blogs/", views.BlogListView.as_view(), name="blog-list"),
     # プロンプト編集画面
-    path("prompts/edit/<int:source_id>/", TemplateView.as_view(template_name="trail_status/prompt/edit-js.html"), name="prompt-edit-js"),
+    path("prompt/<int:source_id>/", views.PromptEditView.as_view(), name="prompt-edit"),
     # プロンプトAPI
     path("api/prompt/", views.get_prompt_json, name="prompt-api"),
     path("api/prompt/<int:source_id>/", views.get_prompt_json, name="prompt-api"),

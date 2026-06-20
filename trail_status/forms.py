@@ -4,10 +4,10 @@ import yaml
 from django import forms
 from django.db import models
 
-from .services import utils
+from .services import prompt_utils
 
 logger = logging.getLogger(__name__)
-PROMPT_DIR = utils.get_prompts_dir()
+PROMPT_DIR = prompt_utils.get_prompt_dir()
 
 
 # fmt: off
