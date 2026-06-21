@@ -217,7 +217,6 @@ def get_data_source(request, source_id):
     except DataSource.DoesNotExist:
         return JsonResponse({"error": "No resources found."})
     source_dict = model_to_dict(data_source)
-    source_dict["prompt_filename"] = data_source.prompt_filename
     return JsonResponse(source_dict)
 
 

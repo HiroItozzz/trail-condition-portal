@@ -160,6 +160,7 @@ class PromptFile(BaseModel):
             logger.warning(f"サイト別プロンプトに記載がありません。ファイル名: {filename}")
             return cls()
 
+        config_dict.update(filename=filename)
         return cls(**config_dict)
 
     def __str__(self):
@@ -173,13 +174,13 @@ class PromptFile(BaseModel):
         width, _ = shutil.get_terminal_size()
         left = 6
         return (
-            f"ファイル名: {filename}".center(width - 5, "─")
-            + f"\nAIのモデル: {model}"
-            + f"\n温度: {temperature}"
-            + f"\n思考予算: {thinking_budget}"
-            + f"\nテンプレートの使用: {use_template}"
-            + "\n"
-            + "─" * left
-            + "プロンプト".ljust(width - left - 5, "─")
-            + f"\n{prompt}"
+                f"ファイル名: {filename}".center(width - 5, "─")
+                + f"\nAIのモデル: {model}"
+                + f"\n温度: {temperature}"
+                + f"\n思考予算: {thinking_budget}"
+                + f"\nテンプレートの使用: {use_template}"
+                + "\n"
+                + "─" * left
+                + "プロンプト".ljust(width - left - 5, "─")
+                + f"\n{prompt}"
         )

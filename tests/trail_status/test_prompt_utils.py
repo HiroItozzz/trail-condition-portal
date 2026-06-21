@@ -15,10 +15,12 @@ def _mock_config():
     template_config = {
         "prompt": "テストプロンプト",
         "config": {"model": "gemini-test-template", "temperature": 1.8, "thinking_budget": 20000},
+        "filename": "template.yaml",
     }
     individual_config = {
         "prompt": "個別プロンプト",
         "config": {"model": "gpt-test-individual", "temperature": 0.2, "thinking_budget": 50, "use_template": True},
+        "filename": "individual.yaml"
     }
     Config = namedtuple("Config", ["template", "individual"])
 
