@@ -244,10 +244,6 @@ def get_prompt_json(request, source_id=None):
 
 @require_POST
 def update_yaml(request, source_id):
-    import json
-    logger.debug(request.POST)
-    result = request.POST.items()
-
     new_data = PromptForm.model_validate(request.POST).to_promptfile()
     new_data.update_site_config()
     logger.debug(str(new_data))

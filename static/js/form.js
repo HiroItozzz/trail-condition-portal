@@ -34,6 +34,7 @@ async function sendData() {
     } catch (e) {
         console.error(e);
     }
+    location.reload()
 }
 
 form.addEventListener('submit', async (ev) => {

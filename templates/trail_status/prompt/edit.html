@@ -13,40 +13,36 @@
   <link rel="stylesheet" href="{% static 'css/prompt.css' %}"/>
 </head>
 <body data-source-id="{{ source_id }}">
-<h1 style="text-align: center;">プロンプト編集</h1>
-<div style="display: flex; justify-content: space-around;">
-  <div class="col-4">
-    <h2>個別プロンプト</h2>
-    <div class="form-group">
+<header>
+  <h1>プロンプト編集</h1>
+  <div class="source-info">
+    <div class="form-group form-el">
       <label for="source-name">情報源の名前</label>
       <span id="source-name" class="form-control-plaintext"></span>
     </div>
+    <div class="form-group form-el">
+      <label for="filename">プロンプトファイル名</label>
+      <span id="filename-display" class="form-control-plaintext" form="prompt-form"></span>
+      <input type="hidden" id="filename" name="filename" value="">
+    </div>
+  </div>
+</header>
+<div class="container d-flex justify-content-center">
+  <div class="col-6 form-display">
     <form id="prompt-form">
-      <div style="display: flex; justify-content: space-between">
-        <div class="form-group">
-          <label for="filename">プロンプトファイル名</label>
-          <span id="filename-display" class="form-control-plaintext"></span>
-          <input type="hidden" id="filename" name="filename" value="">
-        </div>
-        <div>
-          <button type="submit" id="update-btn" name="updateBtn" style="margin-right: 10px;">更新</button>
-          <button type="button" id="reset-btn" name="resetBtn">リセット</button>
+      <div class="title-box">
+        <h2>個別プロンプト</h2>
+        <div id="btn-grp">
+          <button type="submit" id="update-btn" class="btn btn-sm btn-success" name="updateBtn">更新</button>
+          <button type="button" id="reset-btn" class="btn btn-sm btn-warning" name="resetBtn">リセット</button>
         </div>
       </div>
-      <div class="form-check" style="margin-bottom:  10px;">
-        <input type="checkbox"
-               id="use-template"
-               name="useTemplate"
-               class="form-check-input"
-               checked/>
-        <label class="form-check-label" for="use-template">テンプレートプロンプトの使用</label>
-      </div>
-      <div class="form-group">
+      <div class="form-group form-el">
         <label class="form-control-label" for="prompt">プロンプト入力欄</label>
         <input type="checkbox"
                id="prompt-null-check"
-               name="promptNullCheck"
-               style="margin-left: 20px">
+               class="null-check"
+               name="promptNullCheck">
         <label for="prompt-null-check" class="form-check-label">個別設定を使用しない</label>
         <textarea id="prompt"
                   name="prompt"
@@ -55,7 +51,7 @@
                   rows="20"
                   cols="80"></textarea>
       </div>
-      <div>
+      <div class="form-el">
         <label class="form-group" for="model">使用するモデル</label>
         <select id="model" name="model">
           <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
@@ -71,11 +67,11 @@
         </select>
         <input type="checkbox"
                id="model-null-check"
-               name="modelNullCheck"
-               style="margin-left: 20px">
+               class="null-check"
+               name="modelNullCheck">
         <label for="model-null-check" class="form-check-label">個別設定を使用しない</label>
       </div>
-      <div>
+      <div class="form-el">
         <label class="form-group" for="temperature">温度</label>
         <input type="number"
                id="temperature-number"
@@ -86,8 +82,8 @@
                value="">
         <input type="checkbox"
                id="temp-null-check"
-               name="tempNullCheck"
-               style="margin-left: 20px">
+               class="null-check"
+               name="tempNullCheck">
         <label for="temp-null-check" class="form-check-label">個別設定を使用しない</label>
         <input type="range"
                id="temperature"
@@ -98,7 +94,7 @@
                class="form-control-range"
                value=""/>
       </div>
-      <div>
+      <div class="form-el">
         <label for="thinking-budget">Gemini思考予算</label>
         <input type="number"
                id="thinking-budget-number"
@@ -108,8 +104,8 @@
                value="">
         <input type="checkbox"
                id="think-null-check"
-               name="thinkNullCheck"
-               style="margin-left: 20px">
+               class="null-check"
+               name="thinkNullCheck">
         <label for="think-null-check" class="form-check-label">個別設定を使用しない</label>
         <input type="range"
                id="thinking-budget"
@@ -121,15 +117,18 @@
       </div>
     </form>
   </div>
-  <div class="col-4">
-    <h2>出力プロンプト</h2>
-    <div class="form-group">
-      <label for="merged-source-name">情報源の名前</label>
-      <span id="merged-source-name" class="form-control-plaintext"></span>
-    </div>
-    <div class="form-group">
-      <label for="merged-filename">プロンプトファイル名</label>
-      <span id="merged-filename-display" class="form-control-plaintext"></span>
+  <div class="col-6 form-display">
+    <div class="title-box">
+      <h2>出力プロンプト</h2>
+      <div id="use-template-box" class="form-check form-el">
+        <input type="checkbox"
+               id="use-template"
+               name="useTemplate"
+               class="form-check-input"
+               form="prompt-form"
+               checked/>
+        <label class="form-check-label" for="use-template">テンプレートプロンプトの使用</label>
+      </div>
     </div>
     <div class="form-group">
       <label for="merged-prompt" class="form-control-label">プロンプト入力欄</label>

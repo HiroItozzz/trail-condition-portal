@@ -167,7 +167,8 @@ class PromptFile(BaseModel):
         if not self.filename:
             raise KeyError("ファイル名が設定されていません")
         path = get_prompt_dir() / self.filename
-        path.write_text(yaml.safe_dump(self.model_dump(exclude={"filename"}), allow_unicode=True), encoding="utf-8")
+        path.write_text(yaml.safe_dump(self.model_dump(exclude={"filename"}), allow_unicode=True, sort_keys=False),
+                        encoding="utf-8")
 
     def __str__(self):
         prompt = self.prompt
@@ -203,7 +204,7 @@ class PromptForm(BaseModel):
     model: LlmModel | str | None = None
     temperature: float | None = None
     thinking_budget: int | None = None
-    use_template: bool | None = None
+    use_template: bool | None = False  # フォームでのチェックが明示的に外された場合はFalse
 
     @field_validator("*", mode="before")
     @classmethod
