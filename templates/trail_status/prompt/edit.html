@@ -16,19 +16,21 @@
 <header>
   <h1>プロンプト編集</h1>
   <div class="source-info">
-    <div class="form-group form-el">
+    <div>
       <label for="source-name">情報源の名前</label>
-      <span id="source-name" class="form-control-plaintext"></span>
+      <span id="source-name"></span>
     </div>
-    <div class="form-group form-el">
-      <label for="filename">プロンプトファイル名</label>
-      <span id="filename-display" class="form-control-plaintext" form="prompt-form"></span>
-      <input type="hidden" id="filename" name="filename" value="">
+    <div>
+      <label for="filename-display">プロンプトファイル名</label>
+      <span id="filename-display"></span>
+      <input type="hidden" id="filename" name="filename" form="prompt-form" value="">
     </div>
+    <select name="sourceSelect" id="source-select">
+    </select>
   </div>
 </header>
-<div class="container d-flex justify-content-center">
-  <div class="col-6 form-display">
+<div class="container-md d-flex justify-content-center">
+  <div class="col-4 form-display">
     <form id="prompt-form">
       <div class="title-box">
         <h2>個別プロンプト</h2>
@@ -39,11 +41,13 @@
       </div>
       <div class="form-group form-el">
         <label class="form-control-label" for="prompt">プロンプト入力欄</label>
-        <input type="checkbox"
-               id="prompt-null-check"
-               class="null-check"
-               name="promptNullCheck">
-        <label for="prompt-null-check" class="form-check-label">個別設定を使用しない</label>
+        <div class="null-chk-container">
+          <input type="checkbox"
+                 id="prompt-null-check"
+                 class="null-check"
+                 name="promptNullCheck">
+          <label for="prompt-null-check" class="form-check-label">個別設定を使用しない</label>
+        </div>
         <textarea id="prompt"
                   name="prompt"
                   class="form-control"
@@ -52,24 +56,26 @@
                   cols="80"></textarea>
       </div>
       <div class="form-el">
-        <label class="form-group" for="model">使用するモデル</label>
-        <select id="model" name="model">
-          <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-          <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-          <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview</option>
-          <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite</option>
-          <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
-          <option value="gemini-flash-latest">Gemini Flash Latest</option>
-          <option value="deepseek-chat">DeepSeek Chat</option>
-          <option value="deepseek-reasoner">DeepSeek Reasoner</option>
-          <option value="gpt-5-mini">GPT-5 Mini</option>
-          <option value="gpt-5-nano">GPT-5 Nano</option>
-        </select>
-        <input type="checkbox"
-               id="model-null-check"
-               class="null-check"
-               name="modelNullCheck">
-        <label for="model-null-check" class="form-check-label">個別設定を使用しない</label>
+          <label class="form-group" for="model">使用するモデル</label>
+          <select id="model" name="model">
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+            <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview</option>
+            <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite</option>
+            <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+            <option value="gemini-flash-latest">Gemini Flash Latest</option>
+            <option value="deepseek-chat">DeepSeek Chat</option>
+            <option value="deepseek-reasoner">DeepSeek Reasoner</option>
+            <option value="gpt-5-mini">GPT-5 Mini</option>
+            <option value="gpt-5-nano">GPT-5 Nano</option>
+          </select>
+        <div class="null-chk-container">
+          <input type="checkbox"
+                 id="model-null-check"
+                 class="null-check"
+                 name="modelNullCheck">
+          <label for="model-null-check" class="form-check-label">個別設定を使用しない</label>
+        </div>
       </div>
       <div class="form-el">
         <label class="form-group" for="temperature">温度</label>
@@ -80,11 +86,13 @@
                max="2.0"
                step="0.1"
                value="">
-        <input type="checkbox"
-               id="temp-null-check"
-               class="null-check"
-               name="tempNullCheck">
-        <label for="temp-null-check" class="form-check-label">個別設定を使用しない</label>
+        <div class="null-chk-container">
+          <input type="checkbox"
+                 id="temp-null-check"
+                 class="null-check"
+                 name="tempNullCheck">
+          <label for="temp-null-check" class="form-check-label">個別設定を使用しない</label>
+        </div>
         <input type="range"
                id="temperature"
                name="temperature"
@@ -102,11 +110,13 @@
                min="-1"
                max="15000"
                value="">
-        <input type="checkbox"
-               id="think-null-check"
-               class="null-check"
-               name="thinkNullCheck">
-        <label for="think-null-check" class="form-check-label">個別設定を使用しない</label>
+        <div class="null-chk-container">
+          <input type="checkbox"
+                 id="think-null-check"
+                 class="null-check"
+                 name="thinkNullCheck">
+          <label for="think-null-check" class="form-check-label">個別設定を使用しない</label>
+        </div>
         <input type="range"
                id="thinking-budget"
                name="thinkingBudget"
@@ -117,7 +127,7 @@
       </div>
     </form>
   </div>
-  <div class="col-6 form-display">
+  <div class="col-4 form-display">
     <div class="title-box">
       <h2>出力プロンプト</h2>
       <div id="use-template-box" class="form-check form-el">
@@ -192,7 +202,7 @@
   </div>
 </div>
 <script type="module" src="{% static 'js/prompt.js' %}"></script>
-<script type="module" src="{% static 'js/form.js' %}"></script>
+<script type="module" src="{% static 'js/prompt-form.js' %}"></script>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
         crossorigin="anonymous"></script>

@@ -4,11 +4,10 @@ from collections import OrderedDict, defaultdict
 from datetime import timedelta
 from typing import override
 
-from django.db.models import Count, F, Max, Prefetch
+from django.db.models import Count, F, Max, Prefetch, Value
 from django.forms import model_to_dict
 from django.http import JsonResponse
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView, ListView, TemplateView
 
 from trail_status.services.prompt_utils import PromptFile, PromptForm
@@ -219,6 +218,15 @@ def get_data_source(request, source_id):
         return JsonResponse({"error": "No resources found."})
     source_dict = model_to_dict(data_source)
     return JsonResponse(source_dict)
+
+
+def get_source_list(request):
+    """情報源レコードをJSONで返却"""
+    if request.method == "POST":
+        return JsonResponse({"error": "Invalid query."})
+
+    sources = DataSource.objects.filter(data_format="WEB").values("pk", "name", "prompt_key")
+    return JsonResponse(list(sources), safe=False)
 
 
 def get_prompt_json(request, source_id=None):

@@ -6,16 +6,28 @@ header {
   background-color: #888888;
 }
 
-header h1 {
-  margin-top: 0.5rem;
-}
 
 .source-info {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 30px;
 }
 
+.source-info > * {
+  margin-top: -0.6rem;
+}
+
+.source-info span {
+  display: block;
+  margin-top: -0.5rem;
+}
+
+#source-select {
+  height: 40px;
+  min-width: 286px;
+  padding: 0 10px;
+}
 .container {
   display: flex;
 }
@@ -23,21 +35,24 @@ header h1 {
 .title-box {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
+  margin-bottom: .5rem;
 }
 
-.form-el {
-  margin-bottom: 5px;
-}
 
 #chkbox-with-btn {
   display: flex;
   justify-content: space-between;
 }
 
+.null-chk-container {
+  float: right;
+}
+
 #btn-grp {
   display: flex;
   gap: 10px;
+  margin-bottom: .5rem;
 }
 
 .null-check {

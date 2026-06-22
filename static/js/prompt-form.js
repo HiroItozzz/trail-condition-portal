@@ -1,4 +1,4 @@
-import {form, pk} from "./prompt.js";
+import {form, sourceId} from "./prompt.js";
 
 function getCookie(name) {
     let cookieValue = null;
@@ -22,7 +22,7 @@ async function sendData() {
     const formData = new FormData(form);
 
     try {
-        const response = await fetch(`http://localhost:8000/api/prompt/${pk}/post/`, {
+        const response = await fetch(`/api/prompt/${sourceId}/post/`, {
             method: "POST",
             // FormData インスタンスをリクエスト本体として設定
             body: formData,

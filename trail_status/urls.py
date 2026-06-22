@@ -20,4 +20,5 @@ urlpatterns = [
     path("api/prompt/<int:source_id>/post/", views.update_yaml, name="prompt-post-api"),
     # 情報源API
     path("api/source/<int:source_id>/", views.get_data_source, name="source-api"),
+    path("api/source/list/", views.get_source_list, name="source-list-api"),
 ]

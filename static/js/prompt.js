@@ -1,28 +1,45 @@
-async function getDataSource(pk) {
-    const res = await fetch(`http://localhost:8000/api/source/${pk}/`);
+async function getSourceList() {
+    const res = await fetch(`/api/source/list/`);
     return await res.json();
 }
 
-async function getSiteConfig(pk) {
-    const res = await fetch(`http://localhost:8000/api/prompt/${pk}/`);
+async function getSiteConfig() {
+    const res = await fetch(`/api/prompt/${sourceId}/`);
     return await res.json();
 }
 
 async function getTemplate() {
-    const res = await fetch("http://localhost:8000/api/prompt/");
+    const res = await fetch("/api/prompt/");
     return await res.json();
 }
 
-export const pk = Number(document.body.dataset.sourceId);
-const [sourceData, individualData, templateData] = await Promise.all([
-    getDataSource(pk),
-    getSiteConfig(pk),
+export const sourceId = Number(document.body.dataset.sourceId);
+const [sourceList, individualData, templateData] = await Promise.all([
+    getSourceList(),
+    getSiteConfig(sourceId),
     getTemplate(),
 ]);
 
 const sourceName = document.getElementById("source-name");
 const filenameDisplay = document.getElementById("filename-display");
 const filename = document.getElementById("filename");
+
+// ヘッダーのドロップダウン
+const sourceSelect = document.getElementById("source-select")
+const createSrcOption = ({pk, name}) => {
+    const option = document.createElement("option");
+    option.value = pk;
+    option.textContent = name;
+    option.selected = pk === sourceId;
+    sourceSelect.appendChild(option);
+}
+sourceList.forEach(createSrcOption);
+
+// 情報源セレクトボックスのイベントリスナー
+sourceSelect.addEventListener("change", (ev) => {
+    const pk = ev.target.value
+    location.href = `/prompt/${pk}/`;
+})
 
 // 画面左側フォーム
 export const form = document.querySelector("form")
@@ -183,8 +200,25 @@ form.resetBtn.addEventListener("click", () => {
         form.useTemplate.checked ? mergeTemplate() : disableTemplate();
     }
 })
+
+form.promptNullCheck.addEventListener("change", (ev) => {
+    if (!ev.target.checked) {
+        merged.prompt.scrollTop = merged.prompt.scrollHeight;
+    }
+})
+
+form.prompt.addEventListener("input", (ev) => {
+    merged.prompt.scrollTop = merged.prompt.scrollHeight;
+})
+
+window.addEventListener('beforeunload', (event) => {
+    // 警告メッセージを表示する（ブラウザによっては標準の文言になります）
+    event.preventDefault();
+    event.returnValue = ''; // 標準ダイアログ用
+});
+
 // 情報源とファイル名（固定値）
-sourceName.textContent = sourceData.name;
+sourceName.textContent = sourceList.find(({pk}) => pk === sourceId)?.name ?? "";
 filenameDisplay.textContent = individualData.filename;
 
 // form初期化
