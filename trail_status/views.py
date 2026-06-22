@@ -8,10 +8,11 @@ from django.db.models import Count, F, Max, Prefetch
 from django.forms import model_to_dict
 from django.http import JsonResponse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView, ListView, TemplateView
 
-from trail_status.services.prompt_utils import PromptFile
-
+from trail_status.services.prompt_utils import PromptFile, PromptForm
+from django.views.decorators.http import require_POST
 from .models import AreaName, BlogFeed, DataSource, StatusType, TrailCondition
 
 logger = logging.getLogger(__name__)
@@ -239,6 +240,18 @@ def get_prompt_json(request, source_id=None):
     prompt_file = PromptFile.load_site_config(prompt_filename)
 
     return JsonResponse(prompt_file.model_dump(by_alias=True))
+
+
+@require_POST
+def update_yaml(request, source_id):
+    import json
+    logger.debug(request.POST)
+    result = request.POST.items()
+
+    new_data = PromptForm.model_validate(request.POST).to_promptfile()
+    new_data.update_site_config()
+    logger.debug(str(new_data))
+    return JsonResponse({'status': 'success', 'received': request.POST}, status=200)
 
 
 def _get_sidebar_context() -> dict:

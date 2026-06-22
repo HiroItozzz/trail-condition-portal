@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 import yaml
 from django.conf import settings
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic.alias_generators import to_camel
 
 from .types import LlmModel
@@ -163,6 +163,12 @@ class PromptFile(BaseModel):
         config_dict.update(filename=filename)
         return cls(**config_dict)
 
+    def update_site_config(self):
+        if not self.filename:
+            raise KeyError("ファイル名が設定されていません")
+        path = get_prompt_dir() / self.filename
+        path.write_text(yaml.safe_dump(self.model_dump(exclude={"filename"}), allow_unicode=True), encoding="utf-8")
+
     def __str__(self):
         prompt = self.prompt
         filename = self.filename
@@ -183,4 +189,37 @@ class PromptFile(BaseModel):
                 + "─" * left
                 + "プロンプト".ljust(width - left - 5, "─")
                 + f"\n{prompt}"
+        )
+
+
+class PromptForm(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
+
+    prompt: str | None = None
+    filename: str | None = None
+    model: LlmModel | str | None = None
+    temperature: float | None = None
+    thinking_budget: int | None = None
+    use_template: bool | None = None
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def convert_from_list(cls, v) -> str:
+        if isinstance(v, list):
+            return v.pop()
+        return v
+
+    def to_promptfile(self) -> PromptFile:
+        return PromptFile(
+            prompt=self.prompt,
+            filename=self.filename,
+            config=PromptFileConfig(
+                model=self.model,
+                temperature=self.temperature,
+                thinking_budget=self.thinking_budget,
+                use_template=self.use_template,
+            )
         )

@@ -15,8 +15,9 @@ urlpatterns = [
     # プロンプト編集画面
     path("prompt/<int:source_id>/", views.PromptEditView.as_view(), name="prompt-edit"),
     # プロンプトAPI
-    path("api/prompt/", views.get_prompt_json, name="prompt-api"),
+    path("api/prompt/", views.get_prompt_json, name="temp-prompt-api"),
     path("api/prompt/<int:source_id>/", views.get_prompt_json, name="prompt-api"),
+    path("api/prompt/<int:source_id>/post/", views.update_yaml, name="prompt-post-api"),
     # 情報源API
-    path("api/source/<int:source_id>/", views.get_data_source, name="prompt-api"),
+    path("api/source/<int:source_id>/", views.get_data_source, name="source-api"),
 ]

@@ -13,8 +13,7 @@ async function getTemplate() {
     return await res.json();
 }
 
-const path = window.location.pathname;
-const pk = Number(document.body.dataset.sourceId);
+export const pk = Number(document.body.dataset.sourceId);
 const [sourceData, individualData, templateData] = await Promise.all([
     getDataSource(pk),
     getSiteConfig(pk),
@@ -26,7 +25,7 @@ const filenameDisplay = document.getElementById("filename-display");
 const filename = document.getElementById("filename");
 
 // 画面左側フォーム
-const form = document.querySelector("form")
+export const form = document.querySelector("form")
 
 // 画面右側出力結果
 const merged = {
@@ -178,7 +177,12 @@ const applyInput = ({nullCheck, formEl, mergeMethod}) => {
 
 // ユーザー入力のイベントリスナー
 inputFields.forEach(applyInput);
-
+form.resetBtn.addEventListener("click", () => {
+    if (window.confirm("プロンプトを初期状態に戻しますか？")) {
+        initForm();
+        form.useTemplate.checked ? mergeTemplate() : disableTemplate();
+    }
+})
 // 情報源とファイル名（固定値）
 sourceName.textContent = sourceData.name;
 filenameDisplay.textContent = individualData.filename;
