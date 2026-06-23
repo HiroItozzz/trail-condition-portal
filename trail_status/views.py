@@ -4,14 +4,16 @@ from collections import OrderedDict, defaultdict
 from datetime import timedelta
 from typing import override
 
-from django.db.models import Count, F, Max, Prefetch, Value
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count, F, Max, Prefetch
 from django.forms import model_to_dict
 from django.http import JsonResponse
 from django.utils import timezone
+from django.views.decorators.http import require_GET, require_POST
 from django.views.generic import DetailView, ListView, TemplateView
 
 from trail_status.services.prompt_utils import PromptFile, PromptForm
-from django.views.decorators.http import require_POST
+
 from .models import AreaName, BlogFeed, DataSource, StatusType, TrailCondition
 
 logger = logging.getLogger(__name__)
@@ -198,12 +200,13 @@ class BlogListView(SideBarMixin, ListView):
         return context
 
 
-class PromptEditView(TemplateView):
+class PromptEditView(LoginRequiredMixin, TemplateView):
     template_name = "trail_status/prompt/edit.html"
+    login_url = "/trail-p0rtal-dashboard/login/"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["source_id"] = self.kwargs["source_id"]
+        context["source_id"] = kwargs["source_id"]
         return context
 
 
@@ -229,23 +232,27 @@ def get_source_list(request):
     return JsonResponse(list(sources), safe=False)
 
 
+# TODO パラメータなしの場合templateを返す（変更検討）
+@require_GET
 def get_prompt_json(request, source_id=None):
     """プロンプトファイルをJSONで返却
 
-    パラメータなしの場合templateを返す（変更予定）"""
-    if request.method == "POST":
-        return JsonResponse({})
-
+    ファイルがなければ作成
+    パラメータなしでテンプレートファイルのデータを返却
+    """
     if source_id is None:
-        prompt_filename = "template.yaml"
+        prompt_file = PromptFile.load_template()
     else:
         try:
             data_source = DataSource.objects.get(pk=source_id)
             prompt_filename = data_source.prompt_filename
         except DataSource.DoesNotExist:
-            return JsonResponse({"error": "No resources found."})
+            return JsonResponse({"error": "No resources found."}, status=400)
 
-    prompt_file = PromptFile.load_site_config(prompt_filename)
+        if data_source.data_format != "WEB":
+            return JsonResponse({"error": "Invalid source ID."}, status=400)
+
+        prompt_file = PromptFile.load_site_config(prompt_filename, make_if_missing=True)
 
     return JsonResponse(prompt_file.model_dump(by_alias=True))
 
@@ -255,7 +262,7 @@ def update_yaml(request, source_id):
     new_data = PromptForm.model_validate(request.POST).to_promptfile()
     new_data.update_site_config()
     logger.debug(str(new_data))
-    return JsonResponse({'status': 'success', 'received': request.POST}, status=200)
+    return JsonResponse({"status": "success", "received": request.POST}, status=200)
 
 
 def _get_sidebar_context() -> dict:

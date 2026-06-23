@@ -1,61 +1,59 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-  <title>プロンプト編集</title>
-  <link rel="stylesheet"
-        href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
-        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
-        crossorigin="anonymous"/>
-  {% load static %}
-  <link rel="stylesheet" href="{% static 'css/prompt.css' %}"/>
-</head>
-<body data-source-id="{{ source_id }}">
-<header>
-  <h1>プロンプト編集</h1>
-  <div class="source-info">
-    <div>
-      <label for="source-name">情報源の名前</label>
-      <span id="source-name"></span>
-    </div>
-    <div>
-      <label for="filename-display">プロンプトファイル名</label>
-      <span id="filename-display"></span>
-      <input type="hidden" id="filename" name="filename" form="prompt-form" value="">
-    </div>
-    <select name="sourceSelect" id="source-select">
-    </select>
+{% extends 'trail_status/prompt/base.html' %}
+{% block title %}
+  プロンプト編集
+{% endblock title %}
+
+{% block header_info %}
+  <div>
+    <label for="source-name">情報源の名前</label>
+    <span id="source-name"></span>
   </div>
-</header>
-<div class="container-md d-flex justify-content-center">
-  <div class="col-4 form-display">
-    <form id="prompt-form">
-      <div class="title-box">
-        <h2>個別プロンプト</h2>
-        <div id="btn-grp">
-          <button type="submit" id="update-btn" class="btn btn-sm btn-success" name="updateBtn">更新</button>
-          <button type="button" id="reset-btn" class="btn btn-sm btn-warning" name="resetBtn">リセット</button>
+  <div>
+    <label for="filename-display">プロンプトファイル名</label>
+    <span id="filename-display"></span>
+    <input type="hidden"
+           id="filename"
+           name="filename"
+           form="prompt-form"
+           value="">
+  </div>
+  <select name="sourceSelect" id="source-select"></select>
+{% endblock header_info %}
+
+{% block content %}
+  <div class="container-md d-flex justify-content-center">
+    <div class="col-4 form-display">
+      <form id="prompt-form">
+        <div class="title-box">
+          <h2>個別プロンプト</h2>
+          <div id="btn-grp">
+            <button type="submit"
+                    id="update-btn"
+                    class="btn btn-sm btn-success"
+                    name="updateBtn">更新</button>
+            <button type="button"
+                    id="reset-btn"
+                    class="btn btn-sm btn-warning"
+                    name="resetBtn">リセット</button>
+          </div>
         </div>
-      </div>
-      <div class="form-group form-el">
-        <label class="form-control-label" for="prompt">プロンプト入力欄</label>
-        <div class="null-chk-container">
-          <input type="checkbox"
-                 id="prompt-null-check"
-                 class="null-check"
-                 name="promptNullCheck">
-          <label for="prompt-null-check" class="form-check-label">個別設定を使用しない</label>
+        <div class="form-group form-el">
+          <label class="form-control-label" for="prompt">プロンプト入力欄</label>
+          <div class="null-chk-container">
+            <input type="checkbox"
+                   id="prompt-null-check"
+                   class="null-check"
+                   name="promptNullCheck">
+            <label for="prompt-null-check" class="form-check-label">個別設定を使用しない</label>
+          </div>
+          <textarea id="prompt"
+                    name="prompt"
+                    class="form-control"
+                    value=""
+                    rows="20"
+                    cols="80"></textarea>
         </div>
-        <textarea id="prompt"
-                  name="prompt"
-                  class="form-control"
-                  value=""
-                  rows="20"
-                  cols="80"></textarea>
-      </div>
-      <div class="form-el">
+        <div class="form-el">
           <label class="form-group" for="model">使用するモデル</label>
           <select id="model" name="model">
             <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
@@ -69,148 +67,136 @@
             <option value="gpt-5-mini">GPT-5 Mini</option>
             <option value="gpt-5-nano">GPT-5 Nano</option>
           </select>
-        <div class="null-chk-container">
+          <div class="null-chk-container">
+            <input type="checkbox"
+                   id="model-null-check"
+                   class="null-check"
+                   name="modelNullCheck">
+            <label for="model-null-check" class="form-check-label">個別設定を使用しない</label>
+          </div>
+        </div>
+        <div class="form-el">
+          <label class="form-group" for="temperature">温度</label>
+          <input type="number"
+                 id="temperature-number"
+                 name="temperatureNumber"
+                 min="0"
+                 max="2.0"
+                 step="0.1"
+                 value="">
+          <div class="null-chk-container">
+            <input type="checkbox"
+                   id="temp-null-check"
+                   class="null-check"
+                   name="tempNullCheck">
+            <label for="temp-null-check" class="form-check-label">個別設定を使用しない</label>
+          </div>
+          <input type="range"
+                 id="temperature"
+                 name="temperature"
+                 min="0"
+                 max="2.0"
+                 step="0.1"
+                 class="form-control-range"
+                 value="" />
+        </div>
+        <div class="form-el">
+          <label for="thinking-budget">Gemini思考予算</label>
+          <input type="number"
+                 id="thinking-budget-number"
+                 name="thinkingBudgetNumber"
+                 min="-1"
+                 max="15000"
+                 value="">
+          <div class="null-chk-container">
+            <input type="checkbox"
+                   id="think-null-check"
+                   class="null-check"
+                   name="thinkNullCheck">
+            <label for="think-null-check" class="form-check-label">個別設定を使用しない</label>
+          </div>
+          <input type="range"
+                 id="thinking-budget"
+                 name="thinkingBudget"
+                 min="-1"
+                 max="15000"
+                 class="form-control-range"
+                 value="" />
+        </div>
+      </form>
+    </div>
+    <div class="col-4 form-display">
+      <div class="title-box">
+        <h2>出力プロンプト</h2>
+        <div id="use-template-box" class="form-check form-el">
           <input type="checkbox"
-                 id="model-null-check"
-                 class="null-check"
-                 name="modelNullCheck">
-          <label for="model-null-check" class="form-check-label">個別設定を使用しない</label>
+                 id="use-template"
+                 name="useTemplate"
+                 class="form-check-input"
+                 form="prompt-form"
+                 checked />
+          <label class="form-check-label" for="use-template">テンプレートプロンプトの使用</label>
         </div>
       </div>
-      <div class="form-el">
-        <label class="form-group" for="temperature">温度</label>
+      <div class="form-group">
+        <label for="merged-prompt" class="form-control-label">プロンプト入力欄</label>
+        <textarea name="merged-prompt"
+                  id="merged-prompt"
+                  class="form-control"
+                  value=""
+                  rows="20"
+                  cols="80"
+                  disabled></textarea>
+      </div>
+      <div>
+        <label class="form-group" for="merged-model">使用するモデル</label>
+        <select name="merged-model" id="merged-model" disabled>
+          <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+          <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+          <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview</option>
+          <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite</option>
+          <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+          <option value="gemini-flash-latest">Gemini Flash Latest</option>
+          <option value="deepseek-chat">DeepSeek Chat</option>
+          <option value="deepseek-reasoner">DeepSeek Reasoner</option>
+          <option value="gpt-5-mini">GPT-5 Mini</option>
+          <option value="gpt-5-nano">GPT-5 Nano</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-group" for="merged-temperature">温度</label>
         <input type="number"
-               id="temperature-number"
-               name="temperatureNumber"
+               id="merged-temperature-number"
                min="0"
                max="2.0"
                step="0.1"
-               value="">
-        <div class="null-chk-container">
-          <input type="checkbox"
-                 id="temp-null-check"
-                 class="null-check"
-                 name="tempNullCheck">
-          <label for="temp-null-check" class="form-check-label">個別設定を使用しない</label>
-        </div>
+               value=""
+               disabled>
         <input type="range"
-               id="temperature"
-               name="temperature"
+               id="merged-temperature"
                min="0"
                max="2.0"
                step="0.1"
                class="form-control-range"
-               value=""/>
+               value=""
+               disabled />
       </div>
-      <div class="form-el">
-        <label for="thinking-budget">Gemini思考予算</label>
+      <div>
+        <label for="merged-thinking-budget">Gemini思考予算</label>
         <input type="number"
-               id="thinking-budget-number"
-               name="thinkingBudgetNumber"
+               id="merged-thinking-budget-number"
                min="-1"
                max="15000"
-               value="">
-        <div class="null-chk-container">
-          <input type="checkbox"
-                 id="think-null-check"
-                 class="null-check"
-                 name="thinkNullCheck">
-          <label for="think-null-check" class="form-check-label">個別設定を使用しない</label>
-        </div>
+               value=""
+               disabled>
         <input type="range"
-               id="thinking-budget"
-               name="thinkingBudget"
+               id="merged-thinking-budget"
                min="-1"
                max="15000"
                class="form-control-range"
-               value=""/>
-      </div>
-    </form>
-  </div>
-  <div class="col-4 form-display">
-    <div class="title-box">
-      <h2>出力プロンプト</h2>
-      <div id="use-template-box" class="form-check form-el">
-        <input type="checkbox"
-               id="use-template"
-               name="useTemplate"
-               class="form-check-input"
-               form="prompt-form"
-               checked/>
-        <label class="form-check-label" for="use-template">テンプレートプロンプトの使用</label>
+               value=""
+               disabled />
       </div>
     </div>
-    <div class="form-group">
-      <label for="merged-prompt" class="form-control-label">プロンプト入力欄</label>
-      <textarea name="merged-prompt"
-                id="merged-prompt"
-                class="form-control"
-                value=""
-                rows="20"
-                cols="80"
-                disabled></textarea>
-    </div>
-    <div>
-      <label class="form-group" for="merged-model">使用するモデル</label>
-      <select name="merged-model" id="merged-model" disabled>
-        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-        <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview</option>
-        <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite</option>
-        <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
-        <option value="gemini-flash-latest">Gemini Flash Latest</option>
-        <option value="deepseek-chat">DeepSeek Chat</option>
-        <option value="deepseek-reasoner">DeepSeek Reasoner</option>
-        <option value="gpt-5-mini">GPT-5 Mini</option>
-        <option value="gpt-5-nano">GPT-5 Nano</option>
-      </select>
-    </div>
-    <div>
-      <label class="form-group" for="merged-temperature">温度</label>
-      <input type="number"
-             id="merged-temperature-number"
-             min="0"
-             max="2.0"
-             step="0.1"
-             value=""
-             disabled>
-      <input type="range"
-             id="merged-temperature"
-             min="0"
-             max="2.0"
-             step="0.1"
-             class="form-control-range"
-             value=""
-             disabled/>
-    </div>
-    <div>
-      <label for="merged-thinking-budget">Gemini思考予算</label>
-      <input type="number"
-             id="merged-thinking-budget-number"
-             min="-1"
-             max="15000"
-             value=""
-             disabled>
-      <input type="range"
-             id="merged-thinking-budget"
-             min="-1"
-             max="15000"
-             class="form-control-range"
-             value=""
-             disabled/>
-    </div>
   </div>
-</div>
-<script type="module" src="{% static 'js/prompt.js' %}"></script>
-<script type="module" src="{% static 'js/prompt-form.js' %}"></script>
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-        crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
-        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
-        crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
-        integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
-        crossorigin="anonymous"></script>
-</body>
-</html>
+{% endblock content %}

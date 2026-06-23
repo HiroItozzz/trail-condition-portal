@@ -6,7 +6,6 @@ header {
   background-color: #888888;
 }
 
-
 .source-info {
   display: flex;
   justify-content: center;
@@ -23,11 +22,17 @@ header {
   margin-top: -0.5rem;
 }
 
+#source-name,
+#filename-display {
+  font-weight: bold;
+}
+
 #source-select {
   height: 40px;
-  min-width: 286px;
+  min-width: 284px;
   padding: 0 10px;
 }
+
 .container {
   display: flex;
 }
@@ -36,9 +41,8 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
 }
-
 
 #chkbox-with-btn {
   display: flex;
@@ -52,9 +56,9 @@ header {
 #btn-grp {
   display: flex;
   gap: 10px;
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
 }
 
 .null-check {
-  margin-left:10px;
+  margin-left: 10px;
 }

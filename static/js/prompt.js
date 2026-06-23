@@ -3,9 +3,10 @@ async function getSourceList() {
     return await res.json();
 }
 
-async function getSiteConfig() {
+async function getSiteConfig(sourceId) {
     const res = await fetch(`/api/prompt/${sourceId}/`);
-    return await res.json();
+    const data = await res.json()
+    return data;
 }
 
 async function getTemplate() {

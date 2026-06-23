@@ -29,6 +29,15 @@ def get_prompt_dir() -> Path:
     return settings.BASE_DIR / "trail_status" / "services" / "prompts"
 
 
+def make_new_file(filename: str) -> None:
+    prompt_dir = get_prompt_dir()
+    try:
+        shutil.copy(prompt_dir / "example.yaml", prompt_dir / filename)
+        logger.warning(f"プロンプトファイルを作成しました。ファイル名: {filename}")
+    except Exception:
+        logger.error("サイト別プロンプトファイルの作成に失敗。example.yamlを確認してください")
+
+
 class PromptFileConfig(BaseModel):
     model_config = ConfigDict(
         alias_generator=to_camel,
@@ -70,7 +79,7 @@ class PromptFile(BaseModel):
         """
 
         template_file = cls.load_template().model_copy(deep=True)
-        individual_file = cls.load_site_config(filename)
+        individual_file = cls.load_site_config(filename, make_if_missing=False)
 
         use_template = individual_file.config.use_template
         # (use_template=Noneの場合はtemplateへフォールバック)
@@ -132,7 +141,7 @@ class PromptFile(BaseModel):
         return cls(**config_dict)
 
     @classmethod
-    def load_site_config(cls, filename: str) -> PromptFile:
+    def load_site_config(cls, filename: str, make_if_missing=True) -> PromptFile:
         """個別プロンプトファイルをファイル名から安全に読み込み辞書で返却
             ファイルがなければ作成をする
 
@@ -145,13 +154,9 @@ class PromptFile(BaseModel):
         prompt_dir = get_prompt_dir()
         prompt_path = prompt_dir / filename
 
-        if not prompt_path.exists():
+        if not prompt_path.exists() and make_if_missing:
             logger.warning(f"サイト別プロンプトファイルが見つかりません: {prompt_path}")
-            try:
-                shutil.copy(prompt_dir / "example.yaml", prompt_path)
-                logger.warning(f"プロンプトファイルを作成しました。ファイル名: {filename}")
-            except Exception:
-                logger.error("サイト別プロンプトファイルの作成に失敗。example.yamlを確認してください")
+            make_new_file(filename)
             return cls()
 
         config_dict = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
@@ -167,8 +172,9 @@ class PromptFile(BaseModel):
         if not self.filename:
             raise KeyError("ファイル名が設定されていません")
         path = get_prompt_dir() / self.filename
-        path.write_text(yaml.safe_dump(self.model_dump(exclude={"filename"}), allow_unicode=True, sort_keys=False),
-                        encoding="utf-8")
+        path.write_text(
+            yaml.safe_dump(self.model_dump(exclude={"filename"}), allow_unicode=True, sort_keys=False), encoding="utf-8"
+        )
 
     def __str__(self):
         prompt = self.prompt
@@ -181,15 +187,15 @@ class PromptFile(BaseModel):
         width, _ = shutil.get_terminal_size()
         left = 6
         return (
-                f"ファイル名: {filename}".center(width - 5, "─")
-                + f"\nAIのモデル: {model}"
-                + f"\n温度: {temperature}"
-                + f"\n思考予算: {thinking_budget}"
-                + f"\nテンプレートの使用: {use_template}"
-                + "\n"
-                + "─" * left
-                + "プロンプト".ljust(width - left - 5, "─")
-                + f"\n{prompt}"
+            f"ファイル名: {filename}".center(width - 5, "─")
+            + f"\nAIのモデル: {model}"
+            + f"\n温度: {temperature}"
+            + f"\n思考予算: {thinking_budget}"
+            + f"\nテンプレートの使用: {use_template}"
+            + "\n"
+            + "─" * left
+            + "プロンプト".ljust(width - left - 5, "─")
+            + f"\n{prompt}"
         )
 
 
@@ -222,5 +228,5 @@ class PromptForm(BaseModel):
                 temperature=self.temperature,
                 thinking_budget=self.thinking_budget,
                 use_template=self.use_template,
-            )
+            ),
         )
