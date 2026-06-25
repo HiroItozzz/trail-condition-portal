@@ -36,7 +36,7 @@ class DataFetcher:
             logger.exception(f"Unexpected error fetching {self.url}")
             raise e
 
-    async def fetch_parsed_text(self, response_text: str) -> str:
+    def fetch_parsed_text(self, response_text: str) -> str:
         """
         単一のURLからテキストを取得。リトライとロギング付き。
         """

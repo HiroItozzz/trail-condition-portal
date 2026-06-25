@@ -8,6 +8,7 @@ from trail_status.models import DataSource
 from trail_status.services.db_writer import DbWriter
 from trail_status.services.llm_client import ConversationalAi, DeepseekClient, GeminiClient, GptClient, LlmConfig
 from trail_status.services.pipeline import AiPipeline, UpdatedDataList
+from trail_status.services.prompt_utils import PromptFile
 from trail_status.services.slack_notifier import SlackNotifier
 from trail_status.services.types import ConditionSchemaAiList, ResultSingle, SourceSchemaSingle
 
@@ -73,7 +74,7 @@ class Command(BaseCommand):
                     id=source.id,
                     name=source.name,
                     url1=source.url1,
-                    prompt_filename=source.prompt_filename,
+                    prompt_file=PromptFile.load_merged_config(source.prompt_filename, url=source.url1),
                     content_hash=source.content_hash,
                 )
                 source_data_list = [model_data_single]
@@ -86,7 +87,11 @@ class Command(BaseCommand):
             # CLI引数なしの場合すべての情報源を処理リストに追加
             source_data_list = [
                 SourceSchemaSingle(
-                    id=s.id, name=s.name, url1=s.url1, prompt_key=s.prompt_filename, content_hash=s.content_hash
+                    id=s.id,
+                    name=s.name,
+                    url1=s.url1,
+                    prompt_file=PromptFile.load_merged_config(s.prompt_filename, url=s.url1),
+                    content_hash=s.content_hash,
                 )
                 for s in DataSource.objects.filter(data_format="WEB")
             ]

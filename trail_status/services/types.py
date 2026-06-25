@@ -12,6 +12,7 @@ from ..models import AreaName, StatusType
 if typing.TYPE_CHECKING:
     from .llm_client import LlmConfig
     from .llm_stats import LlmStats
+    from .prompt_utils import PromptFile
 
 
 area_help_text = " / ".join([f"{label}:{name}" for name, label in AreaName.choices])
@@ -94,7 +95,7 @@ class SourceSchemaSingle:
     id: int
     name: str
     url1: str
-    prompt_filename: str
+    prompt_file: PromptFile
     content_hash: str | None = None
 
 

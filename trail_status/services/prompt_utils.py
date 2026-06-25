@@ -4,6 +4,7 @@ import logging
 import shutil
 import typing
 from functools import lru_cache
+from urllib.parse import urlparse
 
 import yaml
 from django.conf import settings
@@ -28,12 +29,6 @@ def get_prompt_dir() -> Path:
     return settings.BASE_DIR / "trail_status" / "services" / "prompts"
 
 
-def get_prompt_filename_from_data(source_id: int, prompt_key: str) -> str:
-    """ソースデータからプロンプトファイル名を取得"""
-    # 形式: {id:03d}_{prompt_key}.yaml
-    return f"{source_id:03d}_{prompt_key}.yaml"
-
-
 class PromptFileConfig(BaseModel):
     model_config = ConfigDict(
         alias_generator=to_camel,
@@ -51,8 +46,19 @@ class PromptFile(BaseModel):
     config: PromptFileConfig = PromptFileConfig(use_template=True)
     filename: str | None = None
 
+    @staticmethod
+    def _format_url(prompt: str, url: str) -> str:
+        parsed = urlparse(url)
+        return prompt.format(scheme=parsed.scheme, netloc=parsed.netloc)
+
+    @staticmethod
+    def get_filename_from_data(source_id: int, prompt_key: str) -> str:
+        """ソースデータからプロンプトファイル名を取得"""
+        # 形式: {id:03d}_{prompt_key}.yaml
+        return f"{source_id:03d}_{prompt_key}.yaml"
+
     @classmethod
-    def load_merged_config(cls, filename: str) -> PromptFile:
+    def load_merged_config(cls, filename: str, url: str | None = None) -> PromptFile:
         template_file = cls.load_template().model_copy(deep=True)
         individual_file = cls.load_site_config(filename)
 
@@ -60,6 +66,9 @@ class PromptFile(BaseModel):
         # (use_template=Noneの場合はtemplateへフォールバック)
         if use_template is False:
             return individual_file
+
+        if url is not None:
+            template_file.prompt = cls._format_url(template_file.prompt, url)
 
         template_file.prompt += "\n\n" + individual_file.prompt if individual_file.prompt else ""
 
