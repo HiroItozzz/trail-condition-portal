@@ -73,7 +73,7 @@ class Command(BaseCommand):
                     id=source.id,
                     name=source.name,
                     url1=source.url1,
-                    prompt_key=source.prompt_key,
+                    prompt_filename=source.prompt_filename,
                     content_hash=source.content_hash,
                 )
                 source_data_list = [model_data_single]
@@ -86,7 +86,7 @@ class Command(BaseCommand):
             # CLI引数なしの場合すべての情報源を処理リストに追加
             source_data_list = [
                 SourceSchemaSingle(
-                    id=s.id, name=s.name, url1=s.url1, prompt_key=s.prompt_key, content_hash=s.content_hash
+                    id=s.id, name=s.name, url1=s.url1, prompt_key=s.prompt_filename, content_hash=s.content_hash
                 )
                 for s in DataSource.objects.filter(data_format="WEB")
             ]

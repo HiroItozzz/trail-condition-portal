@@ -112,15 +112,15 @@ class AiPipeline:
         """AI解析処理"""
         import time
 
-        prompt_filename = prompt_utils.get_prompt_filename_from_data(source_data.id, source_data.prompt_key)
+        filename = source_data.prompt_filename
 
         try:
-            config = LlmConfig.from_file(prompt_filename, data=scraped_text, model=self.ai_model)
+            config = LlmConfig.from_file(filename, data=scraped_text, model=self.ai_model)
         except FileNotFoundError:
-            logger.error(f"プロンプトファイルが見つかりません: {prompt_filename}")
-            raise ValueError(f"プロンプトファイルが見つかりません: {prompt_filename}")
+            logger.error(f"プロンプトファイルが見つかりません: {filename}")
+            raise ValueError(f"プロンプトファイルが見つかりません: {filename}")
         except Exception as e:
-            logger.exception(f"プロンプトファイル読み込みエラー: {prompt_filename}")
+            logger.exception(f"プロンプトファイル読み込みエラー: {filename}")
             raise e
 
         # AIクライアントの注入

@@ -12,7 +12,7 @@ from trail_status.services.types import ConditionSchemaAiInternal, ResultSingle,
 def mock_DbWriter(sample_llm_config):
     """DBライターのモック"""
     sample_source_schema = SourceSchemaSingle(
-        id=100, name="sample", url1="http://url1.com", prompt_key="test_key", content_hash=None
+        id=100, name="sample", url1="http://url1.com", prompt_filename="test_key", content_hash=None
     )
     sample_result_single = ResultSingle(success=True, message="OK", config=sample_llm_config)
     return DbWriter(sample_source_schema, sample_result_single)

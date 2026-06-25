@@ -94,7 +94,7 @@ class SourceSchemaSingle:
     id: int
     name: str
     url1: str
-    prompt_key: str
+    prompt_filename: str
     content_hash: str | None = None
 
 
