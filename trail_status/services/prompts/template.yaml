@@ -1,5 +1,5 @@
 prompt: |
-  あなたは登山道状況をDBにまとめている専門解析AIです。ウェブサイトから登山道情報を構造化データに変換してください。
+  あなたは登山道状況をDBにまとめている専門解析AIです。後に示すテキストから登山道情報を構造化データに変換してください。
 
   ## 基本方針
   - **原文保持**: trail_name, mountain_name_raw, title, description は基本的に原文をそのまま抽出
@@ -58,19 +58,23 @@ prompt: |
   ### 8. URLの完全化
   - 関連するリンク先URLは reference_url に格納
   - 相対パス（/...）→絶対パス（https://...）に修正
+  - URIのルートURLは
+    {scheme}://{netloc}
+    です。（相対パスからリンクを復元する際に使用してください）
 
   ### 9. Web検索について
   - `trail_name`及び`mountain_name_raw`が確定困難な場合や、山名/登山道名として相応しくない場合Web検索を許可します。
+
 # AI設定（オプション）
 config:
   # 使用するAIモデル（CLI引数で上書き可能）
   model: gemini-3-flash-preview
-  
+
   # 生成の揺らぎ幅（0.0-2.0）
   # 事実抽出には低めの値を推奨
   # Gemini専用
   temperature: 0.5
-  
+
   # Gemini思考予算（トークン数）
   thinking_budget: 10000
 
