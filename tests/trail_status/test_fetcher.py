@@ -17,7 +17,7 @@ async def test_parse_html():
         </body>
     </html>
     """
-    text = await fetcher.fetch_parsed_text(mock_response_text)
+    text = fetcher.fetch_parsed_text(mock_response_text)
 
     assert len(text) > 0
     assert "登山道情報" in text or "通行止め" in text  # trafilaturaで抽出されたテキスト

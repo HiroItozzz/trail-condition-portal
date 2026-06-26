@@ -3,8 +3,6 @@ import logging
 from typing import Callable
 
 import httpx
-
-from . import prompt_utils
 from .fetcher import DataFetcher
 from .llm_client import ConversationalAi, LlmConfig
 from .llm_stats import LlmStats
@@ -79,7 +77,7 @@ class AiPipeline:
                     )
 
             # 3. trafilaturaでテキスト抽出
-            parsed_text = await fetcher.fetch_parsed_text(scraped_html)
+            parsed_text = fetcher.fetch_parsed_text(scraped_html)
             if not parsed_text.strip():
                 logger.warning(f"テキスト抽出結果が空: {source_data.name}")
                 return ResultSingle(success=False, message="テキスト抽出結果が空でした")
@@ -112,15 +110,11 @@ class AiPipeline:
         """AI解析処理"""
         import time
 
-        prompt_filename = prompt_utils.get_prompt_filename_from_data(source_data.id, source_data.prompt_key)
-
+        prompt_file = source_data.prompt_file
         try:
-            config = LlmConfig.from_file(prompt_filename, data=scraped_text, model=self.ai_model)
-        except FileNotFoundError:
-            logger.error(f"プロンプトファイルが見つかりません: {prompt_filename}")
-            raise ValueError(f"プロンプトファイルが見つかりません: {prompt_filename}")
+            config = LlmConfig.from_file(prompt_file, data=scraped_text, model=self.ai_model)
         except Exception as e:
-            logger.exception(f"プロンプトファイル読み込みエラー: {prompt_filename}")
+            logger.exception(f"プロンプトファイル読み込みエラー: {prompt_file.filename}")
             raise e
 
         # AIクライアントの注入

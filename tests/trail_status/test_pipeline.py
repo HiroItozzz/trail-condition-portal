@@ -73,7 +73,7 @@ class TestPipeline:
                 id=1,
                 name="テスト山",
                 url1="https://example.com/test",
-                prompt_key="standard",
+                prompt_file=PromptFile(prompt="test"),
                 content_hash=None,
             )
         ]

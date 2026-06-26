@@ -88,8 +88,8 @@ class TestFromFile(SetUp):
         """プロンプト読み込みを含む結合テスト"""
         mock_path = self.create_file(tmp_path)
         monkeypatch.setattr(prompt_utils, "get_prompt_dir", MagicMock(return_value=tmp_path))
-
-        result = LlmConfig.from_file(mock_path.individual.name, self.data)
+        mock_prompt_file = PromptFile.load_merged_config(mock_path.individual.name)
+        result = LlmConfig.from_file(mock_prompt_file, self.data)
 
         expected_prompt = self.template_config["prompt"] + "\n\n" + self.individual_config["prompt"]
         assert result.prompt == expected_prompt

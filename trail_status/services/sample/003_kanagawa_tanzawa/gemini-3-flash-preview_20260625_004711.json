@@ -1,0 +1,100 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "T09_大倉尾根線",
+      "mountain_name_raw": "塔ノ岳",
+      "title": "通行できます",
+      "description": "見晴茶屋過ぎ。倒木撤去完了しました。",
+      "reported_at": "2026-06-17",
+      "resolved_at": null,
+      "status": "CLEAR",
+      "area": "TANZAWA",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/68091/tukodomekaijo.pdf",
+      "comment": "令和8年6月17日から通行可能。"
+    },
+    {
+      "trail_name": "T13_寄ユーシン線",
+      "mountain_name_raw": "雨山",
+      "title": "通行できません",
+      "description": "寄～雨山峠～雨山橋。登山道崩落（寄～雨山峠～雨山橋） 登山道の安全を確認中のため。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "TANZAWA",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/68091/tukodomekaijo.pdf",
+      "comment": "当面の間通行止め。"
+    },
+    {
+      "trail_name": "T22_同角山稜線",
+      "mountain_name_raw": "同角ノ頭",
+      "title": "通行できません",
+      "description": "ユーシン～同角分岐。登山道の安全を確認中のため。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "TANZAWA",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/68091/tukodomekaijo.pdf",
+      "comment": "当面の間通行止め。"
+    },
+    {
+      "trail_name": "T23_ユーシン塔ノ岳線",
+      "mountain_name_raw": "塔ノ岳",
+      "title": "通行できません",
+      "description": "塔ノ岳～尊仏ノ土平。登山道の安全を確認中のため。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "TANZAWA",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/68091/tukodomekaijo.pdf",
+      "comment": "当面の間通行止め。"
+    },
+    {
+      "trail_name": "T27_世附不老山線",
+      "mountain_name_raw": "不老山",
+      "title": "通行できます",
+      "description": "世附峠～芦沢橋。",
+      "reported_at": "2025-02-12",
+      "resolved_at": null,
+      "status": "CLEAR",
+      "area": "TANZAWA",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/68091/tukodomekaijo.pdf",
+      "comment": "令和7年2月12日から通行可能。"
+    },
+    {
+      "trail_name": "T37_平戸焼山線",
+      "mountain_name_raw": "焼山",
+      "title": "通行できます（一部ルートの変更）",
+      "description": "通行できます（一部ルートの変更）",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLEAR",
+      "area": "TANZAWA",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/68091/tukodomekaijo.pdf",
+      "comment": "一部ルートの変更あり。"
+    },
+    {
+      "trail_name": "神の川林道",
+      "mountain_name_raw": "檜洞丸",
+      "title": "通り抜けはご遠慮ください",
+      "description": "神ノ川公園橋付近から先は大変危険ですので、徒歩も含め林道の通り抜けはご遠慮ください。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "TANZAWA",
+      "reference_url": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/kouenhodou_top.html",
+      "comment": "詳細は林道管理者へ要問い合わせ。"
+    },
+    {
+      "trail_name": "神ノ川公衆便所",
+      "mountain_name_raw": "檜洞丸",
+      "title": "使用可能となりました",
+      "description": "神ノ川公衆便所が使用可能となりました。なお、山岳トイレの使用にあたっては、ルールとマナーを守ってご利用いただきますよう、引き続きご理解とご協力をお願いいたします。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "FACILITY",
+      "area": "TANZAWA",
+      "reference_url": "https://www.pref.kanagawa.jp/docs/f4y/02yama/kouen_kouenhodou/kouenhodou_top.html",
+      "comment": "トイレ使用ルール遵守の呼びかけあり。"
+    }
+  ]
+} 

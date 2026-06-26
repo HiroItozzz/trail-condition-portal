@@ -1,0 +1,70 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "上落合橋登山口から両神山山頂",
+      "mountain_name_raw": "両神山",
+      "title": "ツキノワグマによる人的被害防止のための通行止めについて",
+      "description": "ツキノワグマによる人的被害防止のため、通行止めとなっています。",
+      "reported_at": "2026-06-05",
+      "resolved_at": null,
+      "status": "ANIMAL",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/soshiki/b0504/tozanjoho/tsukokise/kamiotiaibasi.html"
+    },
+    {
+      "trail_name": "芋木ノドッケの分岐からオハヤシノ頭の間",
+      "mountain_name_raw": "芋木ノドッケ",
+      "title": "ツキノワグマによる人的被害防止のための通行止めについて",
+      "description": "ツキノワグマによる人的被害防止のため、通行止めとなっています。",
+      "reported_at": "2026-05-19",
+      "resolved_at": null,
+      "status": "ANIMAL",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/soshiki/b0504/tozanjoho/tsukokise/imonokidokke.html"
+    },
+    {
+      "trail_name": "川又十文字峠線",
+      "mountain_name_raw": "十文字峠",
+      "title": "【注意】川又十文字峠線／秩父市大滝地内の土砂崩落及び路肩崩落の発生について",
+      "description": "川又十文字峠線・柳避難小屋付近で、土砂崩落により登山道が埋まっている箇所があります。\nまた、入川軌道分岐から約2200m地点で、路肩が崩落している箇所があります。\n通行の際は、別ルートへ迂回するなど足元に十分注意して通行してください。\n沢筋のルートを利用する場合は、増水時には通行しないようお願いします。",
+      "reported_at": "2025-05-13",
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/kawamatajyuumonjitouge2.pdf"
+    },
+    {
+      "trail_name": "大輪三峰線（三峯神社表参道コース）",
+      "mountain_name_raw": "三峯神社",
+      "title": "【注意】大輪三峰線（三峯神社表参道コース）の通行注意について",
+      "description": "大輪三峰線（三峯神社表参道）で、倒木により橋が落ちている箇所があります。\n通行の際は、足元に十分注意し迂回をお願いします。\nまた、増水時には危険ですので通行しないようお願いします。",
+      "reported_at": "2025-03-25",
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/tyuuikannki2.pdf"
+    },
+    {
+      "trail_name": "大日向霧藻ヶ峰線",
+      "mountain_name_raw": "霧藻ヶ峰",
+      "title": "【注意】大日向霧藻ヶ峰線の一部区間の通行止めについて",
+      "description": "大血川溪流観光釣場から林道大血川線の交差までの間が通行止となっています。\n霧藻ヶ峰から大血川溪流観光釣場へ行くことはできません。",
+      "reported_at": "2025-01-10",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/hptuukoudome2.pdf"
+    },
+    {
+      "trail_name": "黒岩尾根線",
+      "mountain_name_raw": "黒岩尾根",
+      "title": "【注意】黒岩尾根線通行止め／秩父市大滝地内の木橋破損について",
+      "description": "黒岩尾根線・雁坂小屋手前付近で、木橋の破損が確認されました。\n通行の安全を確保できないため、当面の間通行止めとします。\n雁坂峠へは川又雁坂峠線または山梨県側から通行してください。",
+      "reported_at": "2024-10-09",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/kuroiwaonesen4.pdf"
+    }
+  ]
+}

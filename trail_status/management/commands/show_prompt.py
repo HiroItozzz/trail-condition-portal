@@ -27,7 +27,7 @@ class Command(BaseCommand):
             print(f"情報源IDの最大値: {DataSource.objects.aggregate(Max('pk'))['pk__max']}")
             sys.exit(1)
         prompt_key = source.prompt_key
-        filename = prompt_utils.get_prompt_filename_from_data(source_id, prompt_key)
+        filename = PromptFile.get_filename_from_data(source_id, prompt_key)
         config = PromptFile.load_merged_config(filename)
 
         print(config)

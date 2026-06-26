@@ -63,7 +63,7 @@ class LlmConfig(BaseModel):
             return "openai"
 
     @classmethod
-    def from_file(cls, prompt_filename: str, data: str, **cli_overrides) -> LlmConfig:
+    def from_file(cls, prompt_file: PromptFile, data: str, **cli_overrides) -> LlmConfig:
         """
         プロンプトファイルから設定を読み込んでインスタンス作成
 
@@ -75,7 +75,6 @@ class LlmConfig(BaseModel):
         Returns:
             LlmConfig: マージされた設定のインスタンス
         """
-        prompt_file: PromptFile = PromptFile.load_merged_config(prompt_filename)
         prompt_config: dict = prompt_file.config.model_dump() if prompt_file.config else {}
 
         # CLI > promptファイル > デフォルト の優先度
@@ -83,7 +82,7 @@ class LlmConfig(BaseModel):
         kwargs = {
             "prompt": prompt_file.prompt or "",
             "data": data,
-            "prompt_filename": prompt_filename,
+            "prompt_filename": prompt_file.filename,
         }
 
         # model設定の上書き

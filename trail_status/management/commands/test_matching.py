@@ -8,6 +8,7 @@ from django.db import transaction
 from trail_status.models import DataSource, TrailCondition
 from trail_status.services.db_writer import DbWriter
 from trail_status.services.llm_client import LlmConfig
+from trail_status.services.prompt_utils import PromptFile
 from trail_status.services.types import ConditionSchemaAiInternal, ResultSingle, SourceSchemaSingle
 
 logger = logging.getLogger(__name__)
@@ -221,12 +222,12 @@ class Command(BaseCommand):
             id=source.id,
             name=source.name,
             url1=source.url1,
-            prompt_key=source.prompt_key,
+            prompt_file=PromptFile.load_merged_config(source.prompt_filename, url=source.url1),
             content_hash=source.content_hash,
         )
 
         # LlmConfigをダミーで作成（照合ロジックで使用）
-        config = LlmConfig(model=model_name, data="", temperature=0)
+        config = LlmConfig(prompt="dummy", model=model_name, data="", temperature=0)
 
         # ResultSingle（最小限のダミー）
         result = ResultSingle(
