@@ -4,6 +4,7 @@ LlmConfig設定クラスのテスト
 
 from collections import namedtuple
 from unittest.mock import MagicMock
+from urllib.parse import urlparse
 
 import pytest
 import yaml
@@ -61,7 +62,7 @@ def test_api_key_missing_error(no_api_keys):
 class SetUp:
     def setup_method(self):
         self.template_config = {
-            "prompt": "テストプロンプト",
+            "prompt": "テストプロンプト {scheme}://{netloc}/",
             "config": {"model": "gemini-test-template", "temperature": 1.8, "thinking_budget": 20000},
         }
         self.individual_config = {
@@ -86,14 +87,23 @@ class SetUp:
 class TestFromFile(SetUp):
     def test_valid(self, mock_api_keys, tmp_path, monkeypatch):
         """プロンプト読み込みを含む結合テスト"""
+
+        root_url = "https://dummy.com/"
+        url = root_url + "u/r/i/"
+        parsed = urlparse(url)
+        expected_prompt = (
+            self.template_config["prompt"].format(scheme=parsed.scheme, netloc=parsed.netloc)
+            + "\n\n"
+            + self.individual_config["prompt"]
+        )
+
         mock_path = self.create_file(tmp_path)
         monkeypatch.setattr(prompt_utils, "get_prompt_dir", MagicMock(return_value=tmp_path))
-        mock_prompt_file = PromptFile.load_merged_config(mock_path.individual.name)
+        mock_prompt_file = PromptFile.load_merged_config(mock_path.individual.name, url)
         result = LlmConfig.from_file(mock_prompt_file, self.data)
 
-        expected_prompt = self.template_config["prompt"] + "\n\n" + self.individual_config["prompt"]
         assert result.prompt == expected_prompt
+        assert root_url in result.prompt
         assert result.thinking_budget == self.individual_config["config"]["thinking_budget"]
         assert result.temperature == self.individual_config["config"]["temperature"]
         assert result.api_key == "test-openai-key"
-        print(result)

@@ -58,7 +58,17 @@ class PromptFile(BaseModel):
         return f"{source_id:03d}_{prompt_key}.yaml"
 
     @classmethod
-    def load_merged_config(cls, filename: str, url: str | None = None) -> PromptFile:
+    def load_merged_config(cls, filename: str, url: str | None) -> PromptFile:
+        """個別プロンプトとテンプレートがマージされたLLMのための設定ファイルを返却
+
+        Args:
+            filename (str): プロンプト設定ファイル名
+            url (str | None): テンプレートファイル内の置換変数に適用するURL
+
+        Returns:
+            PromptFile: プロンプトファイルのインスタンス
+        """
+
         template_file = cls.load_template().model_copy(deep=True)
         individual_file = cls.load_site_config(filename)
 

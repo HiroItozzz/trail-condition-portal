@@ -59,7 +59,7 @@ prompt: |
   - 関連するリンク先URLは reference_url に格納
   - 相対パス（/...）→絶対パス（https://...）に修正
   - URIのルートURLは
-    {scheme}://{netloc}
+    {scheme}://{netloc}/
     です。（相対パスからリンクを復元する際に使用してください）
 
   ### 9. Web検索について

@@ -6,7 +6,6 @@ from django.core.management.base import BaseCommand
 from django.db.models import Max
 
 from trail_status.models import DataSource
-from trail_status.services import prompt_utils
 from trail_status.services.prompt_utils import PromptFile
 
 logger = logging.getLogger(__name__)
@@ -26,8 +25,6 @@ class Command(BaseCommand):
             print(f"情報源ID {source_id} は存在しません", file=sys.stderr)
             print(f"情報源IDの最大値: {DataSource.objects.aggregate(Max('pk'))['pk__max']}")
             sys.exit(1)
-        prompt_key = source.prompt_key
-        filename = PromptFile.get_filename_from_data(source_id, prompt_key)
-        config = PromptFile.load_merged_config(filename)
+        config = PromptFile.load_merged_config(source.prompt_filename, source.url1)
 
         print(config)

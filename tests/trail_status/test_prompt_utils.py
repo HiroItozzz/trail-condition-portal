@@ -1,6 +1,7 @@
 import copy
 from collections import namedtuple
 from unittest.mock import MagicMock
+from urllib.parse import urlparse
 
 import pytest
 import yaml
@@ -53,13 +54,21 @@ class TestUtils:
 
     def test_load_merged_config(self, mock_config):
         config, paths = mock_config
-        # プロンプトは結合
-        expected_prompt = config.template["prompt"] + "\n\n" + config.individual["prompt"]
+
+        root_url = "https://dummy.com/"
+        url = root_url + "u/r/i/"
+        parsed = urlparse(url)
+
+        expected_prompt = (
+            config.template["prompt"].format(scheme=parsed.scheme, netloc=parsed.netloc)
+            + "\n\n"
+            + config.individual["prompt"]
+        )
 
         expected_config = copy.deepcopy(config.individual)
         expected_config["prompt"] = expected_prompt
         expected_config["filename"] = paths.individual.name
 
-        result = PromptFile.load_merged_config(paths.individual.name)
+        result = PromptFile.load_merged_config(paths.individual.name, url)
 
         assert result == PromptFile(**expected_config)
