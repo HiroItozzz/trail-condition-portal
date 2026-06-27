@@ -267,6 +267,7 @@ class DbWriter:
                 db_record.description = matched_ai_record.description
                 db_record.status = matched_ai_record.status
                 db_record.comment = matched_ai_record.comment
+                db_record.reference_url = matched_ai_record.reference_url
                 db_record.reported_at = matched_ai_record.reported_at
                 db_record.resolved_at = matched_ai_record.resolved_at
                 db_record.ai_model = matched_ai_record.ai_model
