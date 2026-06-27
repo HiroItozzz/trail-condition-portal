@@ -1,9 +1,7 @@
 from django.db import models
-from django.utils import timezone
 
 from .mountain import AreaName, MountainGroup
 from .source import DataSource
-from .utils import ChoiceManager
 
 
 class StatusType(models.TextChoices):
@@ -26,7 +24,7 @@ class TrailCondition(models.Model):
         on_delete=models.PROTECT,
         verbose_name="情報源",
     )
-    url1 = models.URLField("情報源URL",max_length=500)
+    url1 = models.URLField("情報源URL", max_length=500)
 
     trail_name = models.CharField("登山道名・区間（原文）", max_length=50)
     mountain_name_raw = models.CharField("山名（原文）", default="", max_length=50, blank=True)
@@ -71,8 +69,6 @@ class TrailCondition(models.Model):
     disabled = models.BooleanField("情報の無効化（管理用）", default=False, help_text="[使用例] 誤情報だった場合ほか")
     created_at = models.DateTimeField("登録日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)
-
-    objects: ChoiceManager = ChoiceManager()
 
     class Meta:
         verbose_name = "登山道状態"

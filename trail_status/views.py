@@ -1,12 +1,12 @@
 import logging
 import urllib.parse
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict, defaultdict
 from datetime import timedelta
 from typing import override
 
 from django.db.models import Count, F, Max, Prefetch
 from django.utils import timezone
-from django.views.generic import ListView, DetailView
+from django.views.generic import DetailView, ListView
 
 from .models import AreaName, BlogFeed, DataSource, StatusType, TrailCondition
 
@@ -25,6 +25,7 @@ class SideBarMixin:
 
 class TrailListView(SideBarMixin, ListView):
     """登山道状況一覧ページ（トップページ）のビュー"""
+
     model = TrailCondition
     queryset = TrailCondition.objects.filter(disabled=False).prefetch_related("source")
     template_name = "trail_status/trail_list.html"
@@ -41,7 +42,7 @@ class TrailListView(SideBarMixin, ListView):
         context = super().get_context_data(**kwargs)
 
         base_conditions = self.get_queryset()
-        datasource = DataSource.objects.filter(data_format="WEB")
+        datasource = DataSource.web
 
         # クエリパラメータによる絞り込み
         if self.source_filter:
@@ -64,33 +65,39 @@ class TrailListView(SideBarMixin, ListView):
         # 新規追加情報源 = DataSource.created_atとTrailCondition.updated_atの差が1日以内
         seven_days_ago = timezone.now().date() - timedelta(days=7)
         # @formatter:off
-        recent_updated_sources = (self.get_queryset()
-                                   .values("source__name", "source__url1")
-                                   .annotate(
-                                       latest_date=Max("updated_at"),
-                                       source_created_at=F("source__created_at"),
-                                   # DataSourceの作成日とTrailConditionの最新更新日の差が1日以内のものを除外
-                                   ).filter(latest_date__gt=F("source_created_at") + timedelta(days=1))
-                                   .filter(latest_date__date__gte=seven_days_ago)
-                                   .order_by("-latest_date")
-                                )
+        recent_updated_sources = (
+            self.get_queryset()
+            .values("source__name", "source__url1")
+            .annotate(
+                latest_date=Max("updated_at"),
+                source_created_at=F("source__created_at"),
+                # DataSourceの作成日とTrailConditionの最新更新日の差が1日以内のものを除外
+            )
+            .filter(latest_date__gt=F("source_created_at") + timedelta(days=1))
+            .filter(latest_date__date__gte=seven_days_ago)
+            .order_by("-latest_date")
+        )
         # @formatter:on
 
         last_checked_at = datasource.aggregate(Max("last_checked_at"))["last_checked_at__max"]
 
-        context.update({"conditions": filtered_conditions,
-                        "current_source": current_source,
-                        "current_area": current_area,
-                        "current_status": current_status,
-                        "latest_update_date": latest_update_date,
-                        "recent_updated_sources": recent_updated_sources,
-                        "last_checked_at": last_checked_at,
-                        })
+        context.update(
+            {
+                "conditions": filtered_conditions,
+                "current_source": current_source,
+                "current_area": current_area,
+                "current_status": current_status,
+                "latest_update_date": latest_update_date,
+                "recent_updated_sources": recent_updated_sources,
+                "last_checked_at": last_checked_at,
+            }
+        )
         return context
 
 
 class TrailDetailView(SideBarMixin, DetailView):
     """登山道状況個別詳細ページのビュー"""
+
     model = TrailCondition
     template_name = "trail_status/detail.html"
     context_object_name = "item"
@@ -101,12 +108,12 @@ class TrailDetailView(SideBarMixin, DetailView):
 
         # ヤマレコ検索リンク生成
         yamareco_base_url = "https://www.yamareco.com/modules/yamareco/search_record.php"
-        yamareco_fixed_params = {'isphoto': 1, 'request': 1, 'submit': 'submit'}
+        yamareco_fixed_params = {"isphoto": 1, "request": 1, "submit": "submit"}
 
         yamareco_area_id = AreaName.get_yamareco_area_id(self.object.area)
         params = {
-            'place': self.object.mountain_name_raw,
-            'area': yamareco_area_id,
+            "place": self.object.mountain_name_raw,
+            "area": yamareco_area_id,
             **yamareco_fixed_params,
         }
 
@@ -116,8 +123,9 @@ class TrailDetailView(SideBarMixin, DetailView):
 
 class SourceListView(SideBarMixin, ListView):
     """情報源一覧ページのビュー"""
+
     model = DataSource
-    queryset = DataSource.objects.filter(data_format="WEB").order_by("organization_type", "id")
+    queryset = DataSource.web.order_by("organization_type", "id")
     template_name = "trail_status/sources.html"
 
     @override
@@ -134,21 +142,24 @@ class SourceListView(SideBarMixin, ListView):
 
 class BlogListView(SideBarMixin, ListView):
     """巡視ブログ一覧ページのビュー"""
+
     model = DataSource
     template_name = "trail_status/blogs.html"
 
     @override
     def get_queryset(self):
         # @formatter:off
-        queryset = (DataSource.objects.filter(data_format="BLOG")
-                     .prefetch_related(
-                         Prefetch(
-                             "blogfeed_set",
-                             queryset=BlogFeed.objects.filter(disabled=False).order_by("-published_at")[:4],
-                             to_attr="recent_feeds",
-                         )
-                     ).order_by("area_name", "id")
-                   )
+        queryset = (
+            DataSource.objects.filter(data_format="BLOG")
+            .prefetch_related(
+                Prefetch(
+                    "blogfeed_set",
+                    queryset=BlogFeed.objects.filter(disabled=False).order_by("-published_at")[:4],
+                    to_attr="recent_feeds",
+                )
+            )
+            .order_by("area_name", "id")
+        )
         # @formatter:on
         return queryset
 
@@ -205,11 +216,7 @@ def _get_sidebar_context() -> dict:
 
     # 情報源フィルター選択肢（データがある情報源のみ）
     source_counts = dict(base_conditions.values("source").annotate(count=Count("id")).values_list("source", "count"))
-    source_choices = [
-        (id, name)
-        for id, name in DataSource.objects.filter(data_format="WEB").get_choices()
-        if source_counts.get(id, 0) > 0
-    ]
+    source_choices = [(id, name) for id, name in DataSource.web.get_labels() if source_counts.get(id, 0) > 0]
 
     return {
         "source_choices": source_choices,

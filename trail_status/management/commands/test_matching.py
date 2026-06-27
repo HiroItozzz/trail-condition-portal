@@ -91,7 +91,7 @@ class Command(BaseCommand):
 
             # DataSourceを取得
             try:
-                source = DataSource.objects.filter(data_format="WEB").get(id=source_id)
+                source = DataSource.web.get(id=source_id)
             except DataSource.DoesNotExist:
                 self.stdout.write(self.style.WARNING(f"スキップ: DataSource ID {source_id} が見つかりません"))
                 continue

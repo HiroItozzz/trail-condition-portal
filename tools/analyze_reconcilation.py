@@ -1,5 +1,7 @@
 from pathlib import Path
+
 from trail_status.models import DataSource
+
 
 def _handle_all_sources(self, file_gen: int, ai_model: str, force_sync: bool):
     """全ての情報源について照合テストを実行"""
@@ -34,7 +36,7 @@ def _handle_all_sources(self, file_gen: int, ai_model: str, force_sync: bool):
 
         # DataSourceを取得
         try:
-            source = DataSource.objects.filter(data_format="WEB").get(id=source_id)
+            source = DataSource.web.get(id=source_id)
         except DataSource.DoesNotExist:
             self.stdout.write(self.style.WARNING(f"スキップ: DataSource ID {source_id} が見つかりません"))
             continue

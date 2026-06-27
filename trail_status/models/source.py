@@ -1,7 +1,8 @@
+from typing import Iterable
+
 from django.db import models
 
 from .mountain import AreaName
-from .utils import ChoiceManager
 
 
 class OrganizationType(models.TextChoices):
@@ -13,6 +14,14 @@ class OrganizationType(models.TextChoices):
     MOUNTAIN_HUT = "MOUNTAIN_HUT", "山小屋"
     SNS_USER = "SNS", "SNS/ユーザー投稿"
     OTHER = "OTHER", "その他"
+
+
+class WebSourceManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(data_format="WEB")
+
+    def get_labels(self) -> Iterable[tuple[int, str]]:
+        return self.values_list("id", "name").order_by("id")
 
 
 class DataSource(models.Model):
@@ -36,8 +45,14 @@ class DataSource(models.Model):
         default="WEB",
     )
 
-    area_name = models.CharField("山域", max_length=20, choices=AreaName.choices, default="", blank=True,
-                                 help_text="""巡視ブログのエリア名分類用に使用""")  # 例: 奥多摩
+    area_name = models.CharField(
+        "山域",
+        max_length=20,
+        choices=AreaName.choices,
+        default="",
+        blank=True,
+        help_text="""巡視ブログのエリア名分類用に使用""",
+    )  # 例: 奥多摩
 
     # ハッシュベース重複検出
     content_hash = models.CharField(
@@ -53,7 +68,8 @@ class DataSource(models.Model):
     created_at = models.DateTimeField("登録日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)
 
-    objects: ChoiceManager = ChoiceManager()
+    objects = models.Manager()
+    web = WebSourceManager()
 
     class Meta:
         verbose_name = "情報源"
