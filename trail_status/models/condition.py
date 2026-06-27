@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 from .mountain import AreaName, MountainGroup
 from .source import DataSource
@@ -69,6 +70,7 @@ class TrailCondition(models.Model):
     disabled = models.BooleanField("情報の無効化（管理用）", default=False, help_text="[使用例] 誤情報だった場合ほか")
     created_at = models.DateTimeField("登録日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)
+    synced_at = models.DateTimeField("バッチによる自動更新日時", null=True)
 
     class Meta:
         verbose_name = "登山道状態"
@@ -82,14 +84,3 @@ class TrailCondition(models.Model):
 
     def __str__(self):
         return f"{self.trail_name}: {self.status}"
-
-    # 既存情報もAIに投げる場合のメソッド
-    def get_raw_fields(self):
-        """AI投入用の原文フィールド"""
-        return {
-            "mountain_name_raw": self.mountain_name_raw,
-            "trail_name": self.trail_name,
-            "title": self.title,
-            "description": self.description,
-            "reported_at": self.reported_at,
-        }
