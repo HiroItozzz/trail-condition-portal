@@ -15,6 +15,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+import os
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -23,9 +25,8 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     path("", include("trail_status.urls")),
-    path("trail-p0rtal-dashboard/", admin.site.urls),
+    path(os.environ.get("DJANGO_ADMIN_PATH", "admin/"), admin.site.urls),
     path("scheduler/", include("scheduler.urls")),
-
     # このサイトについて
     path("about/", TemplateView.as_view(template_name="about.html"), name="about"),
     # サイトポリシー
