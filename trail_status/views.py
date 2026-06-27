@@ -51,7 +51,7 @@ class TrailListView(SideBarMixin, ListView):
             base_conditions = base_conditions.filter(area=self.area_filter)
         if self.status_filter:
             base_conditions = base_conditions.filter(status=self.status_filter)
-        # 報告日の降順で並べ替え（updated_atは表示用のみ）
+        # 報告日の降順で並べ替え
         filtered_conditions = base_conditions.order_by("-reported_at", "-created_at")
 
         current_source = self.source_filter
@@ -59,7 +59,7 @@ class TrailListView(SideBarMixin, ListView):
         current_status = self.status_filter
 
         # 最新の内容更新日（全情報源含む）
-        latest_update_date = self.get_queryset().aggregate(Max("updated_at"))["updated_at__max"]
+        latest_sync_date = self.get_queryset().aggregate(Max("synced_at"))["synced_at__max"]
 
         # 1週間以内の更新リスト（新規追加情報源は除外）
         # 新規追加情報源 = DataSource.created_atとTrailCondition.updated_atの差が1日以内
@@ -69,7 +69,7 @@ class TrailListView(SideBarMixin, ListView):
             self.get_queryset()
             .values("source__name", "source__url1")
             .annotate(
-                latest_date=Max("updated_at"),
+                latest_date=Max("synced_at"),
                 source_created_at=F("source__created_at"),
                 # DataSourceの作成日とTrailConditionの最新更新日の差が1日以内のものを除外
             )
@@ -87,7 +87,7 @@ class TrailListView(SideBarMixin, ListView):
                 "current_source": current_source,
                 "current_area": current_area,
                 "current_status": current_status,
-                "latest_update_date": latest_update_date,
+                "latest_sync_date": latest_sync_date,
                 "recent_updated_sources": recent_updated_sources,
                 "last_checked_at": last_checked_at,
             }
