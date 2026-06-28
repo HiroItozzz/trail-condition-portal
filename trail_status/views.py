@@ -42,7 +42,6 @@ class TrailListView(SideBarMixin, ListView):
         context = super().get_context_data(**kwargs)
 
         base_conditions = self.get_queryset()
-        datasource = DataSource.web
 
         # クエリパラメータによる絞り込み
         if self.source_filter:
@@ -79,7 +78,7 @@ class TrailListView(SideBarMixin, ListView):
         )
         # @formatter:on
 
-        last_checked_at = datasource.aggregate(Max("last_checked_at"))["last_checked_at__max"]
+        last_checked_at = DataSource.web.aggregate(Max("last_checked_at"))["last_checked_at__max"]
 
         context.update(
             {
@@ -125,7 +124,7 @@ class SourceListView(SideBarMixin, ListView):
     """情報源一覧ページのビュー"""
 
     model = DataSource
-    queryset = DataSource.web.order_by("organization_type", "id")
+    queryset = DataSource.web.all().order_by("organization_type", "id")
     template_name = "trail_status/sources.html"
 
     @override

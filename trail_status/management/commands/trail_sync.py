@@ -93,7 +93,7 @@ class Command(BaseCommand):
                     prompt_file=PromptFile.load_merged_config(s.prompt_filename, url=s.url1),
                     content_hash=s.content_hash,
                 )
-                for s in DataSource.web
+                for s in DataSource.web.all()
             ]
             self.stdout.write(f"全ての情報源を処理: {len(source_data_list)}件")
 
