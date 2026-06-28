@@ -48,6 +48,7 @@ class Command(BaseCommand):
             f"trail_sync コマンド開始 - source_id: {source_id}, model: {ai_model}, dry_run: {dry_run}, new_hash: {new_hash_mode}"
         )
 
+        # ───────── Step1 基本コマンドライン引数の処理 ─────────
         if new_hash_mode:
             self.stdout.write(
                 self.style.WARNING("NEW-HASHモード: 更新のないサイトデータも変更されます。本当に実行しますか？")
@@ -60,7 +61,28 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(self.style.WARNING("DRY-RUNモード: DBには保存されません"))
 
-        # 処理対象の情報源を取得（事前にデータを準備）
+        # ───────── Step2 処理対象の情報源をDBから取得 ─────────
+        source_data_list = self.setup_data_source(source_id)
+        if source_data_list is None:
+            return
+
+        # ───────── Step3 スクレイピング・名寄せ処理を実行（非同期） ─────────
+        processor = AiPipeline(
+            source_data_list, client_factory=self.default_client_factory, ai_model=ai_model, new_hash_mode=new_hash_mode
+        )
+        all_source_results: UpdatedDataList = asyncio.run(processor.run())
+
+        # ───────── Step4 DB保存・スラック通知（同期処理） ─────────
+        if not dry_run:
+            for source_data, result_by_source in all_source_results:
+                self.process_result(source_data, result_by_source, new_hash_mode=new_hash_mode)
+
+        # ───────── Step5 結果サマリーをコンソールに表示 ─────────
+        summary = self.generate_summary(all_source_results)
+        self.print_summary(summary)
+
+    def setup_data_source(self, source_id: int | None) -> list[SourceSchemaSingle]:
+        """処理対象の情報源をDBから取得"""
         if source_id:
             try:
                 source = DataSource.objects.get(id=source_id)
@@ -96,65 +118,57 @@ class Command(BaseCommand):
                 for s in DataSource.web.all()
             ]
             self.stdout.write(f"全ての情報源を処理: {len(source_data_list)}件")
+        return source_data_list
 
-        # パイプライン処理を実行（純粋にasync処理のみ）
-        processor = AiPipeline(
-            source_data_list, client_factory=self.default_client_factory, ai_model=ai_model, new_hash_mode=new_hash_mode
-        )
-        all_source_results: UpdatedDataList = asyncio.run(processor.run())
+    def process_result(
+        self, source_data: SourceSchemaSingle, result_by_source: ResultSingle | BaseException, new_hash_mode
+    ) -> None:
+        """DB保存・スラック通知の処理"""
 
-        # DB保存（同期処理）
-        if not dry_run:
-            for source_data, result_by_source in all_source_results:
-                if isinstance(result_by_source, ResultSingle) and result_by_source.success:
-                    writer = DbWriter(source_data, result_by_source)
-                    writer.save_to_source()
+        if isinstance(result_by_source, ResultSingle) and result_by_source.success:
+            writer = DbWriter(source_data, result_by_source)
+            writer.save_to_source()
 
-                    if not result_by_source.content_changed:
-                        if not new_hash_mode:
-                            self.stdout.write(
-                                self.style.WARNING(f"コンテンツ変更なし: {source_data.name} - LLM処理スキップ")
-                            )
-                            continue
-                        else:
-                            logger.info("NEW-HASHモード: 既存データと再度照合します")
-
-                    db_result = writer.persist_condition_and_usage()
-
-                    self.stdout.write(
-                        self.style.SUCCESS(
-                            f"DB保存完了: {db_result['name']}\n更新: {db_result['updated']}件 - 新規作成: {db_result['created']}件 - 計: {db_result['count']}件 (コスト: ${db_result['cost']:.4f})"
-                        )
-                    )
-
-                    # Slack通知を送信（ハッシュ更新検知時）
-                    if db_result["updated"] > 0 or db_result["created"] > 0:
-                        notifier = SlackNotifier()
-                        notifier.send_update_notification(
-                            source_name=db_result["name"],
-                            updated_count=db_result["updated"],
-                            created_count=db_result["created"],
-                            total_count=db_result["count"],
-                            cost=db_result["cost"],
-                        )
+            if not result_by_source.content_changed:
+                if not new_hash_mode:
+                    self.stdout.write(self.style.WARNING(f"コンテンツ変更なし: {source_data.name} - LLM処理スキップ"))
+                    return
                 else:
-                    # 失敗時のSlack通知
-                    notifier = SlackNotifier()
-                    if isinstance(result_by_source, ResultSingle):
-                        error_message = result_by_source.message
-                    else:
-                        error_message = f"予期せぬエラー: {result_by_source}"
-                    notifier.send_error_notification(
-                        source_name=source_data.name,
-                        error_message=error_message,
-                    )
+                    logger.info("NEW-HASHモード: 既存データと再度照合します")
 
-        # 結果サマリーを表示
-        summary = self.generate_summary(all_source_results)
-        self.print_summary(summary)
+            db_result = writer.persist_condition_and_usage()
+
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"DB保存完了: {db_result['name']}\n更新: {db_result['updated']}件 - 新規作成: {db_result['created']}件 - 計: {db_result['count']}件 (コスト: ${db_result['cost']:.4f})"
+                )
+            )
+
+            # Slack通知を送信（ハッシュ更新検知時）
+            if db_result["updated"] > 0 or db_result["created"] > 0:
+                notifier = SlackNotifier()
+                notifier.send_update_notification(
+                    source_name=db_result["name"],
+                    updated_count=db_result["updated"],
+                    created_count=db_result["created"],
+                    total_count=db_result["count"],
+                    cost=db_result["cost"],
+                )
+        else:
+            # 失敗時のSlack通知
+            notifier = SlackNotifier()
+            if isinstance(result_by_source, ResultSingle):
+                error_message = result_by_source.message
+            else:
+                error_message = f"予期せぬエラー: {result_by_source}"
+            notifier.send_error_notification(
+                source_name=source_data.name,
+                error_message=error_message,
+            )
 
     @staticmethod
     def default_client_factory(config: LlmConfig) -> ConversationalAi:
+        """AI処理のインスタンスのファクトリメソッド"""
         if config.model.startswith("deepseek"):
             ai_client = DeepseekClient(config)
         elif config.model.startswith("gemini"):
