@@ -6,6 +6,7 @@ import os
 from collections import namedtuple
 from unittest.mock import AsyncMock, MagicMock
 
+import httpx
 import pytest
 import yaml
 
@@ -102,9 +103,7 @@ def mock_async_client(monkeypatch):
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=None)
 
-    # 4. パッチを当てる
-    # pipeline.py の中で import httpx しているので、そこを狙い撃ちする
-    monkeypatch.setattr("trail_status.services.pipeline.httpx.AsyncClient", mock_factory)
+    monkeypatch.setattr(httpx, "AsyncClient", mock_factory)
 
     return mock_client
 

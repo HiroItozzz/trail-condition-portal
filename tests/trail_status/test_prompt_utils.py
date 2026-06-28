@@ -45,12 +45,46 @@ class TestUtils:
         result = PromptFile.load_site_config(paths.individual.name)
         assert result == PromptFile(**config.individual)
 
-    def test_load_site_and_template_config(self, mock_config):
+    def test_site_config_file_not_exists(self, tmp_path):
+        dummy_path = tmp_path / "dummy.yaml"
+        result = PromptFile.load_site_config(dummy_path)
+
+        result_text = dummy_path.read_text()
+
+        assert result == PromptFile()
+        assert dummy_path.exists()
+        assert all(s in result_text for s in ["prompt:", "config:", "use_template: true"])
+
+    def test_site_config_config_dict_is_None(self, mock_config):
+        _, paths = mock_config
+        paths.individual.write_text("")
+
+        result = PromptFile.load_site_config(paths.individual.name)
+
+        assert result == PromptFile()
+
+
+    def test_load_template(self, mock_config):
         """プロンプトファイル読み込みのテスト"""
         config, paths = mock_config
         result = PromptFile.load_template(paths.template.name)
 
         assert result == PromptFile(**config.template)
+
+    def test_load_template_not_exists(self):
+        """プロンプトファイル読み込みのテスト"""
+
+        with pytest.raises(FileNotFoundError):
+            PromptFile.load_template("dummy_path")
+
+    def test_load_template_prompt_not_set(self, mock_config):
+        config, paths = mock_config
+        del config.template["prompt"]
+        with open(paths.template, "w") as f:
+            yaml.safe_dump(config.template, f, encoding="utf-8")
+
+        with pytest.raises(ValueError):
+            PromptFile.load_template(paths.template.name)
 
     def test_load_merged_config(self, mock_config):
         config, paths = mock_config
@@ -72,3 +106,24 @@ class TestUtils:
         result = PromptFile.load_merged_config(paths.individual.name, url)
 
         assert result == PromptFile(**expected_config)
+
+    def test_load_merged_config_use_template_false(self, mock_config):
+        config, paths = mock_config
+        config.individual["config"]["use_template"] = False
+        paths.individual.write_text(yaml.safe_dump(config.individual), encoding="utf-8")
+
+        result = PromptFile.load_merged_config(paths.individual, url="dummy")
+
+        assert result == PromptFile(**config.individual)
+
+    def test_str(self, mock_config, capsys):
+        _, path = mock_config
+        prompt_file = PromptFile.load_merged_config(path.individual.name, url="https://dummy.com/")
+
+        print(prompt_file)
+
+        out, _ = capsys.readouterr()
+
+        expected_words = ["ファイル名", "モデル", "温度", "思考予算", "テンプレートの使用", "プロンプト"]
+
+        assert all(w in out for w in expected_words)
