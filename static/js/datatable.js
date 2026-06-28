@@ -1,13 +1,12 @@
-console.log("jQuery版:", $.fn.jquery);
-console.log("DataTables有無:", !!$.fn.DataTable);
-console.log("Responsive有無:", !!$.fn.DataTable.Responsive);
-
 const isMobile = window.innerWidth <= 768;
 const pageLength = isMobile ? 20 : 15;
 
 var table = $("#trail-table").DataTable({
   dom: '<"datatable-header"<"dt-row1"f><"dt-row2"<"resolved-filter">l>>rtip',
-  order: [[1, "desc"], [6, "desc"]],
+  order: [
+    [1, "desc"],
+    [6, "desc"],
+  ],
   language: {
     url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/ja.json",
   },
@@ -89,7 +88,7 @@ var table = $("#trail-table").DataTable({
     { width: "60px", targets: 1, className: "text-center" },
     { width: "65px", targets: 3, className: "text-center" },
   ],
-  // ↓↓↓ ここを追加 ↓↓↓
+
   initComplete: function () {
     // チェックボックス
     var hasRecentSources = $("#trail-table").data("has-recent-sources") === true;
@@ -104,11 +103,9 @@ var table = $("#trail-table").DataTable({
         '<input type="checkbox" id="include-new-sources" class="w-4 h-4 rounded" checked>' +
         "<span>新規情報源を含む</span>" +
         "</label>";
-    }
-
-    else {
-    filtersHtml +=
-      '<label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap" style="margin-left: 4px;">' +
+    } else {
+      filtersHtml +=
+        '<label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap" style="margin-left: 4px;">' +
         '<input type="checkbox" id="exclude-resolved" class="w-4 h-4 rounded" checked>' +
         "<span>解消済除く</span>" +
         "</label>";
@@ -131,5 +128,7 @@ var table = $("#trail-table").DataTable({
         "</select>" +
         "</div>",
     );
+
+    $("#trail-table").css("visibility", "visible");
   },
 });
