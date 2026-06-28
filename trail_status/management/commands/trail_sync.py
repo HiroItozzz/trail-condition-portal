@@ -106,7 +106,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(f"指定された情報源が見つかりません: {source_id}"))
                 return
         else:
-            # CLI引数なしの場合すべての情報源を処理リストに追加
+            # CLI引数なしの場合、data_format='WEB'のすべての情報源を処理リストに追加
             source_data_list = [
                 SourceSchemaSingle(
                     id=s.id,
