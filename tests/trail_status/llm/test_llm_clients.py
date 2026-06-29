@@ -18,15 +18,15 @@ def config(mock_api_keys, sample_llm_config):
 def test_deepseek_client_initialization(config):
     """DeepSeekクライアントの初期化テスト"""
     client = DeepseekClient(config)
-    assert client.model == "deepseek-chat"
-    assert client.temperature == 0.3
-    assert client.prompt == "テスト用プロンプト"
+    assert client.config.model == "deepseek-chat"
+    assert client.config.temperature == 0.3
+    assert client.config.prompt == "テスト用プロンプト"
 
 
 def test_prompt_generation(config):
     """プロンプト生成テスト"""
     client = DeepseekClient(config)
-    prompt = client.prompt_for_deepseek
+    prompt = client.prompt_with_data
 
     # JSON Schema指示が含まれているかチェック
     assert "Pydanticモデル" in prompt
