@@ -20,6 +20,11 @@ def clear_cache():
     yield
 
 
+@pytest.fixture(autouse=True)
+def deactivate_langsmith(monkeypatch):
+    monkeypatch.setenv("LANGSMITH_TRACING", "false")
+
+
 @pytest.fixture
 def _mock_config():
     template_config = {
