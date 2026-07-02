@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 import yaml
 from django.conf import settings
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic.alias_generators import to_camel
 
 from .types import LlmModel
@@ -42,9 +42,15 @@ class PromptFileConfig(BaseModel):
 
 
 class PromptFile(BaseModel):
-    prompt: str | None = None
+    prompt: str = ""
     config: PromptFileConfig = PromptFileConfig(use_template=True)
     filename: str | None = None
+
+    @field_validator("prompt", mode="before")
+    def convert_none_to_empty_string(cls, v: str | None) -> str:
+        if v is None:
+            return ""
+        return v
 
     @staticmethod
     def _format_url(prompt: str, url: str) -> str:
@@ -77,7 +83,7 @@ class PromptFile(BaseModel):
         if use_template is False:
             return individual_file
 
-        if url is not None:
+        if template_file.prompt and url:
             template_file.prompt = cls._format_url(template_file.prompt, url)
 
         template_file.prompt += "\n\n" + individual_file.prompt if individual_file.prompt else ""
@@ -152,15 +158,15 @@ class PromptFile(BaseModel):
                 logger.warning(f"プロンプトファイルを作成しました。ファイル名: {filename}")
             except Exception:
                 logger.error("サイト別プロンプトファイルの作成に失敗。example.yamlを確認してください")
-            return cls()
+            return cls(filename=filename)
 
         config_dict = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
 
         if config_dict is None:
             logger.warning(f"サイト別プロンプトに記載がありません。ファイル名: {filename}")
-            return cls()
+            return cls(filename=filename)
 
-        return cls(**config_dict)
+        return cls(**config_dict, filename=filename)
 
     def __str__(self):
         prompt = self.prompt

@@ -5,7 +5,7 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import Any, final, override
 
 from django.conf import settings
 from langsmith import traceable
@@ -29,7 +29,7 @@ class LlmConfig(BaseModel):
         default=0.5, ge=0, le=2.0, description="生成ごとの揺らぎの幅（※ deepseek-reasonerでは無視される）"
     )
     thinking_budget: int = Field(default=10000, ge=-1, le=15000, description="Geminiの思考予算（トークン数）")
-    prompt_filename: str | None = Field(default=None, description="プロンプトファイル名")
+    prompt_filename: str = Field(default="No_files", description="プロンプトファイル名")
     allow_websearch: bool = Field(default=True, description="Gemini, OpenAIでWeb検索を許可するかどうか")
 
     @computed_field(repr=False)
@@ -123,98 +123,106 @@ class ConversationalAi(ABC):
     MAX_RETRIES = 3
 
     def __init__(self, config: LlmConfig):
-        self.model: str = config.model
-        self.temperature: float = config.temperature
-        self.prompt: str = config.prompt
-        self.data: str = config.data
-        self.api_key: str = config.api_key
-        self.thinking_budget: int = config.thinking_budget
-        self.prompt_filename: str = config.prompt_filename or "No_files"
-        self.provider: str | None = config.provider
-        self.websearch: bool = config.allow_websearch
-        self._config: LlmConfig | None = config
+        self.config: LlmConfig = config
+
+    @property
+    @abstractmethod
+    def prompt_with_data(self) -> Any:
+        """指示とデータを各モデルにあわせマージした最終的なプロンプト"""
 
     async def generate(self) -> tuple[ConditionSchemaAiList, TokenStats]:
-        @traceable(
+        """LangSmithでトレースされたLLM呼び出し（メイン処理）
+
+        Returns:
+            tuple[ConditionSchemaAiList, TokenStats]: LLMの出力とトークン使用量の統計
+        """
+        traced = traceable(
             run_type="llm",
-            name=f"{self.prompt_filename}_{self.model.capitalize()}",
+            name=f"{self.config.prompt_filename}_{self.config.model.capitalize()}",
             metadata={
-                "ls_provider": self.provider,
-                "ls_model_name": self.model,
-                "ls_temperature": self.temperature,
-                "ls_max_tokens": self.thinking_budget,
+                "ls_provider": self.config.provider,
+                "ls_model_name": self.config.model,
+                "ls_temperature": self.config.temperature,
+                "ls_max_tokens": self.config.thinking_budget,
             },
-        )
-        async def _run() -> tuple[ConditionSchemaAiList, TokenStats]:
-            """LangSmithのデコレータを定義するためだけの関数内関数
+        )(self._generate)
 
-            Returns:
-                tuple[ConditionSchemaAiList, TokenStats]
-            """
-            for i in range(self.MAX_RETRIES):
-                logger.info(f"{self.model}の応答を待っています。")
-                logger.debug(f"LlmConfig詳細： \n{self._config}")
-                logger.debug(f"APIキー: ...{self.api_key[-5:]}")
+        return await traced()
 
-                try:
-                    raw_response = await self._call_api()  # 各クライアントで実装されるAPI呼び出し
-                    response_text = self._extract_text(raw_response)  # 各クライアントで実装されるテキスト抽出
-                    validated_data = self._get_validated_data(raw_response)  # 共通のバリデーション
-                    break
-                except ValidationError as e:
-                    await self.validation_error(e, i, self.MAX_RETRIES, response_text)
-                except Exception as e:
-                    await self._handle_exceptions(e, i, self.MAX_RETRIES)
+    @final
+    async def _generate(self) -> tuple[ConditionSchemaAiList, TokenStats]:
+        """LLM呼び出しのメイン処理
 
-            # AI出力の保存設定
-            if os.getenv("SAVE_AI_OUTPUTS") in ["True", "true", "t"]:
-                self.save_sample_data(response_text)
-            stats = self._create_token_stats(raw_response)  # 共通のトークン統計作成関数
+        Returns:
+            tuple[ConditionSchemaAiList, TokenStats]: LLMの出力とトークン使用量の統計
+        """
+        for i in range(self.MAX_RETRIES):
+            logger.info(f"{self.config.model}の応答を待っています。")
+            logger.debug(f"LlmConfig詳細： \n{self.config}")
+            logger.debug(f"APIキー: ...{self.config.api_key[-5:]}")
 
-            logger.debug("ConversationalAiの処理終了")
-            return validated_data, stats
+            try:
+                raw_response = await self._call_api()  # 各クライアントで実装されるAPI呼び出し
+                response_text = self._extract_text(raw_response)  # 各クライアントで実装されるテキスト抽出
+                validated_data = self._get_validated_data(raw_response)  # 共通のバリデーション
+                break
+            except ValidationError as e:
+                await self.validation_error(e, i, self.MAX_RETRIES, response_text)
+            except Exception as e:
+                await self._handle_exceptions(e, i, self.MAX_RETRIES)
 
-        return await _run()
+        # AI出力の保存設定
+        if os.getenv("SAVE_AI_OUTPUTS") in ["True", "true", "t"]:
+            self.save_sample_data(response_text)
+        stats = self._create_token_stats(raw_response)  # 共通のトークン統計作成関数
 
-    @abstractmethod
-    async def _call_api(self) -> Any: ...
-
-    @abstractmethod
-    def _extract_text(self, raw_response: Any) -> str: ...
+        logger.debug("ConversationalAiの処理終了")
+        return validated_data, stats
 
     @abstractmethod
-    def _get_validated_data(self, raw_response: Any) -> ConditionSchemaAiList: ...
+    async def _call_api(self) -> Any:
+        """LLMConfigを利用しLLMを呼び出す抽象メソッド"""
 
     @abstractmethod
-    def _create_token_stats(self, raw_response: Any) -> TokenStats: ...
+    def _extract_text(self, raw_response: Any) -> str:
+        """LLMのAPIコールの生のレスポンスオブジェクトを受取りテキストを返す抽象メソッド"""
 
     @abstractmethod
-    async def _handle_exceptions(self, e: Exception, retry_count: int, max_retries: int) -> None: ...
+    def _get_validated_data(self, raw_response: Any) -> ConditionSchemaAiList:
+        """LLMのAPIコールの生のレスポンスオブジェクトを受取りPydanticモデルを返す抽象メソッド"""
+
+    @abstractmethod
+    def _create_token_stats(self, raw_response: Any) -> TokenStats:
+        """LLMのAPIコールの生のレスポンスオブジェクトを受取り、トークンの統計情報を返す抽象メソッド"""
+
+    @abstractmethod
+    async def _handle_exceptions(self, e: Exception, retry_count: int, max_retries: int) -> None:
+        """LLMのAPIコール時のバリデーションエラー以外の例外処理を行う抽象メソッド"""
 
     # サーバーエラーとバリデーションエラー時のみリトライ
     async def handle_server_error(self, e, i, max_retries):
         if i < max_retries - 1:
-            logger.warning(f"{self.model}の計算資源が逼迫しているようです。{3 ** (i + 1)}秒後にリトライします。")
+            logger.warning(f"{self.config.model}の計算資源が逼迫しているようです。{3 ** (i + 1)}秒後にリトライします。")
             await asyncio.sleep(3 ** (i + 1))
         else:
-            logger.error(f"{self.model}は現在過負荷のようです。少し時間をおいて再実行する必要があります。")
+            logger.error(f"{self.config.model}は現在過負荷のようです。少し時間をおいて再実行する必要があります。")
             logger.error("実行を中止します。")
             raise e
 
     async def validation_error(self, e, i, max_retries, response_text) -> None:
         if i < max_retries - 1:
-            logger.warning(f"{self.model}が構造化出力に失敗。")
-            self.temperature += 0.1
-            logger.warning(f"Temperatureを0.1上げてリトライします。更新後のTemperature: {self.temperature}")
-            if self.temperature == 0.0:
+            logger.warning(f"{self.config.model}が構造化出力に失敗。")
+            self.config.temperature += 0.1
+            logger.warning(f"Temperatureを0.1上げてリトライします。更新後のTemperature: {self.config.temperature}")
+            if self.config.temperature == 0.0:
                 logger.warning(
                     "Temperature=0は毎回同じ出力（＝構造化失敗）となります。設定を0.1以上にすることを検討してください"
                 )
-            logger.warning(f"設定ファイル名:{self.prompt_filename!r}")
+            logger.warning(f"設定ファイル名:{self.config.prompt_filename!r}")
             logger.warning("3秒後にリトライします")
             await asyncio.sleep(3)
         else:
-            logger.error(f"{self.model}が{max_retries}回構造化出力に失敗。LLMの設定を見直してください。")
+            logger.error(f"{self.config.model}が{max_retries}回構造化出力に失敗。LLMの設定を見直してください。")
             self.save_invalid_data(response_text)
             logger.error("実行を中止します。")
             raise e
@@ -235,11 +243,11 @@ class ConversationalAi(ABC):
         # デバッグ用：サンプル出力を保存
         from datetime import datetime
 
-        output_dir = prompt_utils.get_sample_dir() / Path(self.prompt_filename).stem
+        output_dir = prompt_utils.get_sample_dir() / Path(self.config.prompt_filename).stem
         output_dir.mkdir(exist_ok=True)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_path = output_dir / f"{self.model}_{timestamp}.json"
+        output_path = output_dir / f"{self.config.model}_{timestamp}.json"
         output_path.write_text(response_text, encoding="utf-8")
 
     def save_invalid_data(self, response_text: str):
@@ -250,41 +258,141 @@ class ConversationalAi(ABC):
         output_dir.mkdir(exist_ok=True)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        error_file = output_dir / f"validation_error_{self.model}_{self.prompt_filename}_{timestamp}.txt"
+        error_file = output_dir / f"validation_error_{self.config.model}_{self.config.prompt_filename}_{timestamp}.txt"
         error_file.write_text(response_text, encoding="utf-8")
 
         logger.error(f"{error_file}へ出力を保存しました。")
+
+
+class GeminiClient(ConversationalAi):
+    from google.genai.types import GenerateContentResponse
+
+    @property
+    @override
+    def prompt_with_data(self) -> str:
+        return self.config.prompt + "\n\n\n" + self.config.data
+
+    @override
+    async def _call_api(self) -> GenerateContentResponse:
+        from google import genai
+        from google.genai import types
+        from langsmith.wrappers import wrap_gemini
+
+        # api_key引数なしでも、環境変数"GEMNI_API_KEY"の値を勝手に参照するが、可読性のため代入
+        client = wrap_gemini(
+            genai.Client(http_options=types.HttpOptions(timeout=120 * 1000))  # 2分
+        )
+
+        # 検索許可設定
+        search_tool = types.Tool(google_search=types.GoogleSearch()) if self.config.allow_websearch else None
+
+        response = await client.aio.models.generate_content(  # リクエスト
+            model=self.config.model,
+            contents=self.prompt_with_data,
+            config=types.GenerateContentConfig(
+                temperature=self.config.temperature,
+                response_mime_type="application/json",  # 構造化出力
+                response_json_schema=ConditionSchemaAiList.model_json_schema(),
+                thinking_config=types.ThinkingConfig(thinking_budget=self.config.thinking_budget),
+                tools=[search_tool],
+            ),
+        )
+        return response
+
+    @override
+    def _extract_text(self, raw_response: GenerateContentResponse) -> str:
+        return raw_response.text or ""
+
+    @override
+    @traceable
+    def _get_validated_data(self, raw_response: GenerateContentResponse) -> ConditionSchemaAiList:
+        """AI出力データのバリデーション"""
+        try:
+            validated_data = ConditionSchemaAiList.model_validate_json(self._extract_text(raw_response))
+            logger.info(f"{self.config.model}が構造化出力に成功")
+        except ValidationError as e:
+            raise e
+        return validated_data
+
+    @override
+    def _create_token_stats(self, raw_response: GenerateContentResponse) -> TokenStats:
+        for part in raw_response.candidates[0].content.parts:
+            if not part.text:
+                continue
+            elif part.thought:
+                logger.debug("## **Thoughts summary:**")
+                logger.debug(part.text)
+            else:
+                logger.debug("## **Answer:**")
+                logger.debug(part.text)
+
+        # Noneチェック
+        if raw_response.usage_metadata:
+            prompt_tokens = raw_response.usage_metadata.prompt_token_count or 0
+            thoughts_tokens = getattr(raw_response.usage_metadata, "thoughts_token_count", 0) or 0
+            output_tokens = raw_response.usage_metadata.candidates_token_count or 0
+        else:
+            logger.warning("Gemini API response did not include usage metadata.")
+            prompt_tokens = 0
+            thoughts_tokens = 0
+            output_tokens = 0
+
+        stats = TokenStats(
+            prompt_tokens,
+            thoughts_tokens,
+            output_tokens,
+            len(self.config.prompt),
+            len(raw_response.text or ""),
+            self.config.model,
+        )
+        return stats
+
+    @override
+    async def _handle_exceptions(self, e: Exception, retry_count: int, max_retries: int) -> None:
+        from google.genai.errors import ClientError, ServerError
+
+        if isinstance(e, ServerError):
+            await self.handle_server_error(e, retry_count, max_retries)
+        elif isinstance(e, ClientError):
+            self.handle_client_error(e)
+        else:
+            self.handle_unexpected_error(e)
 
 
 class DeepseekClient(ConversationalAi):
     from openai.types.chat import ChatCompletion
 
     @property
-    def prompt_for_deepseek(self):
+    @override
+    def prompt_with_data(self) -> str:
         STATEMENT = f"【重要】次の行から示す要請はこのPydanticモデルに合うJSONで出力してください: {ConditionSchemaAiList.model_json_schema()}\n"
-        return STATEMENT + self.prompt + "\n\n\n" + self.data
+        return STATEMENT + self.config.prompt + "\n\n\n" + self.config.data
 
+    @override
     async def _call_api(self) -> ChatCompletion:
+        import openai
         from langsmith.wrappers import wrap_openai
-        from openai import AsyncOpenAI
 
-        client = wrap_openai(AsyncOpenAI(api_key=self.api_key, base_url="https://api.deepseek.com"))
+        client = wrap_openai(openai.AsyncOpenAI(api_key=self.config.api_key, base_url="https://api.deepseek.com"))
 
         response = await client.chat.completions.create(
-            model=self.model,
-            temperature=self.temperature,
-            messages=[{"role": "user", "content": self.prompt_for_deepseek}],
+            model=self.config.model,
+            temperature=self.config.temperature,
+            messages=[{"role": "user", "content": self.prompt_with_data}],
             response_format={"type": "json_object"},
             stream=False,
         )
         return response
 
+    @override
     def _extract_text(self, raw_response: ChatCompletion) -> str:
         return raw_response.choices[0].message.content or ""
 
+    @override
     def _get_validated_data(self, raw_response: ChatCompletion) -> ConditionSchemaAiList:
         return ConditionSchemaAiList.model_validate_json(self._extract_text(raw_response))
 
+    @override
     def _create_token_stats(self, raw_response: ChatCompletion) -> TokenStats:
         # Noneチェック
         if raw_response.usage:
@@ -304,12 +412,13 @@ class DeepseekClient(ConversationalAi):
             prompt_tokens,
             thoughts_tokens,
             output_tokens,
-            len(self.prompt_for_deepseek),
+            len(self.prompt_with_data),
             len(self._extract_text(raw_response)),
-            self.model,
+            self.config.model,
         )
         return stats
 
+    @override
     async def _handle_exceptions(self, e: Exception, retry_count: int, max_retries: int) -> None:
         if any(code in str(e) for code in ["500", "502", "503"]):
             await self.handle_server_error(e, retry_count, max_retries)
@@ -332,135 +441,51 @@ class DeepseekClient(ConversationalAi):
             self.handle_unexpected_error(e)
 
 
-class GeminiClient(ConversationalAi):
-    from google.genai.types import GenerateContentResponse
-
-    @property
-    def prompt_for_gemini(self):
-        return self.prompt + "\n\n\n" + self.data
-
-    async def _call_api(self) -> GenerateContentResponse:
-        from google import genai
-        from google.genai import types
-        from langsmith.wrappers import wrap_gemini
-
-        # api_key引数なしでも、環境変数"GEMNI_API_KEY"の値を勝手に参照するが、可読性のため代入
-        client = wrap_gemini(
-            genai.Client(http_options=types.HttpOptions(timeout=120 * 1000))  # 2分
-        )
-
-        # 検索許可設定
-        search_tool = types.Tool(google_search=types.GoogleSearch()) if self.websearch else None
-
-        response = await client.aio.models.generate_content(  # リクエスト
-            model=self.model,
-            contents=self.prompt_for_gemini,
-            config=types.GenerateContentConfig(
-                temperature=self.temperature,
-                response_mime_type="application/json",  # 構造化出力
-                response_json_schema=ConditionSchemaAiList.model_json_schema(),
-                thinking_config=types.ThinkingConfig(thinking_budget=self.thinking_budget),
-                tools=[search_tool],
-            ),
-        )
-        return response
-
-    def _extract_text(self, raw_response: GenerateContentResponse) -> str:
-        return raw_response.text
-
-    @traceable
-    def _get_validated_data(self, raw_response: GenerateContentResponse) -> ConditionSchemaAiList:
-        """AI出力データのバリデーション"""
-        try:
-            validated_data = ConditionSchemaAiList.model_validate_json(self._extract_text(raw_response))
-            logger.info(f"{self.model}が構造化出力に成功")
-        except ValidationError as e:
-            raise e
-        return validated_data
-
-    async def _handle_exceptions(self, e: Exception, retry_count: int, max_retries: int) -> None:
-        from google.genai.errors import ClientError, ServerError
-
-        if isinstance(e, ServerError):
-            await self.handle_server_error(e, retry_count, max_retries)
-        elif isinstance(e, ClientError):
-            self.handle_client_error(e)
-        else:
-            self.handle_unexpected_error(e)
-
-    def _create_token_stats(self, raw_response: GenerateContentResponse) -> TokenStats:
-        for part in raw_response.candidates[0].content.parts:
-            if not part.text:
-                continue
-            elif part.thought:
-                logger.debug("## **Thoughts summary:**")
-                logger.debug(part.text)
-            else:
-                logger.debug("## **Answer:**")
-                logger.debug(part.text)
-
-        # Noneチェック
-        if raw_response.usage_metadata:
-            prompt_tokens = raw_response.usage_metadata.prompt_token_count
-            thoughts_tokens = getattr(raw_response.usage_metadata, "thoughts_token_count", 0) or 0
-            output_tokens = raw_response.usage_metadata.candidates_token_count
-        else:
-            logger.warning("Gemini API response did not include usage metadata.")
-            prompt_tokens = 0
-            thoughts_tokens = 0
-            output_tokens = 0
-
-        stats = TokenStats(
-            prompt_tokens,
-            thoughts_tokens,
-            output_tokens,
-            len(self.prompt),
-            len(raw_response.text),
-            self.model,
-        )
-        return stats
-
-
 class GptClient(ConversationalAi):
     from openai.types.responses import ParsedResponse
 
     @property
-    def prompt_for_gpt(self):
+    @override
+    def prompt_with_data(self) -> list[dict[str, str]]:
         input = [
             {
                 "role": "system",
-                "content": f"{self.prompt}",
+                "content": f"{self.config.prompt}",
             },
-            {"role": "user", "content": f"{self.data}"},
+            {"role": "user", "content": f"{self.config.data}"},
         ]
         return input
 
+    @override
     async def _call_api(self) -> ParsedResponse[ConditionSchemaAiList]:
+        import openai
         from langsmith.wrappers import wrap_openai
-        from openai import AsyncOpenAI
 
-        client = wrap_openai(AsyncOpenAI())
+        client = wrap_openai(openai.AsyncOpenAI())
         # 検索許可設定
         search_tool = (
             {"type": "web_search", "user_location": {"city": "Tokyo", "type": "approximate"}}
-            if self.websearch
+            if self.config.allow_websearch
             else None
         )
 
         response = await client.responses.parse(
-            model=self.model,
+            model=self.config.model,
             tools=[search_tool],
-            input=self.prompt_for_gpt,
+            input=self.prompt_with_data,
             text_format=ConditionSchemaAiList,
         )
         return response
 
+    @override
     def _extract_text(self, raw_response: ParsedResponse[ConditionSchemaAiList]) -> str:
         return raw_response.output_parsed.model_dump_json()
 
+    @override
     def _get_validated_data(self, raw_response: ParsedResponse[ConditionSchemaAiList]) -> ConditionSchemaAiList:
         return raw_response.output_parsed
 
+    @override
     def _create_token_stats(self, raw_response: ParsedResponse[ConditionSchemaAiList]) -> TokenStats:
         # Noneチェック
         if raw_response.usage:
@@ -479,12 +504,13 @@ class GptClient(ConversationalAi):
             input_tokens,
             thoughts_tokens,
             pure_output_tokens,
-            len(self.prompt + self.data),
+            len(self.config.prompt + self.config.data),
             -1,
-            self.model,
+            self.config.model,
         )
         return stats
 
+    @override
     async def _handle_exceptions(self, e: Exception, retry_count: int, max_retries: int) -> None:
         if any(code in str(e) for code in ["500", "502", "503"]):
             await self.handle_server_error(e, retry_count, max_retries)

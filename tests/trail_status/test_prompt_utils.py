@@ -39,20 +39,28 @@ def mock_config(_mock_config, tmp_path, monkeypatch):
 
 
 class TestUtils:
+    def teardown_method(self):
+        p = prompt_utils.get_prompt_dir() / "new_file.yaml"
+
+        if p.exists():
+            p.unlink()
+
     def test_load_site_config(self, mock_config):
         """プロンプトファイル読み込みのテスト"""
         config, paths = mock_config
         result = PromptFile.load_site_config(paths.individual.name)
-        assert result == PromptFile(**config.individual)
+        assert result == PromptFile(**config.individual, filename=paths.individual.name)
 
-    def test_site_config_file_not_exists(self, tmp_path):
-        dummy_path = tmp_path / "dummy.yaml"
-        result = PromptFile.load_site_config(dummy_path)
+    def test_site_config_file_not_exists(self):
+        new_file_path = prompt_utils.get_prompt_dir() / "new_file.yaml"
 
-        result_text = dummy_path.read_text()
+        result = PromptFile.load_site_config("new_file.yaml")
 
-        assert result == PromptFile()
-        assert dummy_path.exists()
+        # exampleプロンプトファイルのコピーが作成される
+        result_text = new_file_path.read_text()
+
+        assert result == PromptFile(filename=new_file_path.name)
+        assert new_file_path.exists()
         assert all(s in result_text for s in ["prompt:", "config:", "use_template: true"])
 
     def test_site_config_config_dict_is_None(self, mock_config):
@@ -61,8 +69,7 @@ class TestUtils:
 
         result = PromptFile.load_site_config(paths.individual.name)
 
-        assert result == PromptFile()
-
+        assert result == PromptFile(filename=paths.individual.name)
 
     def test_load_template(self, mock_config):
         """プロンプトファイル読み込みのテスト"""
@@ -112,9 +119,9 @@ class TestUtils:
         config.individual["config"]["use_template"] = False
         paths.individual.write_text(yaml.safe_dump(config.individual), encoding="utf-8")
 
-        result = PromptFile.load_merged_config(paths.individual, url="dummy")
+        result = PromptFile.load_merged_config(paths.individual.name, url="dummy")
 
-        assert result == PromptFile(**config.individual)
+        assert result == PromptFile(**config.individual, filename=paths.individual.name)
 
     def test_str(self, mock_config, capsys):
         _, path = mock_config

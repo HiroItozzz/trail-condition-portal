@@ -81,7 +81,7 @@ class Command(BaseCommand):
         summary = self.generate_summary(all_source_results)
         self.print_summary(summary)
 
-    def setup_data_source(self, source_id: int | None) -> list[SourceSchemaSingle]:
+    def setup_data_source(self, source_id: int | None) -> list[SourceSchemaSingle] | None:
         """処理対象の情報源をDBから取得"""
         if source_id:
             try:
