@@ -28,27 +28,6 @@ def mock_api_keys(monkeypatch):
 
 
 @pytest.fixture
-def deepseek_config(mock_api_keys, llm_config_factory):
-    """テスト用のLlmConfig"""
-    config_dict = llm_config_factory(LlmModel.DEEPSEEK_CHAT)
-    return LlmConfig(**config_dict)
-
-
-@pytest.fixture
-def gemini_config(mock_api_keys, llm_config_factory):
-    """テスト用のLlmConfig"""
-    config_dict = llm_config_factory(LlmModel.GEMINI_3_1_FLASH_LITE)
-    return LlmConfig(**config_dict)
-
-
-@pytest.fixture
-def gpt_config(mock_api_keys, llm_config_factory):
-    """テスト用のLlmConfig"""
-    config_dict = llm_config_factory(LlmModel.GPT_5_NANO)
-    return LlmConfig(**config_dict)
-
-
-@pytest.fixture
 def ai_class(monkeypatch):
     class DummyAi(ConversationalAi):
         """共通メソッドテスト用の汎用AIモック"""

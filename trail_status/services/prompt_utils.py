@@ -158,15 +158,15 @@ class PromptFile(BaseModel):
                 logger.warning(f"プロンプトファイルを作成しました。ファイル名: {filename}")
             except Exception:
                 logger.error("サイト別プロンプトファイルの作成に失敗。example.yamlを確認してください")
-            return cls()
+            return cls(filename=filename)
 
         config_dict = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
 
         if config_dict is None:
             logger.warning(f"サイト別プロンプトに記載がありません。ファイル名: {filename}")
-            return cls()
+            return cls(filename=filename)
 
-        return cls(**config_dict)
+        return cls(**config_dict, filename=filename)
 
     def __str__(self):
         prompt = self.prompt
