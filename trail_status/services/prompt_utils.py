@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 import yaml
 from django.conf import settings
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic.alias_generators import to_camel
 
 from .types import LlmModel
@@ -42,9 +42,15 @@ class PromptFileConfig(BaseModel):
 
 
 class PromptFile(BaseModel):
-    prompt: str | None = None
+    prompt: str = ""
     config: PromptFileConfig = PromptFileConfig(use_template=True)
     filename: str | None = None
+
+    @field_validator("prompt", mode="before")
+    def convert_none_to_empty_string(cls, v: str | None) -> str:
+        if v is None:
+            return ""
+        return v
 
     @staticmethod
     def _format_url(prompt: str, url: str) -> str:
@@ -77,7 +83,7 @@ class PromptFile(BaseModel):
         if use_template is False:
             return individual_file
 
-        if url is not None:
+        if template_file.prompt and url:
             template_file.prompt = cls._format_url(template_file.prompt, url)
 
         template_file.prompt += "\n\n" + individual_file.prompt if individual_file.prompt else ""

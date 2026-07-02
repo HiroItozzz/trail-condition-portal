@@ -5,16 +5,20 @@ import pytest
 
 from trail_status.models import AreaName, StatusType, TrailCondition
 from trail_status.services.db_writer import DbWriter
-from trail_status.services.types import ConditionSchemaAiInternal, ResultSingle, SourceSchemaSingle
 from trail_status.services.prompt_utils import PromptFile
+from trail_status.services.types import ConditionSchemaAiInternal, LlmModel, ResultSingle, SourceSchemaSingle
+
 
 @pytest.fixture
-def mock_DbWriter(sample_llm_config):
+def mock_DbWriter(llm_config_factory):
     """DBライターのモック"""
+
+    llm_config = llm_config_factory(LlmModel.DEEPSEEK_CHAT)
+
     sample_source_schema = SourceSchemaSingle(
         id=100, name="sample", url1="http://url1.com", prompt_file=PromptFile(prompt="test"), content_hash=None
     )
-    sample_result_single = ResultSingle(success=True, message="OK", config=sample_llm_config)
+    sample_result_single = ResultSingle(success=True, message="OK", config=llm_config)
     return DbWriter(sample_source_schema, sample_result_single)
 
 

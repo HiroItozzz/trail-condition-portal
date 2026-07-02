@@ -15,6 +15,10 @@ from trail_status.services.types import ConditionSchemaAiList, SourceSchemaSingl
 class FakeGeminiClient(ConversationalAi):
     """テスト用 GeminiClient モック"""
 
+    @property
+    def prompt_with_data(self):
+        return ""
+    
     async def _call_api(self):
         """Gemini response の構造を模倣"""
         return SimpleNamespace(
@@ -34,9 +38,9 @@ class FakeGeminiClient(ConversationalAi):
             input_tokens=usage.prompt_token_count,
             thoughts_tokens=usage.thoughts_token_count or 0,
             pure_output_tokens=usage.candidates_token_count,
-            input_letter_count=len(self.prompt),
+            input_letter_count=len(self.config.prompt),
             output_letter_count=len(raw_response.text),
-            model=self.model,
+            model=self.config.model,
         )
 
     async def _handle_exceptions(self, e, retry_count, max_retries):

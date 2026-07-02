@@ -11,13 +11,20 @@ import pytest
 import yaml
 
 from trail_status.services import prompt_utils
+from trail_status.services.llm_client import LlmConfig
 from trail_status.services.prompt_utils import PromptFile
+from trail_status.services.types import ConditionSchemaAiList, LlmModel
 
 
 @pytest.fixture(autouse=True)
 def clear_cache():
     PromptFile.load_template.cache_clear()
     yield
+
+
+@pytest.fixture(autouse=True)
+def deactivate_langsmith(monkeypatch):
+    monkeypatch.setenv("LANGSMITH_TRACING", "false")
 
 
 @pytest.fixture
@@ -114,15 +121,20 @@ def sample_url():
 
 
 @pytest.fixture
-def sample_llm_config():
-    """共通のLLM設定"""
-    return {
-        "prompt": "テスト用プロンプト",
-        "model": "deepseek-chat",
-        "temperature": 0.3,
-        "data": "テスト用データ",
-        "prompt_key": "test_key",
-    }
+def llm_config_factory():
+    """共通のLLM設定の"""
+
+    def factory(model: LlmModel):
+        data = {
+            "prompt": "テスト用プロンプト",
+            "model": model,
+            "temperature": 0.3,
+            "data": "テスト用データ",
+            "prompt_key": "test_key",
+        }
+        return LlmConfig(**data)
+
+    return factory
 
 
 @pytest.fixture
@@ -144,8 +156,8 @@ def sample_token_stats():
 
 
 @pytest.fixture
-def mock_openai_response():
-    """OpenAI APIレスポンスのモック"""
+def mock_openai_response():  # TODO ResponseAPIのモックレスポンスの作成
+    """OpenAI APIレスポンスのモック（ChatCompletions）"""
     from unittest.mock import MagicMock
 
     mock_response = MagicMock()
