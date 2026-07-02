@@ -370,10 +370,10 @@ class DeepseekClient(ConversationalAi):
 
     @override
     async def _call_api(self) -> ChatCompletion:
+        import openai
         from langsmith.wrappers import wrap_openai
-        from openai import AsyncOpenAI
 
-        client = wrap_openai(AsyncOpenAI(api_key=self.config.api_key, base_url="https://api.deepseek.com"))
+        client = wrap_openai(openai.AsyncOpenAI(api_key=self.config.api_key, base_url="https://api.deepseek.com"))
 
         response = await client.chat.completions.create(
             model=self.config.model,
@@ -458,10 +458,10 @@ class GptClient(ConversationalAi):
 
     @override
     async def _call_api(self) -> ParsedResponse[ConditionSchemaAiList]:
+        import openai
         from langsmith.wrappers import wrap_openai
-        from openai import AsyncOpenAI
 
-        client = wrap_openai(AsyncOpenAI())
+        client = wrap_openai(openai.AsyncOpenAI())
         # 検索許可設定
         search_tool = (
             {"type": "web_search", "user_location": {"city": "Tokyo", "type": "approximate"}}

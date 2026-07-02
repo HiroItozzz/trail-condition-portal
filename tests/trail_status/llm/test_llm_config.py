@@ -52,10 +52,24 @@ def test_api_key_auto_detection_gemini(mock_api_keys):
     assert config.api_key == "test-gemini-key"
 
 
-def test_api_key_missing_error(no_api_keys):
+def test_deepseek_api_key_missing_error(no_api_keys):
     """APIキー未設定時のエラーテスト"""
     config = LlmConfig(prompt="テストプロンプト", model="deepseek-chat", data="テストデータ")
     with pytest.raises(ValueError, match="環境変数 DEEPSEEK_API_KEY が設定されていません"):
+        _ = config.api_key
+
+
+def test_gemini_api_key_missing_error(no_api_keys):
+    """APIキー未設定時のエラーテスト"""
+    config = LlmConfig(prompt="テストプロンプト", model="gemini-3-flash-preview", data="テストデータ")
+    with pytest.raises(ValueError, match="環境変数 GEMINI_API_KEY が設定されていません"):
+        _ = config.api_key
+
+
+def test_openai_api_key_missing_error(no_api_keys):
+    """APIキー未設定時のエラーテスト"""
+    config = LlmConfig(prompt="テストプロンプト", model="gpt-5-mini", data="テストデータ")
+    with pytest.raises(ValueError, match="環境変数 OPENAI_API_KEY が設定されていません"):
         _ = config.api_key
 
 
