@@ -13,10 +13,9 @@ prompt: |
 config:
   model: 
   # 動物目撃情報の正確な分類のため低温度
-  temperature: 0.0
+  temperature: 0.3
   
-  # 御岳は情報量が中程度なので標準設定
-  thinking_budget: 
+  thinking_budget: -1
   
   # テンプレートを使用
   use_template: true

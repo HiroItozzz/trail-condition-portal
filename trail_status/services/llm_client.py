@@ -280,7 +280,7 @@ class GeminiClient(ConversationalAi):
 
         # api_key引数なしでも、環境変数"GEMNI_API_KEY"の値を勝手に参照するが、可読性のため代入
         client = wrap_gemini(
-            genai.Client(http_options=types.HttpOptions(timeout=120 * 1000))  # 2分
+            genai.Client(http_options=types.HttpOptions(timeout=300 * 1000))  # 5分
         )
 
         # 検索許可設定
