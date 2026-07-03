@@ -177,6 +177,7 @@ def mock_gemini_response():
 
     mock_response = MagicMock()
     mock_response.text = '{"trail_condition_records": []}'
+    mock_response.parsed = {"trail_condition_records": []}
     mock_response.candidates = [MagicMock()]
     mock_response.candidates[0].content.parts = [MagicMock(text="", thought=False)]
     mock_response.usage_metadata.prompt_token_count = 100

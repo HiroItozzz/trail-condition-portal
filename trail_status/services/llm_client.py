@@ -270,9 +270,11 @@ class GeminiClient(ConversationalAi):
     @property
     @override
     def prompt_with_data(self) -> str:
+        """未使用（システムプロンプトとデータが独立で設定されるため）"""
         return self.config.prompt + "\n\n\n" + self.config.data
 
     @override
+    @traceable
     async def _call_api(self) -> GenerateContentResponse:
         from google import genai
         from google.genai import types
@@ -288,8 +290,9 @@ class GeminiClient(ConversationalAi):
 
         response = await client.aio.models.generate_content(  # リクエスト
             model=self.config.model,
-            contents=self.prompt_with_data,
+            contents=self.config.data,
             config=types.GenerateContentConfig(
+                system_instruction=self.config.prompt,
                 temperature=self.config.temperature,
                 response_mime_type="application/json",  # 構造化出力
                 response_json_schema=ConditionSchemaAiList.model_json_schema(),
@@ -297,6 +300,7 @@ class GeminiClient(ConversationalAi):
                 tools=[search_tool],
             ),
         )
+        logger.debug(f"{response.candidates[0].finish_reason=}")
         return response
 
     @override
@@ -308,10 +312,11 @@ class GeminiClient(ConversationalAi):
     def _get_validated_data(self, raw_response: GenerateContentResponse) -> ConditionSchemaAiList:
         """AI出力データのバリデーション"""
         try:
-            validated_data = ConditionSchemaAiList.model_validate_json(self._extract_text(raw_response))
+            validated_data = ConditionSchemaAiList.model_validate(raw_response.parsed)
             logger.info(f"{self.config.model}が構造化出力に成功")
         except ValidationError as e:
             raise e
+
         return validated_data
 
     @override

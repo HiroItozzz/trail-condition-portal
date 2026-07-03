@@ -164,14 +164,15 @@ class TestGemini:
         """生レスポンスのバリデーションの挙動"""
         gemini_config = llm_config_factory(LlmModel.GEMINI_3_FLASH_PREVIEW)
 
-        monkeypatch.setattr(ConditionSchemaAiList, "model_validate_json", MagicMock(return_value="validated"))
-        monkeypatch.setattr(GeminiClient, "_extract_text", MagicMock(return_value=mock_gemini_response.text))
-
+        monkeypatch.setattr(
+            ConditionSchemaAiList,
+            "model_validate",
+            MagicMock(return_value="validated"),
+        )
         client = GeminiClient(gemini_config)
         result = client._get_validated_data(mock_gemini_response)
 
-        GeminiClient._extract_text.assert_called_once_with(mock_gemini_response)
-        ConditionSchemaAiList.model_validate_json.assert_called_once_with(mock_gemini_response.text)
+        ConditionSchemaAiList.model_validate.assert_called_once_with(mock_gemini_response.parsed)
         assert result == "validated"
 
     def test_get_validated_data_error_raised(
@@ -180,14 +181,14 @@ class TestGemini:
         """生レスポンスのバリデーションエラー時の挙動（リレイズ）"""
         gemini_config = llm_config_factory(LlmModel.GEMINI_3_FLASH_PREVIEW)
 
-        monkeypatch.setattr(ConditionSchemaAiList, "model_validate_json", MagicMock(side_effect=validation_error))
+        monkeypatch.setattr(ConditionSchemaAiList, "model_validate", MagicMock(side_effect=validation_error))
         monkeypatch.setattr(GeminiClient, "_extract_text", MagicMock(return_value=mock_gemini_response.text))
 
         client = GeminiClient(gemini_config)
         with pytest.raises(ValidationError):
             client._get_validated_data(mock_gemini_response)
 
-        ConditionSchemaAiList.model_validate_json.assert_called_once_with(mock_gemini_response.text)
+        ConditionSchemaAiList.model_validate.assert_called_once_with(mock_gemini_response.parsed)
 
     def test_create_token_stats(self, llm_config_factory, mock_gemini_response):
         """トークン計算の挙動"""

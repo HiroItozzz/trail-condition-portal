@@ -133,4 +133,5 @@ class AiPipeline:
         llm_stats = LlmStats(token_stats)
         llm_stats.execution_time = execution_time
 
+        # Todo namedtuple化
         return config, ai_result, llm_stats
