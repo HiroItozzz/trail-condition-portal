@@ -38,7 +38,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DATABASES = {
     "default": dj_database_url.config(
         default=f"sqlite:///{BASE_DIR}/db.sqlite3" if DEBUG else None,
-        conn_max_age=600,
+        conn_max_age=0,
         conn_health_checks=False,
     ),
 }
