@@ -18,6 +18,9 @@ temp/
 .ipynb_checkpoints/
 .coverage
 
+# db
+db.sqlite3
+
 # tests
 /.coverage
 

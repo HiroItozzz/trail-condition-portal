@@ -15,13 +15,22 @@ https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 import os
 from pathlib import Path
-
 from urllib.parse import urlparse
+
+try:
+    # For a test environment in host machine without PostgreSQL.
+    from dotenv import load_dotenv
+
+    load_dotenv(".env.sqlite3.local", override=False)
+except ImportError:
+    pass
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 # ジャンゴ秘密鍵
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # データベース設定
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
@@ -39,10 +48,16 @@ if url := os.environ.get("DATABASE_URL"):
             "CONN_HEALTH_CHECKS": False,
         }
     }
+elif DEBUG:
+    # ホストマシンPythonランタイム環境用設定
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": str(BASE_DIR / "db.sqlite3"),
+        }
+    }
 else:
     raise ValueError("DATABASE_URL 環境変数が設定されていません。")
-
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 INSTALLED_APPS = [
     "django.contrib.admin",  # 管理サイト
