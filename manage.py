@@ -1,7 +1,16 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
+
 import os
 import sys
+
+try:
+    # For a dev environment of Python runtime in host machine without PostgreSQL.
+    from dotenv import load_dotenv
+
+    load_dotenv(".env.sqlite3.local", override=False)
+except ImportError:
+    pass
 
 
 def main():

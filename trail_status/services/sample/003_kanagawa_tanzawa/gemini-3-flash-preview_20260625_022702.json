@@ -1,0 +1,100 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "上落合橋登山口から両神山山頂",
+      "mountain_name_raw": "両神山",
+      "title": "ツキノワグマによる人的被害防止のための通行止めについて",
+      "description": "令和8年6月5日、両神山（上落合橋登山口から山頂の間）において、登山者がツキノワグマに襲われ負傷する事案が発生しました。\n人的被害を防止するため、当面の間、当該区間を通行止めとします。",
+      "reported_at": "2026-06-05",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/soshiki/b0504/tozanjoho/tsukokise/kamiotiaibasi.html",
+      "comment": "クマによる人身被害発生に伴う緊急措置。上落合橋登山口からの入山不可。"
+    },
+    {
+      "trail_name": "芋木ノドッケの分岐からオハヤシノ頭の間",
+      "mountain_name_raw": "雲取山",
+      "title": "ツキノワグマによる人的被害防止のための通行止めについて",
+      "description": "令和8年5月19日、雲取山（芋木ノドッケの分岐からオハヤシノ頭の間）において、登山者がツキノワグマに襲われ負傷する事案が発生しました。\n人的被害を防止するため、当面の間、当該区間を通行止めとします。",
+      "reported_at": "2026-05-19",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/soshiki/b0504/tozanjoho/tsukokise/imonokidokke.html",
+      "comment": "クマによる人身被害発生に伴う緊急措置。雲取山・白岩山間の主稜線の一部が通行止。"
+    },
+    {
+      "trail_name": "川又十文字峠線",
+      "mountain_name_raw": "十文字峠",
+      "title": "【注意】川又十文字峠線／秩父市大滝地内の土砂崩落及び路肩崩落の発生について",
+      "description": "秩父市大滝地内の川又十文字峠線において、土砂崩落及び路肩崩落が発生しています。\n通行の際は十分注意してください。",
+      "reported_at": "2025-05-13",
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/36382/kawamatajyuumonjitouge2.pdf",
+      "comment": "土砂崩落および路肩崩落による通行注意。"
+    },
+    {
+      "trail_name": "大輪三峰線（三峯神社表参道コース）",
+      "mountain_name_raw": "三峯神社",
+      "title": "【注意】大輪三峰線（三峯神社表参道コース）の通行注意について",
+      "description": "大輪三峰線（三峯神社表参道コース）において、石段の崩落や倒木等が発生しており、通行に注意が必要です。\n設置された案内板等に従ってください。",
+      "reported_at": "2025-03-25",
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/36382/tyuuikannki2.pdf",
+      "comment": "表参道コース。石段崩落等による足元注意。"
+    },
+    {
+      "trail_name": "大日向霧藻ヶ峰線",
+      "mountain_name_raw": "霧藻ヶ峰",
+      "title": "【注意】大日向霧藻ヶ峰線の一部区間の通行止めについて",
+      "description": "大日向霧藻ヶ峰線の一部区間において、地滑りの影響により通行止めとなっています。",
+      "reported_at": "2025-01-10",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/36382/hptuukoudome2.pdf",
+      "comment": "地滑りによる一部区間通行止。"
+    },
+    {
+      "trail_name": "黒岩尾根線",
+      "mountain_name_raw": "雲取山",
+      "title": "【注意】黒岩尾根線通行止め／秩父市大滝地内の木橋破損について",
+      "description": "黒岩尾根線において、秩父市大滝地内の木橋が破損しているため、通行止めとなっています。",
+      "reported_at": "2024-10-09",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/36382/kuroiwaonesen4.pdf",
+      "comment": "木橋破損による通行止。"
+    },
+    {
+      "trail_name": "秩父多摩甲斐国立公園内通行不能区間",
+      "mountain_name_raw": "奥秩父山域",
+      "title": "秩父多摩甲斐国立公園内通行不能区間について",
+      "description": "秩父多摩甲斐国立公園（埼玉県内）において、現在通行不能となっている区間の一覧です。\n・大洞川ルート（荒川起点〜雲取山）\n・二瀬〜和名倉山\n・太陽寺〜大血川\n・将監峠〜唐松尾山",
+      "reported_at": "2023-12-01",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.kanagawa.jp/documents/36382/20231201tozandou.pdf",
+      "comment": "長期通行不能区間のまとめ。和名倉山や雲取山の大洞川ルート等が含まれる。"
+    },
+    {
+      "trail_name": "一般国道140号（秩父市大滝地内）",
+      "mountain_name_raw": "奥秩父山域",
+      "title": "一般国道140号（秩父市大滝地内）通行止め解除について",
+      "description": "一般国道140号（秩父市大滝地内）の通行止めは解除されました。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLEAR",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/a1006/oshirase/kokudou140gounorakuseki.html",
+      "comment": "落石による通行止めが解除され、登山口へのアクセスが改善。"
+    }
+  ]
+} 

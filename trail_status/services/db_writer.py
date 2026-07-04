@@ -155,19 +155,13 @@ class DbWriter:
         now = timezone.now()
 
         if to_update:
-            # TrailConditionSchemaInternalのフィールド名を取得
-            # Djangoモデルの更新対象フィールドと一致している前提
-            fields_to_update = list(ConditionSchemaAiInternal.model_fields.keys())
-
             # bulk_updateではauto_now=Trueが機能しないため手動でセット
             for record in to_update:
                 record.updated_at = now
-
-            if "updated_at" not in fields_to_update:
-                fields_to_update.append("updated_at")
+                record.synced_at = now
 
             # 更新
-            TrailCondition.objects.bulk_update(to_update, fields_to_update)
+            TrailCondition.objects.bulk_update(to_update, self.FIELDS_TO_UPDATE)
             logger.info(f"更新完了: {len(to_update)}件")
 
         if to_create:
@@ -175,6 +169,7 @@ class DbWriter:
             for record in to_create:
                 record.created_at = now
                 record.updated_at = now
+                record.synced_at = now
 
             # 新規作成
             TrailCondition.objects.bulk_create(to_create)
@@ -267,6 +262,7 @@ class DbWriter:
                 db_record.description = matched_ai_record.description
                 db_record.status = matched_ai_record.status
                 db_record.comment = matched_ai_record.comment
+                db_record.reference_url = matched_ai_record.reference_url
                 db_record.reported_at = matched_ai_record.reported_at
                 db_record.resolved_at = matched_ai_record.resolved_at
                 db_record.ai_model = matched_ai_record.ai_model
@@ -410,7 +406,6 @@ class DbWriter:
 
         - token_set_ratio, token_sort_ratio用
         """
-
         # 形態素解析器の初期化
         if self._analyzer is None:
             self._analyzer = Dictionary(dict="core").create()

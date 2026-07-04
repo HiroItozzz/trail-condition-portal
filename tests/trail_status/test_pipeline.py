@@ -6,6 +6,7 @@ import pytest
 from trail_status.services.llm_client import ConversationalAi, LlmConfig
 from trail_status.services.llm_stats import TokenStats
 from trail_status.services.pipeline import AiPipeline
+from trail_status.services.prompt_utils import PromptFile
 from trail_status.services.types import ConditionSchemaAiList, SourceSchemaSingle
 
 # --- テスト用 LLM クライアント ---
@@ -13,6 +14,10 @@ from trail_status.services.types import ConditionSchemaAiList, SourceSchemaSingl
 
 class FakeGeminiClient(ConversationalAi):
     """テスト用 GeminiClient モック"""
+
+    @property
+    def prompt_with_data(self):
+        return ""
 
     async def _call_api(self):
         """Gemini response の構造を模倣"""
@@ -33,48 +38,60 @@ class FakeGeminiClient(ConversationalAi):
             input_tokens=usage.prompt_token_count,
             thoughts_tokens=usage.thoughts_token_count or 0,
             pure_output_tokens=usage.candidates_token_count,
-            input_letter_count=len(self.prompt),
+            input_letter_count=len(self.config.prompt),
             output_letter_count=len(raw_response.text),
-            model=self.model,
+            model=self.config.model,
         )
 
     async def _handle_exceptions(self, e, retry_count, max_retries):
         raise e
 
 
-@pytest.mark.asyncio
-async def test_process_source_data_full_flow(monkeypatch, mock_async_client):
-    """パイプラインの全体フロー検証（Gemini クライアント使用）
+class TestPipeline:
+    def setup_method(self):
 
-    - httpx.AsyncClient: mock_async_client でモック化
-    - LLMクライアント: FakeGeminiClient で ConversationalAi メソッドをモック化
-    - リトライ・エラーハンドリングは実装動作を検証
-    """
-    # --- LlmConfig.from_file のモック化 ---
-    mock_config = LlmConfig(data="テスト", model="gemini-2.5-flash", site_prompt="テストプロンプト")
-    monkeypatch.setattr("trail_status.services.pipeline.LlmConfig.from_file", MagicMock(return_value=mock_config))
+        self.template_config = {
+            "prompt": "テストプロンプト",
+            "config": {"model": "gemini-test-template", "temperature": 1.8, "thinking_budget": 20000},
+        }
+        self.individual_config = {
+            "prompt": "個別プロンプト",
+            "config": {"model": "gpt-test-individual", "temperature": 0.2, "thinking_budget": 50, "use_template": True},
+        }
 
-    # --- テスト用ソースデータ ---
-    source_data_list = [
-        SourceSchemaSingle(
-            id=1,
-            name="テスト山",
-            url1="https://example.com/test",
-            prompt_key="standard",
-            content_hash=None,
-        )
-    ]
+    @pytest.mark.asyncio
+    async def test_process_source_data_full_flow(self, monkeypatch, mock_api_keys, mock_async_client):
+        """パイプラインの全体フロー検証（Gemini クライアント使用）
 
-    # --- テスト実行 ---
-    # client_factory で FakeGeminiClient を生成
-    pipeline = AiPipeline(source_data_list, client_factory=lambda config: FakeGeminiClient(config))
-    results = await pipeline.run()
+        - httpx.AsyncClient: mock_async_client でモック化
+        - LLMクライアント: FakeGeminiClient で ConversationalAi メソッドをモック化
+        - リトライ・エラーハンドリングは実装動作を検証
+        """
+        # --- LlmConfig.from_file のモック化 ---
+        mock_config = LlmConfig(data="テスト", model="gemini-2.5-flash", prompt="テストプロンプト")
+        monkeypatch.setattr("trail_status.services.pipeline.LlmConfig.from_file", MagicMock(return_value=mock_config))
 
-    # --- 検証 ---
-    assert len(results) == 1
-    source_data, result = results[0]
+        # --- テスト用ソースデータ ---
+        source_data_list = [
+            SourceSchemaSingle(
+                id=1,
+                name="テスト山",
+                url1="https://example.com/test",
+                prompt_file=PromptFile(prompt="test"),
+                content_hash=None,
+            )
+        ]
 
-    assert result.success is True
-    assert result.content_changed is True
-    assert result.stats is not None
-    assert result.extracted_trail_conditions is not None
+        # --- テスト実行 ---
+        # client_factory で FakeGeminiClient を生成
+        pipeline = AiPipeline(source_data_list, client_factory=lambda config: FakeGeminiClient(config))
+        results = await pipeline.run()
+
+        # --- 検証 ---
+        assert len(results) == 1
+        source_data, result = results[0]
+
+        assert result.success is True
+        assert result.content_changed is True
+        assert result.stats is not None
+        assert result.extracted_trail_conditions is not None

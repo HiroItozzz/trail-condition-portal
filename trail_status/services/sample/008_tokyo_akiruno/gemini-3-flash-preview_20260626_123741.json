@@ -1,0 +1,76 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "御岳林道",
+      "mountain_name_raw": "大岳山",
+      "title": "規制状況",
+      "description": "御岳林道について、道路崩壊のため、当面の間、全線通行止めとなります。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUTAMA",
+      "reference_url": "",
+      "comment": "道路崩壊による全線通行止め。当面の間。"
+    },
+    {
+      "trail_name": "関東ふれあいの道（杉の木陰のみち）",
+      "mountain_name_raw": "日の出山",
+      "title": "規制状況",
+      "description": "関東ふれあいの道（杉の木陰のみち）について、落石の危険があるため、当面の間、一部通行止めとなります。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUTAMA",
+      "reference_url": "",
+      "comment": "落石の危険による一部通行止め。当面の間。"
+    },
+    {
+      "trail_name": "小和田・戸倉散策道",
+      "mountain_name_raw": "戸倉城山",
+      "title": "規制状況",
+      "description": "間伐事業のあるため、一部通行止めとなります。\n昼夜間問わず、土曜日、日曜日、祝日も含めて通行止めです。\n間伐事業等の進捗状況により、変更となる場合があります。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUTAMA",
+      "reference_url": "",
+      "comment": "間伐事業による一部通行止め。土日祝含む終日規制。"
+    },
+    {
+      "trail_name": "入山峠から入山トンネルまで（盆堀林道）",
+      "mountain_name_raw": "市道山",
+      "title": "規制状況",
+      "description": "間伐事業のあるため、全面通行止めとなります。\n昼夜間問わず、土曜日、日曜日、祝日も含めて通行止めです。",
+      "reported_at": null,
+      "resolved_at": "2026-09-25",
+      "status": "CLOSURE",
+      "area": "OKUTAMA",
+      "reference_url": "",
+      "comment": "間伐事業による全面通行止め。2026年9月25日まで予定。"
+    },
+    {
+      "trail_name": "入山峠からトッキリ場まで",
+      "mountain_name_raw": "市道山",
+      "title": "規制状況",
+      "description": "間伐事業のあるため、全面通行止めとなります。\n昼夜間問わず、土曜日、日曜日、祝日も含めて通行止めです。",
+      "reported_at": null,
+      "resolved_at": "2027-08-13",
+      "status": "CLOSURE",
+      "area": "OKUTAMA",
+      "reference_url": "",
+      "comment": "間伐事業による全面通行止め。2027年8月13日まで予定。"
+    },
+    {
+      "trail_name": "網代橋",
+      "mountain_name_raw": "弁天山",
+      "title": "規制状況",
+      "description": "令和元年東日本台風の影響により、橋への損傷が認められたため、全面通行止めとなっています。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUTAMA",
+      "reference_url": "",
+      "comment": "2019年東日本台風による橋梁損傷のため全面通行止め。当面の間。"
+    }
+  ]
+} 

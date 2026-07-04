@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing
 from dataclasses import dataclass
 from datetime import date
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
@@ -11,9 +12,25 @@ from ..models import AreaName, StatusType
 if typing.TYPE_CHECKING:
     from .llm_client import LlmConfig
     from .llm_stats import LlmStats
+    from .prompt_utils import PromptFile
 
 
 area_help_text = " / ".join([f"{label}:{name}" for name, label in AreaName.choices])
+
+
+# fmt: off
+class LlmModel(StrEnum):
+    GEMINI_2_5_FLASH        = "gemini-2.5-flash"
+    GEMINI_2_5_PRO          = "gemini-2.5-pro"
+    GEMINI_3_FLASH_PREVIEW  = "gemini-3-flash-preview"
+    GEMINI_3_1_FLASH_LITE   = "gemini-3.1-flash-lite"
+    GEMINI_3_5_FLASH        = "gemini-3.5-flash"
+    GEMINI_FLASH_LATEST     = "gemini-flash-latest"
+    DEEPSEEK_CHAT           = "deepseek-chat"
+    DEEPSEEK_REASONER       = "deepseek-reasoner"
+    GPT_5_MINI              = "gpt-5-mini"
+    GPT_5_NANO              = "gpt-5-nano"
+# fmt:on
 
 
 class ConditionSchemaAi(BaseModel):
@@ -78,7 +95,7 @@ class SourceSchemaSingle:
     id: int
     name: str
     url1: str
-    prompt_key: str
+    prompt_file: PromptFile
     content_hash: str | None = None
 
 

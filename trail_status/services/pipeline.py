@@ -3,7 +3,6 @@ import logging
 from typing import Callable
 
 import httpx
-
 from .fetcher import DataFetcher
 from .llm_client import ConversationalAi, LlmConfig
 from .llm_stats import LlmStats
@@ -78,7 +77,7 @@ class AiPipeline:
                     )
 
             # 3. trafilaturaでテキスト抽出
-            parsed_text = await fetcher.fetch_parsed_text(scraped_html)
+            parsed_text = fetcher.fetch_parsed_text(scraped_html)
             if not parsed_text.strip():
                 logger.warning(f"テキスト抽出結果が空: {source_data.name}")
                 return ResultSingle(success=False, message="テキスト抽出結果が空でした")
@@ -111,15 +110,11 @@ class AiPipeline:
         """AI解析処理"""
         import time
 
-        prompt_filename = self._get_prompt_filename_from_data(source_data)
-
+        prompt_file = source_data.prompt_file
         try:
-            config = LlmConfig.from_file(prompt_filename, data=scraped_text, model=self.ai_model)
-        except FileNotFoundError:
-            logger.error(f"プロンプトファイルが見つかりません: {prompt_filename}")
-            raise ValueError(f"プロンプトファイルが見つかりません: {prompt_filename}")
+            config = LlmConfig.from_file(prompt_file, data=scraped_text, model=self.ai_model)
         except Exception as e:
-            logger.exception(f"プロンプトファイル読み込みエラー: {prompt_filename}")
+            logger.exception(f"プロンプトファイル読み込みエラー: {prompt_file.filename}")
             raise e
 
         # AIクライアントの注入
@@ -138,11 +133,5 @@ class AiPipeline:
         llm_stats = LlmStats(token_stats)
         llm_stats.execution_time = execution_time
 
+        # Todo namedtuple化
         return config, ai_result, llm_stats
-
-    def _get_prompt_filename_from_data(self, source_data: SourceSchemaSingle) -> str:
-        """ソースデータからプロンプトファイル名を取得"""
-        # 形式: {id:03d}_{prompt_key}.yaml
-        source_id = source_data.id
-        prompt_key = source_data.prompt_key
-        return f"{source_id:03d}_{prompt_key}.yaml"

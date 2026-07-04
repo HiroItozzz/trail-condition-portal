@@ -3,7 +3,6 @@ from django.utils import timezone
 
 from .mountain import AreaName, MountainGroup
 from .source import DataSource
-from .utils import ChoiceManager
 
 
 class StatusType(models.TextChoices):
@@ -26,7 +25,7 @@ class TrailCondition(models.Model):
         on_delete=models.PROTECT,
         verbose_name="情報源",
     )
-    url1 = models.URLField("情報源URL",max_length=500)
+    url1 = models.URLField("情報源URL", max_length=500)
 
     trail_name = models.CharField("登山道名・区間（原文）", max_length=50)
     mountain_name_raw = models.CharField("山名（原文）", default="", max_length=50, blank=True)
@@ -71,8 +70,7 @@ class TrailCondition(models.Model):
     disabled = models.BooleanField("情報の無効化（管理用）", default=False, help_text="[使用例] 誤情報だった場合ほか")
     created_at = models.DateTimeField("登録日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)
-
-    objects: ChoiceManager = ChoiceManager()
+    synced_at = models.DateTimeField("バッチによる自動更新日時", null=True)
 
     class Meta:
         verbose_name = "登山道状態"
@@ -86,14 +84,3 @@ class TrailCondition(models.Model):
 
     def __str__(self):
         return f"{self.trail_name}: {self.status}"
-
-    # 既存情報もAIに投げる場合のメソッド
-    def get_raw_fields(self):
-        """AI投入用の原文フィールド"""
-        return {
-            "mountain_name_raw": self.mountain_name_raw,
-            "trail_name": self.trail_name,
-            "title": self.title,
-            "description": self.description,
-            "reported_at": self.reported_at,
-        }

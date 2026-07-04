@@ -16,33 +16,32 @@ https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 import os
 from pathlib import Path
 
-from urllib.parse import urlparse
+import dj_database_url
+
+try:
+    # For a test environment in host machine without PostgreSQL.
+    from dotenv import load_dotenv
+
+    load_dotenv(".env.sqlite3.local", override=False)
+except ImportError:
+    pass
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 # ジャンゴ秘密鍵
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
 # データベース設定
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-if url := os.environ.get("DATABASE_URL"):
-    parsed = urlparse(url)
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql_psycopg2",
-            "NAME": parsed.path.lstrip("/"),  # データベース名
-            "USER": parsed.username,  # ユーザー名
-            "PASSWORD": parsed.password,  # パスワード
-            "HOST": parsed.hostname,
-            "PORT": parsed.port,
-            "CONN_MAX_AGE": 600,
-            "CONN_HEALTH_CHECKS": False,
-        }
-    }
-else:
-    raise ValueError("DATABASE_URL 環境変数が設定されていません。")
-
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+DATABASES = {
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR}/db.sqlite3" if DEBUG else None,
+        conn_max_age=600,
+        conn_health_checks=False,
+    ),
+}
 
 INSTALLED_APPS = [
     "django.contrib.admin",  # 管理サイト

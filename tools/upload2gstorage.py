@@ -1,12 +1,14 @@
 """
 コマンド:
-uv run tools/upload_gstorage.py
+uv run tools/upload2gstorage.py
 
 """
 
 from pathlib import Path
 
 from google.cloud import storage
+
+BUCKET_NAME = ""
 
 
 def upload():
@@ -16,7 +18,7 @@ def upload():
     for p in local_paths.glob("*/*"):
         # Cloud Storageにアップロード
         client = storage.Client()
-        bucket = client.bucket("yamareco-poi-data")
+        bucket = client.bucket(BUCKET_NAME)
         blob = bucket.blob(f"{p.parent.name}/{p.name}")
         blob.upload_from_filename(p)
         cnt += 1

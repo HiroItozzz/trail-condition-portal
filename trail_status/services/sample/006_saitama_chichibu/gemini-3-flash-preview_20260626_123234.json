@@ -1,0 +1,112 @@
+{
+  "trail_condition_records": [
+    {
+      "trail_name": "上落合橋登山口から両神山山頂",
+      "mountain_name_raw": "両神山",
+      "title": "ツキノワグマによる人的被害防止のための通行止めについて",
+      "description": "令和8年6月4日に両神山（八丁峠コース）において、ツキノワグマによる人的被害が発生しました。\nこのため、上落合橋登山口から両神山山頂までの区間について、当面の間、通行止めとします。",
+      "reported_at": "2026-06-05",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/soshiki/b0504/tozanjoho/tsukokise/kamiotiaibasi.html",
+      "comment": "八丁峠コースでの人的被害発生に伴う措置。当面の間通行禁止。"
+    },
+    {
+      "trail_name": "芋木ノドッケの分岐からオハヤシノ頭の間",
+      "mountain_name_raw": "雲取山",
+      "title": "ツキノワグマによる人的被害防止のための通行止めについて",
+      "description": "令和8年5月18日に雲取山（長沢背稜）において、ツキノワグマによる人的被害が発生しました。\nこのため、芋木ノドッケの分岐からオハヤシノ頭の間の区間について、当面の間、通行止めとします。",
+      "reported_at": "2026-05-19",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/soshiki/b0504/tozanjoho/tsukokise/imonokidokke.html",
+      "comment": "長沢背稜での人的被害発生に伴う措置。当面の間通行禁止。"
+    },
+    {
+      "trail_name": "川又十文字峠線",
+      "mountain_name_raw": "十文字峠",
+      "title": "【注意】川又十文字峠線／秩父市大滝地内の土砂崩落及び路肩崩落の発生について",
+      "description": "秩父市大滝地内の川又十文字峠線において、土砂崩落及び路肩崩落が発生しています。\n通行には十分注意してください。",
+      "reported_at": "2025-05-13",
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/kawamatajyuumonjitouge2.pdf",
+      "comment": "土砂崩落・路肩崩落による通行注意。"
+    },
+    {
+      "trail_name": "大輪三峰線（三峯神社表参道コース）",
+      "mountain_name_raw": "三峯山",
+      "title": "【注意】大輪三峰線（三峯神社表参道コース）の通行注意について",
+      "description": "大輪三峰線（三峯神社表参道コース）において、登山道の一部が崩落している箇所があります。\n通行の際は足元に十分注意してください。",
+      "reported_at": "2025-03-25",
+      "resolved_at": null,
+      "status": "HAZARD",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/tyuuikannki2.pdf",
+      "comment": "一部崩落箇所あり。歩行注意。"
+    },
+    {
+      "trail_name": "大日向霧藻ヶ峰線",
+      "mountain_name_raw": "霧藻ヶ峰",
+      "title": "【注意】大日向霧藻ヶ峰線の一部区間の通行止めについて",
+      "description": "大日向霧藻ヶ峰線の一部区間において、落石の恐れがあるため通行止めとしています。",
+      "reported_at": "2025-01-10",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/hptuukoudome2.pdf",
+      "comment": "落石の危険による一部区間通行止め。"
+    },
+    {
+      "trail_name": "黒岩尾根線",
+      "mountain_name_raw": "雲取山",
+      "title": "【注意】黒岩尾根線通行止め／秩父市大滝地内の木橋破損について",
+      "description": "黒岩尾根線において、木橋が破損し通行が危険な状態となっているため、通行止めとしています。",
+      "reported_at": "2024-10-09",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/kuroiwaonesen4.pdf",
+      "comment": "木橋破損のため通行不可。"
+    },
+    {
+      "trail_name": "隼人両神山線（七滝沢コース）",
+      "mountain_name_raw": "両神山",
+      "title": "秩父多摩甲斐国立公園内通行不能区間について",
+      "description": "隼人両神山線（七滝沢コース）において、歩道崩落箇所が多数あるため、歩行不能となっています。",
+      "reported_at": "2023-12-01",
+      "resolved_at": null,
+      "status": "CLOSURE",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/documents/36382/20231201tozandou.pdf",
+      "comment": "崩落箇所多数のため通行不能。"
+    },
+    {
+      "trail_name": "秩父多摩甲斐国立公園内登山道",
+      "mountain_name_raw": "秩父多摩甲斐国立公園",
+      "title": "【注意】冬季における登山道の通行について",
+      "description": "冬季の登山道は、積雪や凍結により非常に危険な状態となります。\nアイゼン等の冬山装備を確実に準備し、天候や自身の体力に合わせた計画を立ててください。",
+      "reported_at": "2026-01-16",
+      "resolved_at": null,
+      "status": "WEATHER",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/b0504/tozan_winter.html",
+      "comment": "積雪・凍結による装備の注意喚起。"
+    },
+    {
+      "trail_name": "一般国道140号（秩父市大滝地内）",
+      "mountain_name_raw": "雁坂トンネル付近",
+      "title": "一般国道140号（秩父市大滝地内）通行止め解除について",
+      "description": "一般国道140号（秩父市大滝地内）の落石による通行止めは解除されました。",
+      "reported_at": null,
+      "resolved_at": null,
+      "status": "CLEAR",
+      "area": "OKUCHICHIBU",
+      "reference_url": "https://www.pref.saitama.lg.jp/a1006/oshirase/kokudou140gounorakuseki.html",
+      "comment": "アクセス道路の規制解除情報。"
+    }
+  ]
+  }

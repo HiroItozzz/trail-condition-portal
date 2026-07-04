@@ -71,6 +71,7 @@ ptid=2277 title='日の出山' content='' lat=35.781210888896 lng=139.1674251035
 ---対象データ---
 ('日の出山～三室山～梅の公園（日向和田駅）', '日の出山・三室山')
 ---候補データ---
+ptid=2277 title='日の出山' content='' lat=35.781210888896 lng=139.16742510355 elevation=902.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=2277' スコア: 0.8
 
 ---対象データ---
 ('日の出山～三室山～ 愛宕山～二俣尾駅', '日の出山・三室山・愛宕山')
@@ -99,6 +100,9 @@ ptid=2277 title='日の出山' content='' lat=35.781210888896 lng=139.1674251035
 ---対象データ---
 ('海沢林道', '大楢峠')
 ---候補データ---
+ptid=2138 title='大楢峠' content='' lat=35.792389981599 lng=139.13056253400998 elevation=0.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=2138' スコア: 1.0
+ptid=5553 title='楢峠' content='' lat=35.573975664721 lng=139.00657913871999 elevation=0.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=5553' スコア: 0.8571428571428572
+ptid=4103 title='新大地峠' content='' lat=35.58917449888 lng=139.07669792271 elevation=0.0 page_url='http://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=4103' スコア: 0.75
 
 ---対象データ---
 ('御岳林道（七代の滝から上養沢方面）', '御岳山')

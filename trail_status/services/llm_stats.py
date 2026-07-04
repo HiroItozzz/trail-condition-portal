@@ -1,6 +1,8 @@
 import logging
 from abc import ABC, abstractmethod
 
+from .types import LlmModel
+
 logger = logging.getLogger(__name__)
 
 
@@ -12,7 +14,7 @@ class TokenStats:
         pure_output_tokens: int,
         input_letter_count: int,
         output_letter_count: int,
-        model: str,
+        model: LlmModel | str,
     ):
         self.input_tokens = input_tokens
         self.thoughts_tokens = thoughts_tokens
@@ -143,18 +145,18 @@ class LlmFee(BaseLlmFee):
     # fmt: off
     _fees: dict = {
         # flat rate: input/outputの単価が固定 ($per 1M tokens)
-        "gemini-2.5-flash":              {"type": "flat",   "input": 0.30, "output":  2.5},
-        "gemini-3-flash-preview":        {"type": "flat",   "input": 0.50, "output":  3.0},
-        "gemini-3.1-flash-lite":         {"type": "flat",   "input": 0.25, "output":  1.5},
-        "gemini-3.5-flash":              {"type": "flat",   "input": 1.50, "output":  9.0},
+        LlmModel.GEMINI_2_5_FLASH:       {"type": "flat",   "input": 0.30, "output":  2.5},
+        LlmModel.GEMINI_3_FLASH_PREVIEW: {"type": "flat",   "input": 0.50, "output":  3.0},
+        LlmModel.GEMINI_3_1_FLASH_LITE:  {"type": "flat",   "input": 0.25, "output":  1.5},
+        LlmModel.GEMINI_3_5_FLASH:       {"type": "flat",   "input": 1.50, "output":  9.0},
         # (260522現在)gemini-flash-latest は gemini-3.5-flashの料金で算出
-        "gemini-flash-latest":           {"type": "flat",   "input": 1.50, "output":  9.0},
-        "deepseek-chat":                 {"type": "flat",   "input": 0.28, "output":  0.42},
-        "deepseek-reasoner":             {"type": "flat",   "input": 0.28, "output":  0.42},
-        "gpt-5-mini":                    {"type": "flat",   "input": 0.25, "output":  2.0},
-        "gpt-5-nano":                    {"type": "flat",   "input": 0.05, "output":  0.4},
+        LlmModel.GEMINI_FLASH_LATEST:    {"type": "flat",   "input": 1.50, "output":  9.0},
+        LlmModel.DEEPSEEK_CHAT:          {"type": "flat",   "input": 0.28, "output":  0.42},
+        LlmModel.DEEPSEEK_REASONER:      {"type": "flat",   "input": 0.28, "output":  0.42},
+        LlmModel.GPT_5_MINI:             {"type": "flat",   "input": 0.25, "output":  2.0},
+        LlmModel.GPT_5_NANO:             {"type": "flat",   "input": 0.05, "output":  0.4},
         # tiered: トークン量によって単価が変わる
-        "gemini-2.5-pro":                {"type": "tiered", "threshold": 200_000,
+        LlmModel.GEMINI_2_5_PRO:         {"type": "tiered", "threshold": 200_000,
                                           "under": {"input": 1.25, "output": 10.0},
                                           "over":  {"input": 2.50, "output": 15.0}},
     }
@@ -167,7 +169,7 @@ class LlmFee(BaseLlmFee):
         if self.model not in self._fees:
             logger.warning("料金表に登録されていないモデルです")
             logger.warning("gemini-2.5-proの料金で試算します")
-            self.model = "gemini-2.5-pro"
+            self.model = LlmModel.GEMINI_2_5_PRO
 
         fee_entry = self._fees[self.model]
 
