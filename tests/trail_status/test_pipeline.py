@@ -18,7 +18,7 @@ class FakeGeminiClient(ConversationalAi):
     @property
     def prompt_with_data(self):
         return ""
-    
+
     async def _call_api(self):
         """Gemini response の構造を模倣"""
         return SimpleNamespace(
@@ -60,7 +60,7 @@ class TestPipeline:
         }
 
     @pytest.mark.asyncio
-    async def test_process_source_data_full_flow(self, monkeypatch, mock_async_client):
+    async def test_process_source_data_full_flow(self, monkeypatch, mock_api_keys, mock_async_client):
         """パイプラインの全体フロー検証（Gemini クライアント使用）
 
         - httpx.AsyncClient: mock_async_client でモック化
