@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 authors = [{ name = "HiroItozzz" }]
 license = { text = "All rights reserved" }
 dependencies = [
+    "dj-database-url>=3.1.2",
     "django>=6.0",
     "django-cors-headers>=4.9.0",
     "gunicorn>=23.0.0",
