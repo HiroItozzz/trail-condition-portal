@@ -64,4 +64,4 @@ class EmailNotifier:
 
         except Exception as e:
             # メール送信失敗でパイプライン全体を落とさない
-            logger.error(f"❌️ メール通知の送信に失敗しました: {e}")
+            logger.exception(f"❌️ メール通知の送信に失敗しました: {e}")
