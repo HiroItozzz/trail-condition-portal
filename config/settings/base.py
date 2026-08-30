@@ -129,10 +129,15 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_SENDER_NOREPLY", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_PASSWORD_NOREPLY", "")
 
 # ログ設定
+LOGGING_APP_NAME = "your_app_name"  # required
+LOGGING_FIELDS = ("levelname", "name", "module", "process", "thread", "pathname", "asctime")
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
+        "json": {
+            "()": "django_json_logging.formatters.JSONFormatter",
+        },
         "verbose": {
             "format": "{levelname} | {asctime} | {module} | {lineno} | {funcName} | {taskName} | {message}",
             "style": "{",
@@ -145,7 +150,7 @@ LOGGING = {
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "formatter": "console",
+            "formatter": "json",
         },
     },
     "loggers": {
