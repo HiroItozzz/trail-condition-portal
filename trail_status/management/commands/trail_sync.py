@@ -6,6 +6,7 @@ from django.core.management.base import BaseCommand
 
 from trail_status.models import DataSource
 from trail_status.services.db_writer import DbWriter
+from trail_status.services.email_notifier import EmailNotifier
 from trail_status.services.llm_client import ConversationalAi, DeepseekClient, GeminiClient, GptClient, LlmConfig
 from trail_status.services.pipeline import AiPipeline, UpdatedDataList
 from trail_status.services.prompt_utils import PromptFile
@@ -123,7 +124,7 @@ class Command(BaseCommand):
     def process_result(
         self, source_data: SourceSchemaSingle, result_by_source: ResultSingle | BaseException, new_hash_mode
     ) -> None:
-        """DB保存・スラック通知の処理"""
+        """DB保存・通知の処理"""
 
         if isinstance(result_by_source, ResultSingle) and result_by_source.success:
             writer = DbWriter(source_data, result_by_source)
@@ -144,10 +145,19 @@ class Command(BaseCommand):
                 )
             )
 
-            # Slack通知を送信（ハッシュ更新検知時）
+            # Slack/email通知を送信（ハッシュ更新検知時）
             if db_result["updated"] > 0 or db_result["created"] > 0:
-                notifier = SlackNotifier()
-                notifier.send_update_notification(
+                slack_client = SlackNotifier()
+                slack_client.send_update_notification(
+                    source_name=db_result["name"],
+                    updated_count=db_result["updated"],
+                    created_count=db_result["created"],
+                    total_count=db_result["count"],
+                    cost=db_result["cost"],
+                )
+
+                email_client = EmailNotifier()
+                email_client.send_update_notification(
                     source_name=db_result["name"],
                     updated_count=db_result["updated"],
                     created_count=db_result["created"],
@@ -156,12 +166,17 @@ class Command(BaseCommand):
                 )
         else:
             # 失敗時のSlack通知
-            notifier = SlackNotifier()
+            slack_client = SlackNotifier()
+            email_client = EmailNotifier()
             if isinstance(result_by_source, ResultSingle):
                 error_message = result_by_source.message
             else:
                 error_message = f"予期せぬエラー: {result_by_source}"
-            notifier.send_error_notification(
+            slack_client.send_error_notification(
+                source_name=source_data.name,
+                error_message=error_message,
+            )
+            email_client.send_error_notification(
                 source_name=source_data.name,
                 error_message=error_message,
             )

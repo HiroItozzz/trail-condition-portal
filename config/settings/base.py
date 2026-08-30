@@ -116,6 +116,20 @@ AUTH_PASSWORD_VALIDATORS = [
 # 設定なしの場合、通知は送信されない）
 SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL", "")
 
+# email設定
+DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_SENDER_NOREPLY", "noreply@trail-info.jp")
+NOTIFICATION_RECIPIENTS = [
+    address.strip() for address in os.environ.get("EMAIL_RECIPIENTS", "").split(",") if address.strip()
+]
+
+# production/develop各モジュールで設定
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.mailgun.org"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get("EMAIL_SENDER_NOREPLY", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_PASSWORD_NOREPLY", "")
+
 # ログ設定
 LOGGING = {
     "version": 1,
