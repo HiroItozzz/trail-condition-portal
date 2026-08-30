@@ -64,6 +64,9 @@ class DbWriter:
     # 形態素解析器（遅延ロード）
     _analyzer = None
 
+    # 更新対象カラム
+    FIELDS_TO_UPDATE = list(ConditionSchemaAiInternal.model_fields.keys()) + ["updated_at", "synced_at"]
+
     def __init__(
         self,
         source_schema_single: SourceSchemaSingle,
