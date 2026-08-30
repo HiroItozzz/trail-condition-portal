@@ -14,7 +14,7 @@ class EmailNotifier:
     """
 
     def __init__(self):
-        # settings.py 側で DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_SENDER', ...) を想定
+        # settings.py 側で DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_SENDER_NOREPLY', ...) を想定
         self.from_email = settings.DEFAULT_FROM_EMAIL
         self.to_emails: list[str] = getattr(settings, "NOTIFICATION_RECIPIENTS", [])
 

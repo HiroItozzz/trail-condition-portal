@@ -118,7 +118,9 @@ SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL", "")
 
 # email設定
 DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_SENDER_NOREPLY", "noreply@trail-info.jp")
-NOTIFICATION_RECIPIENTS = os.environ.get("EMAIL_RECIPIENTS", "").split(",")
+NOTIFICATION_RECIPIENTS = [
+    address.strip() for address in os.environ.get("EMAIL_RECIPIENTS", "").split(",") if address.strip()
+]
 
 # production/develop各モジュールで設定
 # EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
