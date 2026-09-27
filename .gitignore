@@ -38,9 +38,10 @@ outputs/
 tools/grid/samples/
 
 # Claude
-CLAUDE.md
 Claude Conversations/
-.claude/
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
 
 # pycharm
 .idea/
