@@ -483,6 +483,18 @@ wheels = [
 ]
 
 [[package]]
+name = "django-json-logger"
+version = "0.1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f0/65/c99b6388619efef388bc0341ea6b9bfbf9f24485e98f76445ac56ad7bb99/django_json_logger-0.1.1.tar.gz", hash = "sha256:7a21de4197314ff0423f2535ab00d23b47befee9576295c61ada9b6e7ec333bd", size = 5893, upload-time = "2025-02-12T15:20:01.616Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/97/61/0e1361b3c2ef1f91f46738932a1b570ae27d5a29ef135ba04efd3f7fca35/django_json_logger-0.1.1-py3-none-any.whl", hash = "sha256:31638f6271dd9b9f66afd101ed959f987dca798c0c6ebd6edd2cdb94d862accc", size = 6791, upload-time = "2025-02-12T15:19:59.761Z" },
+]
+
+[[package]]
 name = "django-stubs"
 version = "6.0.6"
 source = { registry = "https://pypi.org/simple" }
@@ -2177,6 +2189,7 @@ dependencies = [
     { name = "dj-database-url" },
     { name = "django" },
     { name = "django-cors-headers" },
+    { name = "django-json-logger" },
     { name = "gunicorn" },
     { name = "psycopg", extra = ["binary"] },
     { name = "python-dotenv" },
@@ -2223,6 +2236,7 @@ requires-dist = [
     { name = "dj-database-url", specifier = ">=3.1.2" },
     { name = "django", specifier = ">=6.0" },
     { name = "django-cors-headers", specifier = ">=4.9.0" },
+    { name = "django-json-logger", specifier = ">=0.1.1" },
     { name = "feedparser", marker = "extra == 'batch'", specifier = ">=6.0.12" },
     { name = "google-cloud-storage", marker = "extra == 'batch'", specifier = ">=3.8.0" },
     { name = "google-genai", marker = "extra == 'batch'", specifier = ">=1.57.0" },
