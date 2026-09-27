@@ -30,6 +30,10 @@ uv run mypy <変更したファイル>
 cd frontend && npx vite build        # フロントのビルド
 ```
 
+## 設計資料
+- `docs/260215-pipeline-simple.md`：データ収集パイプラインの流れ
+- `docs/260215-record-matching-simple.md`：AI 出力と既存レコードの照合
+
 ## ブランチと PR の運用
 
 ### ブランチの役割
