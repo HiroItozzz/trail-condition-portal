@@ -188,13 +188,6 @@ def mock_gemini_response():
     return mock_response
 
 
-# Django settings for test
-@pytest.fixture(scope="session")
-def django_db_setup():
-    """テスト用データベース設定"""
-    pass
-
-
 # 非同期テスト用の設定
 @pytest.fixture(scope="session")
 def event_loop_policy():

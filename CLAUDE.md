@@ -20,7 +20,7 @@ Claude Code on the web（クラウドのコンテナ）で作業するときの�
 ## よく使うコマンド
 
 ```bash
-uv run pytest                        # 全テスト。DB は開発用 DB をそのまま使う（tests/CLAUDE.md 参照）
+uv run pytest                        # 全テスト。DB はテスト用 DB を作って使う（tests/CLAUDE.md 参照）
 uv run pytest tests/trail_status/views/test_detail.py
 uv run python manage.py migrate
 uv run python manage.py check
