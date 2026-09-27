@@ -135,6 +135,14 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
+        "json": {
+            "()": "pythonjsonlogger.json.JsonFormatter",
+            "fmt": "{levelname}{asctime}{name}{module}{lineno}{funcName}{message}",
+            "style": "{",
+            # Cloud Logging はキー名 severity をログレベルとして扱う
+            "rename_fields": {"levelname": "severity"},
+            "json_ensure_ascii": False,
+        },
         "verbose": {
             "format": "{levelname} | {asctime} | {module} | {lineno} | {funcName} | {taskName} | {message}",
             "style": "{",
@@ -147,7 +155,7 @@ LOGGING = {
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "formatter": "console",
+            "formatter": "json",
         },
     },
     "loggers": {

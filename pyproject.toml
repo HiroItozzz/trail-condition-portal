@@ -13,6 +13,7 @@ dependencies = [
     "gunicorn>=23.0.0",
     "psycopg[binary]>=3.3.2",
     "python-dotenv>=1.2.2",
+    "python-json-logger>=4.2.0",
     "whitenoise>=6.11.0",
 ]
 
