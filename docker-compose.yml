@@ -6,7 +6,7 @@ services:
       sh -c "uv run manage.py migrate &&
              uv run manage.py runserver 0.0.0.0:8000"
     ports:
-      - "${PORT:-8000}:8000"
+      - "127.0.0.1:${PORT:-8000}:8000"
     volumes:
       - .:/code
       - /code/.venv
@@ -32,7 +32,7 @@ services:
     working_dir: /code
     command: sh -c "npm install && npx vite build --watch"
     ports:
-      - "5173:5173"
+      - "127.0.0.1:5173:5173"
     volumes:
       - ./frontend:/code
       - /code/node_modules
@@ -51,7 +51,7 @@ services:
     env_file:
       - .env.local
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
