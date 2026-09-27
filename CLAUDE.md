@@ -7,7 +7,7 @@ Claude Code on the web（クラウドのコンテナ）で作業するときの�
 `.claude/hooks/session-start.sh`（SessionStart フック）が次を行う。
 
 - `uv sync --all-extras --all-groups`（Python 依存関係。ruff / mypy / pytest を含む）
-- `frontend/` で `npm install`
+- `frontend/` で `npm ci`（`npm install` は `package-lock.json` を書き換えるため使わない）
 - PostgreSQL 16 の起動と、DB `trail_portal_dev` の作成（ユーザー `postgres` / パスワード `postgres`）
 - 次の環境変数の設定
 

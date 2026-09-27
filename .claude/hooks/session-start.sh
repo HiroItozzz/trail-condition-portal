@@ -21,7 +21,7 @@ fi
 # extras をすべて入れる（extras なしの uv sync は batch/analysis を削除するため）
 uv sync --all-extras --all-groups || echo "warn: uv sync に失敗した" >&2
 
-(cd frontend && npm install --no-audit --no-fund) || echo "warn: npm install に失敗した" >&2
+(cd frontend && npm ci --no-audit --no-fund) || echo "warn: npm ci に失敗した" >&2
 
 # PostgreSQL 16（コンテナにインストール済み・停止状態で起動する）
 service postgresql start || echo "warn: PostgreSQL の起動に失敗した" >&2
