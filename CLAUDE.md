@@ -20,7 +20,7 @@ Claude Code on the web（クラウドのコンテナ）で作業するときの�
 ## よく使うコマンド
 
 ```bash
-uv run pytest                        # 全テスト（86件）。テスト用DBは pytest-django が自動で作る
+uv run pytest                        # 全テスト。テスト用DBは pytest-django が自動で作る
 uv run pytest tests/trail_status/views/test_detail.py
 uv run python manage.py migrate
 uv run python manage.py check
@@ -36,7 +36,7 @@ cd frontend && npx vite build        # フロントのビルド
 | ブランチ | 役割 |
 |---|---|
 | `main` | 本番。タグをつけると本番にデプロイされる（`cloudbuild.prod.yaml`） |
-| `develop` | ステージング。push するだけで非公開の Cloud Run にデプロイされる（`cloudbuild.staging.yaml`）。DB は本番とは別の Supabase の DB |
+| `develop` | ステージング。push するだけで Cloud Run（URL は非公開）にデプロイされる（`cloudbuild.staging.yaml`）。DB は本番とは別の Supabase の DB |
 | 作業ブランチ | 作業ごとに `main` から作り、`main` へ PR を出す。マージ後は削除する |
 
 ### コミットと push
@@ -45,7 +45,7 @@ cd frontend && npx vite build        # フロントのビルド
 - `develop` への push は指示があったときだけ行う。
 
 これらは `.claude/` の設定でも止めている。
-- `.claude/hooks/guard-git.py`（PreToolUse フック）：`main` への push、タグの push、`main` ブランチでの commit を拒否し、`develop` への push は確認を求める
+- `.claude/hooks/guard-git.py`（PreToolUse フック）：`main` への push、タグの push、`main` ブランチでの commit を拒否し、`develop` への push は確認を求める。push かどうかや宛先を解析できない書き方（`bash -c`、`$(...)`、変数など）も確認を求める。変更したら `python3 .claude/hooks/test_guard_git.py` で確認する
 - `.claude/settings.json` の `permissions.deny`：GitHub MCP のマージ、自動マージ、ファイルの直接書き込み（`push_files` など）を禁止
 
 ### 作業ブランチの名前
@@ -62,6 +62,12 @@ cd frontend && npx vite build        # フロントのビルド
 - `develop` への push はステージングへのデプロイになるため、指示があったときだけ行う。
 - `develop` を基準に作業しない。`develop` にしかない変更は残さない（必要なら作業ブランチに移して PR にする）。
 - `develop` を上書きする前に、マイグレーションの差（`git diff --name-status origin/develop <ブランチ> -- '*/migrations/*'`）を確認する。ステージングの DB に適用済みのマイグレーションが消える場合は、先にオーナーに相談する。
+
+### 複数のセッションを並行して動かすとき
+- セッションごとにコンテナと clone は別なので、作業ブランチを分ければ互いに干渉しない。1つのセッションは1つの作業ブランチだけを使い、他のセッションのブランチには push しない。
+- セッションのタイトルに作業ブランチ名を入れて、どのセッションが何をしているかを区別できるようにする。
+- `develop` はステージングの枠が1つしかない。push する前に `git log -1 origin/develop` で今載っているものを確認し、他の作業ブランチの内容が載っていれば、上書きしてよいかオーナーに確認する。
+- 他のセッションの PR が先にマージされて `main` が進んだら、自分の PR のブランチに `main` を取り込んでから、テストを流し直す。
 
 ### main のルールセット（GitHub）
 - 削除と force push は禁止。
