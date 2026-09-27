@@ -23,11 +23,34 @@ GIT_OPTS_WITH_VALUE = {"-C", "-c", "--git-dir", "--work-tree", "--namespace"}
 PUSH_OPTS_WITH_VALUE = {"-o", "--push-option", "--repo", "--receive-pack", "--exec"}
 # 単独で push 全体を危険にするフラグ
 PUSH_RISKY_FLAGS = {"--tags", "--follow-tags", "--mirror", "--all"}
-# 先頭から読み飛ばすコマンド（env 系のラッパー）
-SKIP_WORDS = {"env", "command", "sudo", "time", "nohup", "exec"}
+# 先頭から読み飛ばすコマンド（env 系のラッパーと、シェルの制御構文・グループ化のトークン）
+SKIP_WORDS = {
+    "env",
+    "command",
+    "sudo",
+    "time",
+    "nohup",
+    "exec",
+    "{",
+    "}",
+    "!",
+    "if",
+    "then",
+    "else",
+    "elif",
+    "do",
+    "while",
+    "until",
+}
 # 本番デプロイに使うタグの形式（例: v2026.09.27）
 PROD_TAG_PATTERN = re.compile(r"^v\d{4}\.\d{2}\.\d{2}$")
 NAME_ASSIGNMENT_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=.*$")
+# -c でエイリアスを一時的に定義する呼び出しを見つけたときの印（サブコマンドの代わりに使う）
+ALIAS_C_DEFINED = "__alias_c_defined__"
+ALIAS_C_DEFINED_REASON = "git のエイリアスを一時的に定義した呼び出しのため確認が必要。"
+ALIAS_SHELL_REASON = "シェルコマンドの git エイリアスは解析できないため確認が必要。"
+ALIAS_TOO_DEEP_REASON = "git エイリアスの解決が深すぎるため確認が必要。"
+MAX_ALIAS_RESOLUTIONS = 5
 
 
 def _run_git(args: list[str], cwd: str) -> subprocess.CompletedProcess[str]:
@@ -178,12 +201,21 @@ def build_simple_commands(command: str) -> list[list[str]]:
 
 
 def git_subcommand(tokens: list[str]) -> tuple[str, list[str]] | None:
-    """git の呼び出しなら (サブコマンド, 残りの引数) を返す。"""
+    """git の呼び出しなら (サブコマンド, 残りの引数) を返す。
+
+    `-c alias.xxx=...` でエイリアスを一時的に定義している場合は、
+    サブコマンドの代わりに `ALIAS_C_DEFINED` を返す。
+    """
     if not tokens or tokens[0].rsplit("/", 1)[-1] != "git":
         return None
     i = 1
     while i < len(tokens):
         tok = tokens[i]
+        if tok == "-c":
+            if i + 1 < len(tokens) and tokens[i + 1].startswith("alias."):
+                return ALIAS_C_DEFINED, []
+            i += 2
+            continue
         if tok in GIT_OPTS_WITH_VALUE:
             i += 2
             continue
@@ -192,6 +224,28 @@ def git_subcommand(tokens: list[str]) -> tuple[str, list[str]] | None:
             continue
         return tok, tokens[i + 1 :]
     return None
+
+
+def resolve_git_alias(sub: str, args: list[str], cwd: str) -> tuple[str, list[str]] | tuple[None, str]:
+    """サブコマンドが git のエイリアスなら、実体のサブコマンドまで解決する。
+
+    シェルコマンドのエイリアス（`!` 始まり）や、解決が深すぎる場合は
+    (None, 理由) を返す。
+    """
+    for _ in range(MAX_ALIAS_RESOLUTIONS):
+        result = _run_git(["config", "--get", f"alias.{sub}"], cwd)
+        if result.returncode != 0:
+            return sub, args
+        value = result.stdout.strip()
+        if not value:
+            return sub, args
+        if value.startswith("!"):
+            return None, ALIAS_SHELL_REASON
+        alias_tokens = shlex.split(value)
+        if not alias_tokens:
+            return sub, args
+        sub, args = alias_tokens[0], [*alias_tokens[1:], *args]
+    return None, ALIAS_TOO_DEEP_REASON
 
 
 def handle_checkout(args: list[str], effective_branch: str | None, created_branches: set[str]) -> str | None:
@@ -288,6 +342,14 @@ def decide(command: str, cwd: str) -> tuple[str, str] | None:
         if parsed is None:
             continue
         sub, args = parsed
+        if sub == ALIAS_C_DEFINED:
+            decisions.append(("ask", ALIAS_C_DEFINED_REASON))
+            continue
+        resolved = resolve_git_alias(sub, args, cwd)
+        if resolved[0] is None:
+            decisions.append(("ask", resolved[1]))
+            continue
+        sub, args = resolved
         if sub in ("checkout", "switch"):
             effective_branch = handle_checkout(args, effective_branch, created_branches)
         elif sub == "commit":

@@ -152,6 +152,56 @@ def main() -> None:
         if actual is not None:
             failures.append(f"何も出力しないことを期待（main で新規ブランチに commit）-> {actual!r}")
 
+    # 4-1（シェルの制御構文・グループ化）と 4-2（git エイリアス）のケース
+    with tempfile.TemporaryDirectory() as repo_dir:
+        setup_repo(repo_dir)
+        run_git(["config", "alias.p", "commit"], repo_dir)
+        run_git(["config", "alias.pm", "push origin main"], repo_dir)
+        run_git(["config", "alias.sw", "switch"], repo_dir)
+        run_git(["config", "alias.sh", "!git push origin main"], repo_dir)
+
+        run_git(["checkout", "main"], repo_dir)
+
+        deny_on_main_alias = [
+            "{ git commit -m x; }",
+            "if true; then git commit -m x; fi",
+            "git p -m x",
+        ]
+        for command in deny_on_main_alias:
+            actual = decision_of(command, repo_dir)
+            if actual != "deny":
+                failures.append(f"deny を期待（main, alias）: {command!r} -> {actual!r}")
+
+        run_git(["checkout", "feat/a"], repo_dir)
+
+        deny_on_feat_a_alias = [
+            "git pm",
+            "while true; do git push origin main; done",
+            "git sw main && git commit -m x",
+        ]
+        for command in deny_on_feat_a_alias:
+            actual = decision_of(command, repo_dir)
+            if actual != "deny":
+                failures.append(f"deny を期待（feat/a, alias）: {command!r} -> {actual!r}")
+
+        ask_alias = [
+            "git sh",
+            "git -c alias.c=commit c -m x",
+        ]
+        for command in ask_alias:
+            actual = decision_of(command, repo_dir)
+            if actual != "ask":
+                failures.append(f"ask を期待（alias）: {command!r} -> {actual!r}")
+
+        silent_on_feat_a_alias = [
+            "git p -m x",
+            "{ git status; }",
+        ]
+        for command in silent_on_feat_a_alias:
+            actual = decision_of(command, repo_dir)
+            if actual is not None:
+                failures.append(f"何も出力しないことを期待（feat/a, alias）: {command!r} -> {actual!r}")
+
     if failures:
         print(f"failed: {len(failures)} 件")
         for f in failures:
