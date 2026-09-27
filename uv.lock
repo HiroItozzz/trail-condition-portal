@@ -3,10 +3,10 @@ revision = 3
 requires-python = ">=3.13"
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform == 'emscripten'",
-    "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
     "python_full_version < '3.14' and sys_platform == 'win32'",
     "python_full_version < '3.14' and sys_platform == 'emscripten'",
@@ -480,18 +480,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/21/39/55822b15b7ec87410f34cd16ce04065ff390e50f9e29f31d6d116fc80456/django_cors_headers-4.9.0.tar.gz", hash = "sha256:fe5d7cb59fdc2c8c646ce84b727ac2bca8912a247e6e68e1fb507372178e59e8", size = 21458, upload-time = "2025-09-18T10:40:52.326Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/30/d8/19ed1e47badf477d17fb177c1c19b5a21da0fd2d9f093f23be3fb86c5fab/django_cors_headers-4.9.0-py3-none-any.whl", hash = "sha256:15c7f20727f90044dcee2216a9fd7303741a864865f0c3657e28b7056f61b449", size = 12809, upload-time = "2025-09-18T10:40:50.843Z" },
-]
-
-[[package]]
-name = "django-json-logger"
-version = "0.1.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "django" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/f0/65/c99b6388619efef388bc0341ea6b9bfbf9f24485e98f76445ac56ad7bb99/django_json_logger-0.1.1.tar.gz", hash = "sha256:7a21de4197314ff0423f2535ab00d23b47befee9576295c61ada9b6e7ec333bd", size = 5893, upload-time = "2025-02-12T15:20:01.616Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/97/61/0e1361b3c2ef1f91f46738932a1b570ae27d5a29ef135ba04efd3f7fca35/django_json_logger-0.1.1-py3-none-any.whl", hash = "sha256:31638f6271dd9b9f66afd101ed959f987dca798c0c6ebd6edd2cdb94d862accc", size = 6791, upload-time = "2025-02-12T15:19:59.761Z" },
 ]
 
 [[package]]
@@ -1741,6 +1729,15 @@ wheels = [
 ]
 
 [[package]]
+name = "python-json-logger"
+version = "4.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/25/5473e46b179f8e8b4ad3aeeb36773d1701b7770eaf5e5bc2025c7303b598/python_json_logger-4.2.0.tar.gz", hash = "sha256:e371ebe22ec01e289850102091a2b1f6fc9e655c7f1f5f29073936756c290afa", size = 18211, upload-time = "2026-08-15T11:36:38.232Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/dc/55/6467fde553886cb293e41538f3a8b4e4fd4688c6df242cf982162d8367fb/python_json_logger-4.2.0-py3-none-any.whl", hash = "sha256:158a52126fcd6869e09574d2b66272666f3dc8f468c62637ef9a1fa883719cb9", size = 14988, upload-time = "2026-08-15T11:36:36.821Z" },
+]
+
+[[package]]
 name = "pytz"
 version = "2026.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2189,10 +2186,10 @@ dependencies = [
     { name = "dj-database-url" },
     { name = "django" },
     { name = "django-cors-headers" },
-    { name = "django-json-logger" },
     { name = "gunicorn" },
     { name = "psycopg", extra = ["binary"] },
     { name = "python-dotenv" },
+    { name = "python-json-logger" },
     { name = "whitenoise" },
 ]
 
@@ -2236,7 +2233,6 @@ requires-dist = [
     { name = "dj-database-url", specifier = ">=3.1.2" },
     { name = "django", specifier = ">=6.0" },
     { name = "django-cors-headers", specifier = ">=4.9.0" },
-    { name = "django-json-logger", specifier = ">=0.1.1" },
     { name = "feedparser", marker = "extra == 'batch'", specifier = ">=6.0.12" },
     { name = "google-cloud-storage", marker = "extra == 'batch'", specifier = ">=3.8.0" },
     { name = "google-genai", marker = "extra == 'batch'", specifier = ">=1.57.0" },
@@ -2248,6 +2244,7 @@ requires-dist = [
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.2" },
     { name = "pydantic", marker = "extra == 'batch'", specifier = ">=2.13.4" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
+    { name = "python-json-logger", specifier = ">=4.2.0" },
     { name = "pyyaml", marker = "extra == 'batch'", specifier = ">=6.0.3" },
     { name = "rapidfuzz", marker = "extra == 'batch'", specifier = ">=3.14.3" },
     { name = "scikit-learn", marker = "extra == 'analysis'", specifier = ">=1.8.0" },

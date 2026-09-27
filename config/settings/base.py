@@ -131,14 +131,17 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_SENDER_NOREPLY", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_PASSWORD_NOREPLY", "")
 
 # ログ設定
-LOGGING_APP_NAME = "your_app_name"  # required
-LOGGING_FIELDS = ("levelname", "name", "module", "process", "thread", "pathname", "asctime")
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
         "json": {
-            "()": "django_json_logging.formatters.JSONFormatter",
+            "()": "pythonjsonlogger.json.JsonFormatter",
+            "fmt": "{levelname}{asctime}{name}{module}{lineno}{funcName}{message}",
+            "style": "{",
+            # Cloud Logging はキー名 severity をログレベルとして扱う
+            "rename_fields": {"levelname": "severity"},
+            "json_ensure_ascii": False,
         },
         "verbose": {
             "format": "{levelname} | {asctime} | {module} | {lineno} | {funcName} | {taskName} | {message}",

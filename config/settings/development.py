@@ -42,6 +42,8 @@ TEMPLATES = [
     },
 ]
 
+LOGGING["handlers"]["console"]["formatter"] = "console"
+
 # ログファイル出力設定
 if DEBUG:
     LOGGING["handlers"]["file"] = {
