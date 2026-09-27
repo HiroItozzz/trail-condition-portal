@@ -77,7 +77,8 @@ cd frontend && npx vite build        # フロントのビルド
 - 削除と force push は禁止。
 - 必須のステータスチェック：GitHub Actions の `test`（`.github/workflows/test.yml`）。
 - 必須のデプロイ環境：`test`（同じワークフローが `environment: test` で実行する）。
-- マージ前に、PR のブランチを最新の `main` に追従させる必要がある（Require branches to be up to date）。
+- マージ前に、PR のブランチを最新の `main` に追従させる必要がある（Require branches to be up to date）。遅れているときは `gh pr update-branch <番号>` で取り込める。
+- レビューのスレッドをすべて解決しないとマージできない。Sourcery のインラインの指摘も対象なので、対応するか理由を返信してスレッドを解決する。
 - PR と承認はルール上は必須ではないが、運用ではオーナーが PR を確認してマージする。
 
 ### PR を出すとき
