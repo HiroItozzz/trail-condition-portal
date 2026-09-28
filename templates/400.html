@@ -2,6 +2,8 @@
 {% extends 'trail_status/base.html' %}
 {% block title %}URLの指定が正しくありません - トレイルインフォ{% endblock title %}
 {# djlint: on #}
+{# 不正な Host ヘッダーの 400 でも表示できるよう、ホスト名を読む og:url を出さない #}
+{% block og_url %}{% endblock og_url %}
 {% block content %}
   <div class="flex flex-col items-center justify-center min-h-[60vh] text-center">
     <div class="mb-8">

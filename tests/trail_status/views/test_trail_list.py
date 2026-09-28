@@ -148,6 +148,13 @@ class TestTrailListViewFiltering:
         assert response.status_code == 200
         assert list(response.context["conditions"]) == []
 
+    def test_disallowed_host_returns_400(self, client):
+        """ALLOWED_HOSTS にないホスト名は 400（400 のページの表示中にもう一度エラーにならない）"""
+        response = client.get(reverse("trail_status:trail-list"), HTTP_HOST="unknown.example.com")
+
+        assert response.status_code == 400
+        assert "URLの指定が正しくありません" in response.content.decode()
+
     @pytest.mark.parametrize("value", ["abc", "1a", "1.5"])
     def test_source_invalid_returns_400(self, client, value):
         """数値に変換できない値は 400"""
