@@ -16,6 +16,7 @@ steps:
       - "-f"
       - "Dockerfile.prod"
       - "."
+
   - name: "gcr.io/cloud-builders/docker"
     id: "build-batch"
     waitFor: ["-"]
@@ -41,6 +42,7 @@ steps:
       - "push"
       - "--all-tags"
       - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME"
+
   - name: "gcr.io/cloud-builders/docker"
     id: "push-batch"
     waitFor: ["build-batch"]
@@ -64,6 +66,20 @@ steps:
       - "--set-secrets=DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY:latest,DATABASE_URL=$_DATABASE_URL:latest"
       - "--command=uv"
       - "--args=run,--frozen,--no-dev,manage.py,migrate"
+
+  - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
+    id: "execute-migrate"
+    waitFor: ["deploy-migrate-job"]
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "jobs"
+      - "execute"
+      - "trail-info-$BRANCH_NAME-migrate"
+      - "--region=asia-northeast1"
+      - "--wait"
+      - "--task-timeout=20m"
+
   - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
     id: "deploy-sync-job"
     # マイグレーションのあとに更新する（新しいコードが古いスキーマで動かないように）
@@ -79,6 +95,7 @@ steps:
       - "--set-secrets=DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY:latest,DATABASE_URL=$_DATABASE_URL:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,LANGSMITH_API_KEY=LANGSMITH_API_KEY:latest,SLACK_WEBHOOK_URL=SLACK_WEBHOOK_URL:latest,EMAIL_PASSWORD_NOREPLY=EMAIL_PASSWORD_NOREPLY:latest"
       - "--command=uv"
       - "--args=run,--frozen,--no-dev,manage.py,trail_sync"
+
   - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
     id: "deploy-blog-sync-job"
     # マイグレーションのあとに更新する（新しいコードが古いスキーマで動かないように）
@@ -94,19 +111,6 @@ steps:
       - "--set-secrets=DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY:latest,DATABASE_URL=$_DATABASE_URL:latest,SLACK_WEBHOOK_URL=SLACK_WEBHOOK_URL:latest,EMAIL_PASSWORD_NOREPLY=EMAIL_PASSWORD_NOREPLY:latest"
       - "--command=uv"
       - "--args=run,--frozen,--no-dev,manage.py,blog_sync"
-
-  - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
-    id: "execute-migrate"
-    waitFor: ["deploy-migrate-job"]
-    entrypoint: "gcloud"
-    args:
-      - "run"
-      - "jobs"
-      - "execute"
-      - "trail-info-$BRANCH_NAME-migrate"
-      - "--region=asia-northeast1"
-      - "--wait"
-      - "--task-timeout=20m"
 
   - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
     id: "deploy-service"
