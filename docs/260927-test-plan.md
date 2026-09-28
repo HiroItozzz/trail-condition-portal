@@ -107,6 +107,32 @@
 - 試しに 1 つのファイルの `temperature` を `temprature` に書き換えると 6-2 が失敗することを確かめ、元に戻す（`git diff` でプロンプトファイルに差分が残っていないこと）
 - 変更したファイルに `ruff check` / `ruff format --check` の新しい違反がない
 
+### 仕様（`test_db_access.py`）
+対象は `DbWriter.save_to_source` と `DbWriter.persist_condition_and_usage`（`trail_status/services/db_writer.py`）。本体のコードは変えない。
+
+`tests/trail_status/db_writer/test_db_access.py` を書き直す。
+
+- `django_db` の印はモジュールの `pytestmark = pytest.mark.django_db` の 1 か所だけにする。`transaction=True` は使わない（`atomic()` はテストのトランザクションの中でセーブポイントになるため、ロールバックも確かめられる）
+- 空の `TestTrailCondition` は削除する
+- `DataSource` はテストファイルの中で `DataSource.objects.create` で作る。項目は `tests/trail_status/views/conftest.py` の `create_sample_data_source` にそろえる。ほかのディレクトリの `conftest.py` は import しない
+- `DbWriter` に渡すもの
+  - `SourceSchemaSingle`：作った `DataSource` の `id` / `name` / `url1`、`prompt_file=PromptFile(prompt="test")`、`content_hash`
+  - `ResultSingle`：`stats` は本物の `LlmStats(TokenStats(...))`（`model` は `LlmModel.GEMINI_2_5_FLASH`）、`config` は `llm_config_factory(LlmModel.GEMINI_2_5_FLASH)`、`extracted_trail_conditions` は `ConditionSchemaAiList`
+
+| # | テスト | 準備 | 期待する結果 |
+|---|---|---|---|
+| 6-4 | `save_to_source`：内容が変わった | 情報源の `content_hash="old"`、`last_scraped_at` / `last_checked_at` は 2 日前。`ResultSingle(content_changed=True, new_hash="new")` | DB から読み直して、`content_hash == "new"`、`last_scraped_at` と `last_checked_at` が準備の値より新しい |
+| 6-5 | `save_to_source`：内容が変わらない | 6-4 と同じ情報源。`ResultSingle(content_changed=False, new_hash="old")` | `content_hash == "old"`、`last_scraped_at` は準備の値のまま、`last_checked_at` だけが新しい |
+| 6-6 | `save_to_source`：結果が例外 | 6-4 と同じ情報源。`DbWriter` の結果に `RuntimeError("失敗")` を渡す | 例外にならず、情報源の 3 項目はどれも準備の値のまま |
+| 6-7 | `persist_condition_and_usage`：初回の保存 | `TrailCondition` なし。AI 出力 2 件 | その情報源の `TrailCondition` が 2 件で、どちらも `disabled is True`。`created_at` / `updated_at` / `synced_at` が `None` でない。`ai_model` / `prompt_file` が `config` の値。`LlmUsage` が 1 件で、`prompt_tokens` が `TokenStats` の `input_tokens`、`conditions_extracted == 2`、`success is True`、`cost_usd == Decimal(str(stats.total_fee))`。戻り値は `count == 2`、`created == 2`、`updated == 0` |
+| 6-8 | `persist_condition_and_usage`：既存の更新 | `TrailCondition` を 1 件（`status=CLEAR`、`disabled=False`）。AI 出力は山名・登山道名・タイトル・説明が同じで `status=CLOSURE` の 1 件 | `TrailCondition` は 1 件のまま、`status` が `CLOSURE`、`updated_at` が準備の値より新しい。戻り値は `updated == 1`、`created == 0` |
+| 6-9 | `persist_condition_and_usage`：途中で失敗したら全部取り消す | 6-7 と同じ準備。`monkeypatch` で `DbWriter._commit_llm_usage` が `RuntimeError` を投げるようにする | `pytest.raises(RuntimeError)`。その情報源の `TrailCondition` も `LlmUsage` も 0 件（`transaction.atomic()` で `TrailCondition` の保存も取り消される） |
+
+完成の条件
+- docker compose の `web` で `uv run pytest` が全件通る
+- 試しに `persist_condition_and_usage` の `with transaction.atomic():` を外す（中の 2 行はそのまま残す）と 6-9 が失敗することを確かめ、元に戻す（`git diff` で `db_writer.py` に差分が残っていないこと）
+- 変更したファイルに `ruff check` / `ruff format --check` の新しい違反がない
+
 ## 6.5 プロンプトファイルの読み込みの失敗（テスト以外の改善）
 - `trail_sync.py` の `setup_data_source` は、全情報源の `PromptFile.load_merged_config` を `try` なしで呼ぶ。1 つの YAML が壊れているだけで、全情報源の処理が止まる。
 - モデル名・temperature の誤りは `pipeline.py` の `try/except` で、その情報源だけの失敗になる。読み込みの失敗も同じ扱いにするかを決める。
