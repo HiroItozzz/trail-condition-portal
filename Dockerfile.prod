@@ -35,15 +35,10 @@ FROM python-base AS server
 COPY --from=server-deps /code/.venv /code/.venv
 COPY . .
 COPY --from=builder /frontend/dist ./static/dist
-# collectstatic用の環境変数を設定
 ENV DJANGO_SETTINGS_MODULE=config.settings.production
-# ダミー環境変数
-ENV DATABASE_URL=sqlite:///dummy.db
-ENV DJANGO_SECRET_KEY=dummy123
-RUN uv run --frozen --no-dev manage.py collectstatic --noinput
-# ダミー環境変数をリセット/ジャンゴ設定モジュール環境変数はリセット不要
-ENV DATABASE_URL= \
-    DJANGO_SECRET_KEY=
+# collectstatic のときだけダミーの値を渡す（ENV にするとイメージに残るため）
+RUN DATABASE_URL=sqlite:///dummy.db DJANGO_SECRET_KEY=dummy123 \
+    uv run --frozen --no-dev manage.py collectstatic --noinput
 
 CMD ["uv", "run", "--frozen", "--no-dev", "gunicorn", "config.wsgi:application", "--workers=1", "--threads=8", "--timeout=120"]
 
