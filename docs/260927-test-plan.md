@@ -183,5 +183,26 @@ A-1〜A-6 と同じ準備で、`TestReconcileRecordsAssignment` に 1 件足す�
 - `trail_status/services/prompt_utils.py` の `load_template`：エラー時の戻り値の型。
 - `tests/trail_status/conftest.py` の `mock_openai_response`：Response API に合わせたモックにする。
 
+### 調べた結果（2026-09-28）
+- `load_template` は、エラー時には `FileNotFoundError` / `ValueError` を投げ、成功時には `PromptFile` を返している。TODO の「返却型変更」はもう済んでいて、docstring（「辞書で返却」「`str`: プロンプト文字列」）だけが古い。
+- `mock_openai_response` は Chat Completions の形（`usage.prompt_tokens` など）。`GptClient` は Responses API の `usage.input_tokens` / `output_tokens` / `output_tokens_details.reasoning_tokens` を読むが、`MagicMock` はどの属性でも値を返すため、`TestGpt.test_create_token_stats` はエラーにならず、`isinstance(result, TokenStats)` しか確かめていない。`TestDeepseek` の 2 件も同じく値を確かめていない。
+
+### 仕様
+本体のコードは、7-1 の docstring とコメント以外は変えない。
+
+| # | 対象 | 変更 |
+|---|---|---|
+| 7-1 | `prompt_utils.py` の `load_template` | 行末の `# TODO: エラーハンドリングの返却型変更` を削除する。docstring の 1 行目を「template.yaml を読み込み、`PromptFile` で返す」の意味に、`Returns:` を `PromptFile: テンプレートの内容` に直す。`Raises:` はそのまま |
+| 7-2 | `tests/trail_status/conftest.py` | `mock_openai_response` を `mock_deepseek_response` に名前を変え、行末の TODO を削除する。中身は変えないが、`usage.completion_tokens_details.reasoning_tokens` を `20` にする |
+| 7-3 | `tests/trail_status/conftest.py` | `mock_gpt_response` を追加する。`MagicMock()` の `usage` に本物の `openai.types.responses.ResponseUsage` を入れる（`input_tokens=100`、`output_tokens=50`、`output_tokens_details=OutputTokensDetails(reasoning_tokens=20)`、`input_tokens_details=InputTokensDetails(cached_tokens=0)`、`total_tokens=150`）。本物の型にするのは、コードが存在しない属性を読んだときにテストが失敗するようにするため |
+| 7-4 | `tests/trail_status/llm/test_llm_clients.py` の `TestGpt` | `test_call_api` / `test_create_token_stats` で `mock_gpt_response` を使う。`test_create_token_stats` は `isinstance` に加えて、`input_tokens == 100`、`thoughts_tokens == 20`、`pure_output_tokens == 30`、`input_letter_count == len(gpt_config.prompt + gpt_config.data)`、`output_letter_count == -1` を確かめる |
+| 7-5 | 同じファイルの `TestDeepseek` | `mock_deepseek_response` を使う。`test_create_token_stats` は `input_tokens == 100`、`thoughts_tokens == 20`、`pure_output_tokens == 30`、`output_letter_count == len('{"trail_condition_records": []}')` を確かめる |
+
+完成の条件
+- docker compose の `web` で `uv run pytest` が全件通る
+- `mock_openai_response` という名前が `tests/` に残っていない（`grep -rn mock_openai_response tests`）
+- 試しに `GptClient._create_token_stats` の `pure_output_tokens = output_tokens - thoughts_tokens` を `pure_output_tokens = output_tokens` にすると 7-4 が、`DeepseekClient._create_token_stats` の同じ行を変えると 7-5 が失敗することを確かめ、元に戻す（`git diff` で `llm_client.py` に差分が残っていないこと）
+- 変更したファイルに `ruff check` / `ruff format --check` の新しい違反がない
+
 ## 進め方
 2 以降は仕様が決まれば実装係（implementer）に任せられる大きさ。
