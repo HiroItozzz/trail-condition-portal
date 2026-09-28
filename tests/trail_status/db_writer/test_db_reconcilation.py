@@ -265,6 +265,7 @@ class TestReconcileRecordsAssignment:
         """A-6: 結びついても内容に変更がなければ更新せず、新規作成もしない"""
         same_date = date.today()
         x = make_existing_record(101, status=StatusType.CLEAR, resolved_at=same_date)
+        x.title = "既存のタイトル"
         y = make_existing_record(102, status=StatusType.CLEAR)
         a = make_ai_record("a", status=StatusType.CLEAR, resolved_at=same_date)
         b = make_ai_record("b", status=StatusType.CLOSURE)
@@ -274,6 +275,10 @@ class TestReconcileRecordsAssignment:
 
         assert [r.title for r in to_update] == ["b"]
         assert to_create == []
+        # 変更なしと判定された既存レコードは、AI出力の値で書き換えられていない
+        assert x.title == "既存のタイトル"
+        assert x.status == StatusType.CLEAR
+        assert x.resolved_at == same_date
 
     def test_a7_unmatched_existing_record_is_left_untouched(self, monkeypatch, mock_DbWriter):
         """A-7: 結びつかなかった既存レコードはto_updateに含まれず、内容も変わらない"""
