@@ -2,6 +2,8 @@ steps:
   - name: "gcr.io/cloud-builders/docker"
     id: "build-server"
     waitFor: ["-"]
+    # BuildKit で、指定したターゲットに必要なステージだけをビルドする
+    env: ["DOCKER_BUILDKIT=1"]
     args:
       - "build"
       - "--cache-from"
@@ -17,6 +19,8 @@ steps:
   - name: "gcr.io/cloud-builders/docker"
     id: "build-batch"
     waitFor: ["-"]
+    # BuildKit で、指定したターゲットに必要なステージだけをビルドする
+    env: ["DOCKER_BUILDKIT=1"]
     args:
       - "build"
       - "--cache-from"
@@ -62,7 +66,8 @@ steps:
       - "--args=run,--frozen,--no-dev,manage.py,migrate"
   - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
     id: "deploy-sync-job"
-    waitFor: ["push-batch"]
+    # マイグレーションのあとに更新する（新しいコードが古いスキーマで動かないように）
+    waitFor: ["push-batch", "execute-migrate"]
     entrypoint: "gcloud"
     args:
       - "run"
@@ -76,7 +81,8 @@ steps:
       - "--args=run,--frozen,--no-dev,manage.py,trail_sync"
   - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
     id: "deploy-blog-sync-job"
-    waitFor: ["push-batch"]
+    # マイグレーションのあとに更新する（新しいコードが古いスキーマで動かないように）
+    waitFor: ["push-batch", "execute-migrate"]
     entrypoint: "gcloud"
     args:
       - "run"

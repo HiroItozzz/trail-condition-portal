@@ -11,12 +11,14 @@ RUN npx vite build
 
 
 # ========== ステージ2: Pythonイメージ作成 ==========
-FROM python:3.13.14-slim AS python-base
+FROM python:3.13.15-slim AS python-base
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV UV_COMPILE_BYTECODE=1
+# 実行時の uv run で環境を同期しない（依存はビルド時に入れ終わっている。同期すると起動のたびにバイトコードを作り直す）
+ENV UV_NO_SYNC=1
 WORKDIR /code
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.12 /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock* ./
 
 # ========== ステージ3: サーバー用Python依存関係のインストール ==========
