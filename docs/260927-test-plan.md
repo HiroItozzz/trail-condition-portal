@@ -43,6 +43,42 @@
 - `views/` のテストはステータス 200 とキーワードの確認のみ。
 - 追加するケース：`?area=` / `?source=` / `?status=` の絞り込みと、その組み合わせ。
 
+### 仕様
+対象は `TrailListView`（`trail_status/views.py`）の `conditions`。本体のコードは変えない。
+
+- `tests/trail_status/views/test_trail_list.py` に、pytest の書き方（`@pytest.mark.django_db` のクラス、`client` フィクスチャ）でテストを追加する。既存の `TestTrailListView`（`TestCase`）はそのまま残す
+- データは `views/conftest.py` の `create_sample_data_source` / `create_sample_condition` で作る。`title` を変えて、どのレコードかを見分ける
+- 確かめるのは HTML ではなく `response.context["conditions"]` の `title` の並び。並び順も含めて `list` で比べる
+- `transaction=True` は使わない
+
+共通のデータ（どのケースでも同じものを使う）
+
+| title | 情報源 | area | status | reported_at | disabled |
+|---|---|---|---|---|---|
+| A | 情報源 1 | OKUTAMA | CLOSURE | 今日 − 1 日 | False |
+| B | 情報源 1 | TANZAWA | HAZARD | 今日 − 2 日 | False |
+| C | 情報源 2 | OKUTAMA | HAZARD | 今日 − 3 日 | False |
+| D | 情報源 2 | TANZAWA | CLOSURE | 今日 − 4 日 | False |
+| E | 情報源 1 | OKUTAMA | CLOSURE | 今日 | True |
+
+| # | リクエスト | 期待する `title` の並び |
+|---|---|---|
+| 4-1 | 絞り込みなし | `["A", "B", "C", "D"]`（E は `disabled` なので出ない。`reported_at` の降順） |
+| 4-2 | `?area=TANZAWA` | `["B", "D"]` |
+| 4-3 | `?source=<情報源 2 の id>` | `["C", "D"]` |
+| 4-4 | `?status=HAZARD` | `["B", "C"]` |
+| 4-5 | `?area=OKUTAMA&status=CLOSURE` | `["A"]`（E は `disabled`） |
+| 4-6 | `?source=<情報源 1 の id>&area=TANZAWA&status=HAZARD` | `["B"]` |
+| 4-7 | `?area=HAKONE`（データのない山域） | `[]`、ステータス 200 |
+| 4-8 | `?area=`（空の値） | 4-1 と同じ（空文字は絞り込みなし扱い） |
+
+- 4-2〜4-6 は `current_area` / `current_source` / `current_status` がリクエストの値と同じ文字列になることも確かめる
+- 4-1〜4-8 は `pytest.mark.parametrize` で 1 つのテストにまとめてもよい（`ids` にケースの内容を書く）。情報源の id はテストの実行時に決まるので、パラメータには情報源の番号（1 / 2）を書き、テストの中で id に置き換える
+
+完成の条件
+- docker compose の `web` で `uv run pytest` が全件通る
+- 変更したファイルに `ruff check` / `ruff format --check` の新しい違反がない
+
 ## 5. 通知
 - `email_notifier.py` / `slack_notifier.py` のテストがない。
 - 追加するケース：成功時・失敗時の送信内容、設定がないときにスキップすること。
