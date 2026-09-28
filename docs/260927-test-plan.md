@@ -179,7 +179,7 @@ A-1〜A-6 と同じ準備で、`TestReconcileRecordsAssignment` に 1 件足す�
 - モデル名・temperature の誤りは `pipeline.py` の `try/except` で、その情報源だけの失敗になる。読み込みの失敗も同じ扱いにするかを決める。
 - 6 のテストで事前に気づけるようになるため、優先度は低い。
 
-## 7. 小さな TODO
+## 7. 小さな TODO（対応済み：2026-09-28）
 - `trail_status/services/prompt_utils.py` の `load_template`：エラー時の戻り値の型。
 - `tests/trail_status/conftest.py` の `mock_openai_response`：Response API に合わせたモックにする。
 
