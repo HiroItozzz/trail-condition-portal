@@ -124,18 +124,20 @@ steps:
       - "--region=asia-northeast1"
       - "--set-secrets=DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY:latest,DATABASE_URL=$_DATABASE_URL:latest"
 
-  - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
+  - name: "curlimages/curl:8.22.0"
     id: "check-service"
     # デプロイ後、トップページが 200 を返すかを確かめる。失敗してもビルドが失敗になるだけで、
     # トラフィックは新しいリビジョンのまま。応答がなくても 1 分以内に終わるよう、再試行は 2 回まで。
+    # gcloud のイメージには curl が入っていないため、curl の公式イメージを使う。
     # 出力先は /dev/null にしない（再試行の前に出力先を空にできず、5xx で再試行されないため）
     waitFor: ["deploy-service"]
-    entrypoint: "bash"
+    entrypoint: "sh"
     args:
       - "-c"
       - |
-        code=$$(curl -sS -o "$$(mktemp)" -w "%{http_code}" --retry 2 --retry-delay 3 --retry-all-errors --connect-timeout 5 --max-time 15 "https://trail-info.jp/") || true
-        echo "https://trail-info.jp/ -> $$code"
+        code=$$(curl -sS -o "$$(mktemp)" -w "%{http_code}" --retry 2 --retry-delay 3 --retry-all-errors --connect-timeout 5 --max-time 15 "https://trail-info.jp/")
+        rc=$$?
+        echo "https://trail-info.jp/ -> $$code (curl exit $$rc)"
         test "$$code" = "200"
 
 images:
