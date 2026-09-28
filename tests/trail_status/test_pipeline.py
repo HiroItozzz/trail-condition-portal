@@ -256,16 +256,16 @@ class TestPipeline:
     @pytest.mark.asyncio
     async def test_one_of_multiple_sources_fails(self, monkeypatch, mock_api_keys, mock_async_client):
         """複数の情報源のうち1件だけLLM処理に失敗しても、他の結果は入力と同じ順で返る"""
-        mock_config = LlmConfig(data="テスト", model="gemini-2.5-flash", prompt="テストプロンプト")
-        monkeypatch.setattr("trail_status.services.pipeline.LlmConfig.from_file", MagicMock(return_value=mock_config))
 
-        # config内容ではクライアントを区別できないため、呼ばれた回数で1件目だけ失敗させる
-        call_count = 0
+        # 情報源のプロンプトをそのままLlmConfigに渡し、クライアントの生成時に情報源を見分けられるようにする
+        def from_file(prompt_file, data, **kwargs):
+            return LlmConfig(data=data, model="gemini-2.5-flash", prompt=prompt_file.prompt)
 
+        monkeypatch.setattr("trail_status.services.pipeline.LlmConfig.from_file", from_file)
+
+        # 実行順に依存しないよう、1件目の情報源（プロンプトが "test1"）だけ失敗させる
         def client_factory(config):
-            nonlocal call_count
-            call_count += 1
-            if call_count == 1:
+            if config.prompt == "test1":
                 return FailingGeminiClient(config)
             return FakeGeminiClient(config)
 

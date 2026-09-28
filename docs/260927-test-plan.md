@@ -31,7 +31,7 @@
 | 3-3 | 取得結果が空 | HTML を `"   "` にする | `success is False`、`message == "スクレイピング結果が空でした"`、`client_factory` が呼ばれない |
 | 3-4 | HTTP の失敗 | `mock_async_client.get.side_effect = httpx.ConnectError("接続失敗")`。`fetch_html` の tenacity の待ち時間を `monkeypatch.setattr(DataFetcher.fetch_html.retry, "wait", wait_none())` で 0 にする | `success is False`、`message` が `"処理エラー"` で始まる、`get` が 3 回呼ばれる |
 | 3-5 | LLM の失敗 | `_call_api` が `RuntimeError("LLM失敗")` を投げる `FakeGeminiClient` の子クラスを使う | `success is False`、`message` に `"LLM失敗"` を含む |
-| 3-6 | 複数の情報源のうち 1 件だけ失敗 | 情報源を 2 件にし、`client_factory` で 1 件目だけ 3-5 のクライアントを返す（`config` では区別できないので、呼ばれた回数で切り替える） | 結果は 2 件で、入力と同じ順。1 件目は `success is False`、2 件目は `success is True` |
+| 3-6 | 複数の情報源のうち 1 件だけ失敗 | 情報源を 2 件にし、`client_factory` で 1 件目だけ 3-5 のクライアントを返す。`from_file` のモックは情報源のプロンプトを `config.prompt` に入れて返し、`client_factory` はそれを見て切り替える（呼ばれた回数で切り替えると、`asyncio.gather` の実行順に依存するため） | 結果は 2 件で、入力と同じ順。1 件目は `success is False`、2 件目は `success is True` |
 | 3-7 | `previous_hash=""` は初回扱い | `test_fetcher.py` に追加。`has_content_changed(html, "")` | 1 つ目が `True`、2 つ目が `calculate_content_hash(html)` と同じ |
 
 完成の条件
