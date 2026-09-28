@@ -7,8 +7,8 @@
 - 既存のテストでデータが消えなかったのは、`db_writer/test_db_access.py` のクラスでクラス内の `pytestmark = pytest.mark.django_db` が先に入り、デコレータの `transaction=True` が使われていなかったため。`transaction=True` が効くテストでは、終了時の flush で開発用 DB の全テーブルが空になることを確認した。
 - 対応：上書きを外し、pytest-django にテスト用 DB（`test_trail_portal_dev`）を作らせた。docker compose の環境で全 86 件が通り、開発用 DB の件数が変わらないことを確認した。
 
-## 2. レコード照合の複数件のケース
-- `db_writer/test_db_reconcilation.py` は既存レコード 1 件 × AI 結果 1 件のみ。
+## 2. レコード照合の複数件のケース（A は対応済み：2026-09-28、B は未着手）
+- 対応前の `db_writer/test_db_reconcilation.py` は既存レコード 1 件 × AI 結果 1 件のみだった。
 - `_reconcile_records` の、全ペアの類似度計算 → しきい値判定 → スコア降順の割り当てが試されていない。名寄せの精度の中心なので優先度が高い。
 - テストは 2 層に分ける。
   - A：割り当てのしくみ。類似度を表で決めて確かめる。正解はコードの設計から決まる
