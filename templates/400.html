@@ -1,0 +1,23 @@
+{# djlint: off #}
+{% extends 'trail_status/base.html' %}
+{% block title %}URLの指定が正しくありません - トレイルインフォ{% endblock title %}
+{# djlint: on #}
+{% block content %}
+  <div class="flex flex-col items-center justify-center min-h-[60vh] text-center">
+    <div class="mb-8">
+      <div class="text-8xl mb-4">🏔️</div>
+      <h1 class="text-4xl font-bold text-gray-800 mb-4">400</h1>
+      <h2 class="text-2xl font-medium text-gray-600 mb-6">URLの指定が正しくありません</h2>
+    </div>
+    <div class="max-w-md text-gray-500 mb-8">
+      <p class="mb-4">申し訳ございません。URLに含まれる値を読み取れませんでした。</p>
+      <p>URLをご確認いただくか、以下のリンクをご利用ください。</p>
+    </div>
+    <div class="space-y-4">
+      <a href="{% url 'trail_status:trail-list' %}"
+         class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+        🏠 トップページに戻る
+      </a>
+    </div>
+  </div>
+{% endblock content %}

@@ -110,15 +110,15 @@ class PromptFile(BaseModel):
 
     @classmethod
     @lru_cache
-    def load_template(cls, filename: str = "template.yaml") -> PromptFile:  # TODO: エラーハンドリングの返却型変更
+    def load_template(cls, filename: str = "template.yaml") -> PromptFile:
         """
-        template.yamlを読み込み辞書で返却
+        template.yamlを読み込み、PromptFileで返す
 
         Args:
             filename: テンプレートプロンプトファイル名（template.yaml）
 
         Returns:
-            str: プロンプト文字列
+            PromptFile: テンプレートの内容
 
         Raises:
             FileNotFoundError: ファイルが存在しない場合

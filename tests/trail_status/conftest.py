@@ -156,7 +156,7 @@ def sample_token_stats():
 
 
 @pytest.fixture
-def mock_openai_response():  # TODO ResponseAPIのモックレスポンスの作成
+def mock_deepseek_response():
     """OpenAI APIレスポンスのモック（ChatCompletions）"""
     from unittest.mock import MagicMock
 
@@ -165,7 +165,27 @@ def mock_openai_response():  # TODO ResponseAPIのモックレスポンスの作
     mock_response.choices[0].message.content = '{"trail_condition_records": []}'
     mock_response.usage.prompt_tokens = 100
     mock_response.usage.completion_tokens = 50
-    mock_response.usage.completion_tokens_details.reasoning_tokens = 0
+    mock_response.usage.completion_tokens_details.reasoning_tokens = 20
+
+    return mock_response
+
+
+@pytest.fixture
+def mock_gpt_response():
+    """OpenAI APIレスポンスのモック（Responses API）"""
+    from unittest.mock import MagicMock
+
+    from openai.types.responses import ResponseUsage
+    from openai.types.responses.response_usage import InputTokensDetails, OutputTokensDetails
+
+    mock_response = MagicMock()
+    mock_response.usage = ResponseUsage(
+        input_tokens=100,
+        output_tokens=50,
+        output_tokens_details=OutputTokensDetails(reasoning_tokens=20),
+        input_tokens_details=InputTokensDetails(cached_tokens=0),
+        total_tokens=150,
+    )
 
     return mock_response
 

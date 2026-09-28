@@ -1,3 +1,4 @@
+import re
 from datetime import date, timedelta
 
 import pytest
@@ -112,5 +113,45 @@ class TestTrailListViewFiltering:
         assert [c.title for c in response.context["conditions"]] == expected_titles
 
         for key, value in expected_current.items():
-            expected = str(self.sources[value].id) if key == "current_source" else value
+            expected = self.sources[value].id if key == "current_source" else value
             assert response.context[key] == expected
+
+    def test_source_link_is_active(self, client):
+        """サイドバーの選択中の情報源のリンクに active がつく"""
+        selected, other = self.sources[2].id, self.sources[1].id
+
+        response = client.get(reverse("trail_status:trail-list"), query_params={"source": selected})
+
+        html = response.content.decode()
+        assert re.search(rf'\?source={selected}"\s+class="sidebar-link active"', html)
+        assert not re.search(rf'\?source={other}"\s+class="sidebar-link active"', html)
+
+    @pytest.mark.parametrize("value", [" {id}", "{id_fullwidth}"], ids=["前後の空白", "全角の数字"])
+    def test_source_accepts_int_convertible(self, client, value):
+        """int() が受け付ける値は数値として扱う"""
+        source_id = self.sources[2].id
+        fullwidth = str(source_id).translate(str.maketrans("0123456789", "０１２３４５６７８９"))
+        param = value.format(id=source_id, id_fullwidth=fullwidth)
+
+        response = client.get(reverse("trail_status:trail-list"), query_params={"source": param})
+
+        assert response.status_code == 200
+        assert [c.title for c in response.context["conditions"]] == ["C", "D"]
+        assert response.context["current_source"] == source_id
+
+    def test_source_unknown_id_returns_empty(self, client):
+        """存在しない id は 200 で空の一覧"""
+        unknown = max(s.id for s in self.sources.values()) + 1
+
+        response = client.get(reverse("trail_status:trail-list"), query_params={"source": unknown})
+
+        assert response.status_code == 200
+        assert list(response.context["conditions"]) == []
+
+    @pytest.mark.parametrize("value", ["abc", "1a", "1.5"])
+    def test_source_invalid_returns_400(self, client, value):
+        """数値に変換できない値は 400"""
+        response = client.get(reverse("trail_status:trail-list"), query_params={"source": value})
+
+        assert response.status_code == 400
+        assert "URLの指定が正しくありません" in response.content.decode()

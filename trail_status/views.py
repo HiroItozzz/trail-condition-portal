@@ -4,6 +4,7 @@ from collections import OrderedDict, defaultdict
 from datetime import timedelta
 from typing import override
 
+from django.core.exceptions import BadRequest
 from django.db.models import Count, F, Max, Prefetch
 from django.utils import timezone
 from django.views.generic import DetailView, ListView
@@ -33,7 +34,12 @@ class TrailListView(SideBarMixin, ListView):
     @override
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
-        self.source_filter = request.GET.get("source")
+        # テンプレートで DataSource.id（数値）と比べるため、数値に変換する
+        source = request.GET.get("source")
+        try:
+            self.source_filter = int(source) if source else None
+        except ValueError as e:
+            raise BadRequest(f"source の値が不正です: {source!r}") from e
         self.area_filter = request.GET.get("area")
         self.status_filter = request.GET.get("status")
 
@@ -44,7 +50,7 @@ class TrailListView(SideBarMixin, ListView):
         base_conditions = self.get_queryset()
 
         # クエリパラメータによる絞り込み
-        if self.source_filter:
+        if self.source_filter is not None:
             base_conditions = base_conditions.filter(source=self.source_filter)
         if self.area_filter:
             base_conditions = base_conditions.filter(area=self.area_filter)
