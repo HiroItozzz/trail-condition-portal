@@ -10,6 +10,45 @@
 ## 2. レコード照合の複数件のケース
 - `db_writer/test_db_reconcilation.py` は既存レコード 1 件 × AI 結果 1 件のみ。
 - `_reconcile_records` の、全ペアの類似度計算 → しきい値判定 → スコア降順の割り当てが試されていない。名寄せの精度の中心なので優先度が高い。
+- テストは 2 層に分ける。
+  - A：割り当てのしくみ。類似度を表で決めて確かめる。正解はコードの設計から決まる
+  - B：類似度の質。本物の Sudachi + RapidFuzz で「同じ登山道」と判定されるか。正解はオーナーが決める（`sample/` の実際の AI 出力からペアを選ぶ）
+- 照合の流れとテストの 2 層の考え方は `docs/260215-record-matching-simple.md` にまとめた。
+- 決定（2026-09-28）：どの AI 出力とも結びつかなかった既存レコードは、何もせずに残す（意図した挙動）。A の仕様ではこの挙動を assert していないため、固定するテストは別に足す。
+
+### 仕様（A：割り当てのしくみ）
+対象は `DbWriter._reconcile_records`（`trail_status/services/db_writer.py`）。本体のコードは変えない。
+
+- `tests/trail_status/db_writer/test_db_reconcilation.py` に、新しいクラスで追加する。既存のフィクスチャ `mock_DbWriter` を使う。既存のテストは変えない
+- 類似度は `monkeypatch.setattr(DbWriter, "_calculate_similarity", ...)` で差し替え、`(既存レコードの id, AI 出力の title)` をキーにした dict から返す。dict にない組み合わせは 0.0
+- 既存レコードは既存の `mock_existing_record` と同じく `MagicMock(spec=TrailCondition, ...)` で作る（DB は使わない）。`id`、`disabled`、`status`、`resolved_at` を指定する
+- AI 出力は `ConditionSchemaAiInternal` で作り、`title` で見分ける（`"a"`、`"b"` など）
+- どの AI 出力と結びついたかは、更新されたレコードの `title` で見る（更新時に AI 出力の `title` がコピーされる）。そのため、結びつくことを確かめたいペアは、既存の `status` を `CLEAR`、AI 出力の `status` を `CLOSURE` にして更新が起きるようにする
+- しきい値は数値を直接書かず `DbWriter.SIMILARITY_THRESHOLD` を使う
+
+| # | 既存 | AI 出力（渡す順） | 類似度 | 期待する結果 |
+|---|---|---|---|---|
+| A-1 | X | a, b | X-a: 0.95、X-b: 0.80 | `to_update` は X だけで `X.title == "a"`。`to_create` の title は `["b"]`（0.7 以上でも、取り合いに負けたら新規） |
+| A-2 | X | b, a（A-1 の逆順） | A-1 と同じ | A-1 と同じ（渡す順ではなくスコアで決まる） |
+| A-3 | X, Y | a, b | X-a: 0.90、Y-a: 0.85、X-b: 0.80、Y-b: 0.75 | X ← a、Y ← b。`to_create` は空（a が X を取ったあと、b は残った Y と結びつく） |
+| A-4 | X, Y | a, b | X-a: `THRESHOLD`、Y-b: `THRESHOLD - 0.01` | X ← a。`to_create` の title は `["b"]`（しきい値ちょうどは結びつく） |
+| A-5 | X（`disabled=True`） | a | X-a: 1.0 | `to_update` は空。`to_create` の title は `["a"]` で、`disabled is False`（既存レコードがあるので初回ではない） |
+| A-6 | X, Y | a, b | X-a: 0.9、Y-b: 0.9。X と a は `status` も `resolved_at` も同じ。Y と b は `status` が違う | `to_update` は Y だけ。`to_create` は空（変更のないペアは更新も新規もしない） |
+
+- A-1〜A-6 は既存レコードの `id` が 1 から始まらなくても動くように、`id` は 101、102 のように決める
+- 結びつかなかった既存レコードについては assert しない（固定するテストは A-7 で足す）
+
+#### A-7（追加）：結びつかなかった既存レコードは残す
+A-1〜A-6 と同じ準備で、`TestReconcileRecordsAssignment` に 1 件足す。
+
+| # | 既存 | AI 出力 | 類似度 | 期待する結果 |
+|---|---|---|---|---|
+| A-7 | X、Y（どちらも `status=CLEAR`、`disabled=False`、`resolved_at=None`） | a（`status=CLOSURE`） | X-a: 0.9 | `to_update` の title は `["a"]` で、`to_update` に Y が含まれない。`to_create` は空。Y の `disabled` は `False`、`status` は `CLEAR`、`resolved_at` は `None` のまま |
+
+完成の条件
+- docker compose の `web` で `uv run pytest` が全件通る
+- 試しに `_reconcile_records` の `matches.sort(..., reverse=True)` を `reverse=False` にすると、A-1 と A-2 が失敗することを確かめ、元に戻す（`git diff` で `db_writer.py` に差分が残っていないこと）
+- 変更したファイルに `ruff check` / `ruff format --check` の新しい違反がない
 
 ## 3. パイプライン（対応済み：2026-09-28）
 - 対応前の `test_pipeline.py` は成功ケースの 1 件のみだった。
