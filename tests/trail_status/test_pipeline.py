@@ -292,5 +292,6 @@ class TestPipeline:
         assert len(results) == 2
         assert results[0][0].id == 1
         assert results[0][1].success is False
+        assert "LLM失敗" in results[0][1].message
         assert results[1][0].id == 2
         assert results[1][1].success is True

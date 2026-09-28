@@ -81,7 +81,7 @@ class TestSaveToSource:
         original_scraped_at = data_source.last_scraped_at
         original_checked_at = data_source.last_checked_at
 
-        result = ResultSingle(success=True, message="OK", content_changed=False, new_hash="old")
+        result = ResultSingle(success=True, message="OK", content_changed=False, new_hash="other")
         DbWriter(source_schema, result).save_to_source()
 
         data_source.refresh_from_db()
