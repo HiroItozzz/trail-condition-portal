@@ -124,6 +124,19 @@ steps:
       - "--region=asia-northeast1"
       - "--set-secrets=DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY:latest,DATABASE_URL=$_DATABASE_URL:latest"
 
+  - name: "asia.gcr.io/google.com/cloudsdktool/google-cloud-cli:stable"
+    id: "check-service"
+    # デプロイ後、トップページが 200 を返すかを確かめる（コールドスタートに備えて再試行する）。
+    # 失敗してもビルドが失敗になるだけで、トラフィックは新しいリビジョンのまま
+    waitFor: ["deploy-service"]
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        code=$$(curl -sS -o /dev/null -w "%{http_code}" --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 10 --max-time 30 "https://trail-info.jp/") || true
+        echo "https://trail-info.jp/ -> $$code"
+        test "$$code" = "200"
+
 images:
   - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$_BRANCH_NAME:$TAG_NAME"
   - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$_BRANCH_NAME:latest"
