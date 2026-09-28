@@ -280,28 +280,33 @@ class TestGpt:
         assert gpt_config.data in user_prompt["content"]
 
     @pytest.mark.asyncio
-    async def test_call_api(self, monkeypatch, llm_config_factory, mock_openai_response):
+    async def test_call_api(self, monkeypatch, llm_config_factory, mock_gpt_response):
         """API呼び出しを行うメソッドの挙動"""
         gpt_config = llm_config_factory(LlmModel.GPT_5_NANO)
 
         monkeypatch.setattr(openai, "AsyncOpenAI", MagicMock(wraps=openai.AsyncOpenAI))
-        monkeypatch.setattr(AsyncResponses, "parse", AsyncMock(return_value=mock_openai_response))
+        monkeypatch.setattr(AsyncResponses, "parse", AsyncMock(return_value=mock_gpt_response))
 
         client = GptClient(gpt_config)
         result = await client._call_api()
 
         openai.AsyncOpenAI.assert_called_once()
         AsyncResponses.parse.assert_called_once()
-        assert result == mock_openai_response
+        assert result == mock_gpt_response
 
-    def test_create_token_stats(self, llm_config_factory, mock_openai_response):
+    def test_create_token_stats(self, llm_config_factory, mock_gpt_response):
         """トークン計算の挙動"""
         gpt_config = llm_config_factory(LlmModel.GPT_5_NANO)
 
         client = GptClient(gpt_config)
-        result = client._create_token_stats(mock_openai_response)
+        result = client._create_token_stats(mock_gpt_response)
 
         assert isinstance(result, TokenStats)
+        assert result.input_tokens == 100
+        assert result.thoughts_tokens == 20
+        assert result.pure_output_tokens == 30
+        assert result.input_letter_count == len(gpt_config.prompt + gpt_config.data)
+        assert result.output_letter_count == -1
 
 
 class TestDeepseek:
@@ -316,28 +321,32 @@ class TestDeepseek:
         assert deepseek_config.data in result
 
     @pytest.mark.asyncio
-    async def test_call_api(self, monkeypatch, llm_config_factory, mock_openai_response):
+    async def test_call_api(self, monkeypatch, llm_config_factory, mock_deepseek_response):
         """API呼び出しを行うメソッドの挙動"""
         deepseek_config = llm_config_factory(LlmModel.DEEPSEEK_CHAT)
 
         monkeypatch.setattr(openai, "AsyncOpenAI", MagicMock(wraps=openai.AsyncOpenAI))
-        monkeypatch.setattr(AsyncCompletions, "create", AsyncMock(return_value=mock_openai_response))
+        monkeypatch.setattr(AsyncCompletions, "create", AsyncMock(return_value=mock_deepseek_response))
 
         client = DeepseekClient(deepseek_config)
         result = await client._call_api()
 
         openai.AsyncOpenAI.assert_called_once()
         AsyncCompletions.create.assert_called_once()
-        assert result == mock_openai_response
+        assert result == mock_deepseek_response
 
-    def test_create_token_stats(self, llm_config_factory, mock_openai_response):
+    def test_create_token_stats(self, llm_config_factory, mock_deepseek_response):
         """トークン計算の挙動"""
         deepseek_config = llm_config_factory(LlmModel.DEEPSEEK_CHAT)
 
         client = DeepseekClient(deepseek_config)
-        result = client._create_token_stats(mock_openai_response)
+        result = client._create_token_stats(mock_deepseek_response)
 
         assert isinstance(result, TokenStats)
+        assert result.input_tokens == 100
+        assert result.thoughts_tokens == 20
+        assert result.pure_output_tokens == 30
+        assert result.output_letter_count == len('{"trail_condition_records": []}')
 
 
 def test_prompt_generation(llm_config_factory):
@@ -353,10 +362,10 @@ def test_prompt_generation(llm_config_factory):
 
 
 @pytest.mark.asyncio
-async def test_deepseek_generate_success(llm_config_factory, monkeypatch, mock_openai_response):
+async def test_deepseek_generate_success(llm_config_factory, monkeypatch, mock_deepseek_response):
     """DeepSeek API呼び出し成功テスト（モック使用）"""
     mock_client = MagicMock()
-    mock_client.chat.completions.create = AsyncMock(return_value=mock_openai_response)
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_deepseek_response)
 
     # openai.AsyncOpenAI をモック（メソッド内でインポートされるため）
     mock_openai_class = MagicMock(return_value=mock_client)
@@ -377,4 +386,4 @@ async def test_deepseek_generate_success(llm_config_factory, monkeypatch, mock_o
     assert isinstance(validated_data, ConditionSchemaAiList)
     assert len(validated_data.trail_condition_records) == 0
     assert token_stats.input_tokens == 100
-    assert token_stats.pure_output_tokens == 50
+    assert token_stats.pure_output_tokens == 30
