@@ -107,3 +107,13 @@ class TestFetcher(SetUp):
         has_changed, hash3 = self.fetcher.has_content_changed(html2, hash1)
         assert has_changed is True
         assert hash3 != hash1
+
+    @pytest.mark.asyncio
+    async def test_content_change_detection_empty_string_previous_hash(self):
+        """previous_hashが空文字の場合もNoneと同様に初回として扱われる"""
+        html = "<html><body><p>テスト</p></body></html>"
+
+        has_changed, new_hash = self.fetcher.has_content_changed(html, "")
+
+        assert has_changed is True
+        assert new_hash == self.fetcher.calculate_content_hash(html)
