@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile.prod
       target: batch
+    # batch のイメージは app ユーザーで動き /code に書けないため、collectstatic を流すこのコンテナは root で動かす（ローカルで試す用）
+    user: root
     working_dir: /code
     command: >
       sh -c "uv run manage.py migrate &&

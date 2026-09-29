@@ -21,6 +21,9 @@ temp/
 # db
 db.sqlite3
 
+# collectstatic の出力（STATIC_ROOT）
+/staticfiles/
+
 # tests
 /.coverage
 
