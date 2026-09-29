@@ -23,9 +23,9 @@
     </title>
     <meta name="description"
           content="{% block meta_description %}奥多摩・丹沢等の登山道状況を公的機関から自動収集。通行止め・通行注意等の最新状況をまとめて確認できます。{% endblock meta_description %}">
-    <!-- Canonical URL -->
+    <!-- Canonical URL（既定はそのページ自身。クエリパラメータは含めない。ホスト名は読まない） -->
     <link rel="canonical"
-          href="{% block canonical_url %}https://trail-info.jp/{% endblock canonical_url %}">
+          href="{% block canonical_url %}https://trail-info.jp{{ request.path }}{% endblock canonical_url %}">
     {% block meta_robots %}
     {% endblock meta_robots %}
     <!-- OGタグ (SNSシェア用) -->
