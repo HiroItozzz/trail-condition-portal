@@ -1,3 +1,6 @@
+# 開発用の docker-compose.yml とプロジェクト名を分ける（同じだと、コンテナとイメージ（trail-condition-portal-web）を取り合う）
+name: trail-condition-portal-staging
+
 services:
   web:
     build:
