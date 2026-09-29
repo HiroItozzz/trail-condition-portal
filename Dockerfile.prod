@@ -20,6 +20,8 @@ ENV UV_NO_SYNC=1
 WORKDIR /code
 COPY --from=ghcr.io/astral-sh/uv:0.12 /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock* ./
+# アプリを動かすユーザー。/code と .venv は root の持ち物のままにし、アプリからは書き換えられないようにする
+RUN useradd --uid 10001 --create-home --shell /usr/sbin/nologin app
 
 # ========== ステージ3: サーバー用Python依存関係のインストール ==========
 FROM python-base AS server-deps
@@ -40,6 +42,7 @@ ENV DJANGO_SETTINGS_MODULE=config.settings.production
 RUN DATABASE_URL=sqlite:///dummy.db DJANGO_SECRET_KEY=dummy123 \
     uv run --frozen --no-dev manage.py collectstatic --noinput
 
+USER app
 CMD ["uv", "run", "--frozen", "--no-dev", "gunicorn", "config.wsgi:application", "--workers=1", "--threads=8", "--timeout=120"]
 
 # ========== ステージ6: Batch (バッチジョブ用) ==========
@@ -49,4 +52,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=batch-deps /code/.venv /code/.venv
 COPY . .
+# LLM の出力の検証に失敗したとき、llm_client.py の save_invalid_data が outputs/ に書き込む
+RUN mkdir -p outputs && chown app:app outputs
+USER app
 CMD ["uv", "run", "--frozen", "--no-dev", "manage.py", "help"]
