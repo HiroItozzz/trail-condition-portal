@@ -130,17 +130,15 @@ steps:
     # トラフィックは新しいリビジョンのまま。応答がなくても 1 分以内に終わるよう、再試行は 2 回まで。
     # gcloud のイメージには curl が入っていないため、curl の公式イメージを使う。
     # 出力先は /dev/null にしない（再試行の前に出力先を空にできず、5xx で再試行されないため）
-    # 本番は Cloudflare を通るため、キャッシュから返った 200 で成功しないよう、ビルドごとに違うクエリ（ビルドの ID）をつける。
-    # cf-cache-status（Cloudflare のキャッシュの状態）もログに出す
+    # Cloudflare のキャッシュを通らないよう、デプロイした Cloud Run の新しい形式の URL を直接見る（本番も同じ）
     waitFor: ["deploy-service"]
     entrypoint: "sh"
     args:
       - "-c"
       - |
-        out=$$(curl -sS -o "$$(mktemp)" -w "%{http_code} %header{cf-cache-status}" --retry 2 --retry-delay 3 --retry-all-errors --connect-timeout 5 --max-time 15 "https://trail-info.jp/?deploy_check=$BUILD_ID")
+        code=$$(curl -sS -o "$$(mktemp)" -w "%{http_code}" --retry 2 --retry-delay 3 --retry-all-errors --connect-timeout 5 --max-time 15 "https://${_SERVICE_NAME}-${PROJECT_NUMBER}.asia-northeast1.run.app/")
         rc=$$?
-        code=$${out%% *}
-        echo "https://trail-info.jp/?deploy_check=$BUILD_ID -> $$code (curl exit $$rc, cf-cache-status: $${out#* })"
+        echo "https://${_SERVICE_NAME}-${PROJECT_NUMBER}.asia-northeast1.run.app/ -> $$code (curl exit $$rc)"
         test "$$code" = "200"
 
 images:
