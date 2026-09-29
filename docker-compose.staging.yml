@@ -14,6 +14,7 @@ services:
       sh -c "uv run manage.py migrate &&
              uv run manage.py collectstatic --noinput &&
              uv run gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 120"
+    # 開発用の docker-compose.yml と同時に動かすときは、ポートを変える（例：PORT=8001 docker compose -f docker-compose.staging.yml up）
     ports:
       - "${PORT:-8000}:8000"
     environment:
