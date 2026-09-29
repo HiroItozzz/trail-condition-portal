@@ -25,3 +25,31 @@ jobs:
 
       - name: Execute test
         run: docker compose exec web uv run pytest
+
+  # PR で変更した .py だけを確かめる（リポジトリ全体には既存の違反があるため）。
+  # 必須チェックではない。マイグレーションは自動生成なので対象外
+  lint:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Ruff
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git diff --name-only -z --diff-filter=d "origin/${BASE_REF}...HEAD" -- '*.py' ':(exclude)*/migrations/*' > "$RUNNER_TEMP/changed"
+          if [ ! -s "$RUNNER_TEMP/changed" ]; then
+            echo "変更した .py はありません"
+            exit 0
+          fi
+          status=0
+          xargs -0 uv run --frozen --only-group dev ruff check --output-format=github < "$RUNNER_TEMP/changed" || status=1
+          xargs -0 uv run --frozen --only-group dev ruff format --check --diff < "$RUNNER_TEMP/changed" || status=1
+          exit $status
