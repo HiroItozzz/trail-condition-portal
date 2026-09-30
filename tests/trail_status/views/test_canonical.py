@@ -1,6 +1,7 @@
 import re
 
 import pytest
+from django.template.loader import render_to_string
 from django.urls import reverse
 
 from trail_status.models import AreaName, StatusType
@@ -47,6 +48,21 @@ class TestCanonicalUrl:
         response = client.get(reverse("trail_status:source-list"), query_params={"utm_source": "x"})
 
         assert get_canonical(response.content.decode()) == "https://trail-info.jp/sources/"
+
+    def test_404(self, client):
+        """404 のページも、開いた URL を指す（例外にならない）"""
+        response = client.get("/no-such-page/")
+
+        assert response.status_code == 404
+        assert get_canonical(response.content.decode()) == "https://trail-info.jp/no-such-page/"
+
+    def test_500_without_request(self):
+        """既定の 500 のハンドラーと同じく request なしで描画しても、canonical がトップになる"""
+        html = render_to_string("500.html")
+
+        assert get_canonical(html) == "https://trail-info.jp/"
+        # 開発用の設定では、存在しない変数を読むと string_if_invalid の文字列が出る
+        assert "存在しない変数" not in html
 
     def test_detail(self, client):
         response = client.get(reverse("trail_status:trail-detail", args=[self.condition.id]))
