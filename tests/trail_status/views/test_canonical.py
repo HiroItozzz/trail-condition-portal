@@ -73,3 +73,18 @@ class TestCanonicalUrl:
         response = client.get(reverse("trail_status:trail-list"), query_params=params)
 
         assert get_canonical(response.content.decode()) == expected.replace("SOURCE_ID", source_id)
+
+    @pytest.mark.parametrize(
+        ("query", "expected"),
+        [
+            ({"status": "CLOSURE&foo"}, "https://trail-info.jp/?status=CLOSURE%26foo"),
+            ({"area": "OKUTAMA&foo"}, "https://trail-info.jp/?area=OKUTAMA%26foo"),
+            ({"area": "奥多摩"}, "https://trail-info.jp/?area=%E5%A5%A5%E5%A4%9A%E6%91%A9"),
+        ],
+        ids=["状況に&", "山域に&", "山域に日本語"],
+    )
+    def test_trail_list_encodes_query_value(self, client, query, expected):
+        """クエリパラメータの値は URL エンコードして、別の URL にならないようにする"""
+        response = client.get(reverse("trail_status:trail-list"), query_params=query)
+
+        assert get_canonical(response.content.decode()) == expected
