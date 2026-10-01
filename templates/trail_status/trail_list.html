@@ -19,8 +19,9 @@
   {% endif %}
 {% endblock meta_description %}
 {% block canonical_url %}
-  {% if current_area %}https://trail-info.jp/?area={{ current_area }}
+  {% if current_area %}https://trail-info.jp/?area={{ current_area|urlencode }}
   {% elif current_source %}https://trail-info.jp/?source={{ current_source }}
+  {% elif current_status %}https://trail-info.jp/?status={{ current_status|urlencode }}
   {% else %}https://trail-info.jp/{% endif %}
 {% endblock canonical_url %}
 {% block meta_robots %}
