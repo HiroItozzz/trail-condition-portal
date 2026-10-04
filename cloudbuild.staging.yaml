@@ -64,6 +64,7 @@ steps:
       - "--region=asia-northeast1"
       - "--task-timeout=1200s"
       - "--set-secrets=DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY:latest,DATABASE_URL=$_DATABASE_URL:latest"
+      - "--service-account=trail-info-web-$BRANCH_NAME@$PROJECT_ID.iam.gserviceaccount.com"
       - "--command=uv"
       - "--args=run,--frozen,--no-dev,manage.py,migrate"
 
@@ -93,6 +94,7 @@ steps:
       - "--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA"
       - "--region=asia-northeast1"
       - "--set-secrets=DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY:latest,DATABASE_URL=$_DATABASE_URL:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,LANGSMITH_API_KEY=LANGSMITH_API_KEY:latest,SLACK_WEBHOOK_URL=SLACK_WEBHOOK_URL:latest,EMAIL_PASSWORD_NOREPLY=EMAIL_PASSWORD_NOREPLY:latest"
+      - "--service-account=trail-info-batch-$BRANCH_NAME@$PROJECT_ID.iam.gserviceaccount.com"
       - "--command=uv"
       - "--args=run,--frozen,--no-dev,manage.py,trail_sync"
 
@@ -109,6 +111,7 @@ steps:
       - "--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME-batch:$COMMIT_SHA"
       - "--region=asia-northeast1"
       - "--set-secrets=DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY:latest,DATABASE_URL=$_DATABASE_URL:latest,SLACK_WEBHOOK_URL=SLACK_WEBHOOK_URL:latest,EMAIL_PASSWORD_NOREPLY=EMAIL_PASSWORD_NOREPLY:latest"
+      - "--service-account=trail-info-batch-$BRANCH_NAME@$PROJECT_ID.iam.gserviceaccount.com"
       - "--command=uv"
       - "--args=run,--frozen,--no-dev,manage.py,blog_sync"
 
@@ -123,6 +126,7 @@ steps:
       - "--image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/trail-info/$BRANCH_NAME:$COMMIT_SHA"
       - "--region=asia-northeast1"
       - "--set-secrets=DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY:latest,DATABASE_URL=$_DATABASE_URL:latest"
+      - "--service-account=trail-info-web-$BRANCH_NAME@$PROJECT_ID.iam.gserviceaccount.com"
 
   - name: "curlimages/curl:8.22.0"
     id: "check-service"
