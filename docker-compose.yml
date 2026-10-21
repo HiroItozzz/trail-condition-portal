@@ -28,7 +28,7 @@ services:
         condition: service_healthy
 
   frontend:
-    image: node:24-slim
+    image: node:26.12.1-slim
     working_dir: /code
     # npm install はマウント先の package-lock.json を書き換えるため ci を使う
     command: sh -c "npm ci && npx vite build --watch"
