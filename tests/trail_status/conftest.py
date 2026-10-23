@@ -4,6 +4,7 @@ pytest設定とテスト共通フィクスチャ
 
 import os
 from collections import namedtuple
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 import httpx
@@ -173,18 +174,12 @@ def mock_deepseek_response():
 @pytest.fixture
 def mock_gpt_response():
     """OpenAI APIレスポンスのモック（Responses API）"""
-    from unittest.mock import MagicMock
-
-    from openai.types.responses import ResponseUsage
-    from openai.types.responses.response_usage import InputTokensDetails, OutputTokensDetails
 
     mock_response = MagicMock()
-    mock_response.usage = ResponseUsage(
+    mock_response.usage = SimpleNamespace(
         input_tokens=100,
         output_tokens=50,
-        output_tokens_details=OutputTokensDetails(reasoning_tokens=20),
-        input_tokens_details=InputTokensDetails(cached_tokens=0),
-        total_tokens=150,
+        output_tokens_details=SimpleNamespace(reasoning_tokens=20),
     )
 
     return mock_response
