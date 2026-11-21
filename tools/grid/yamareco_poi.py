@@ -7,7 +7,7 @@
 
 from typing import Any
 
-import httpx
+import httpx2
 from pydantic import BaseModel, Field
 
 # エリアID一覧
@@ -67,7 +67,7 @@ def search_poi_raw(area_id: int, name: str | None = None, type_id: int = 0, page
         "page": page,
         "type_id": type_id,
     }
-    res = httpx.post("https://api.yamareco.com/api/v1/searchPoi", data=data)
+    res = httpx2.post("https://api.yamareco.com/api/v1/searchPoi", data=data)
     try:
         res.raise_for_status()
     except Exception as e:
@@ -94,7 +94,7 @@ def search_poi(area_id: int, name: str | None = None, type_id: int = 0) -> list[
         "page": 1,
         "type_id": type_id,
     }
-    r = httpx.post("https://api.yamareco.com/api/v1/searchPoi", data=data)
+    r = httpx2.post("https://api.yamareco.com/api/v1/searchPoi", data=data)
     result = r.json()
     if result.get("err") == 0 and "poilist" in result:
         return result["poilist"]

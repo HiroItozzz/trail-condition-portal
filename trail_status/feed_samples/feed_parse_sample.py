@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 
 import feedparser
-from httpx import AsyncClient, HTTPStatusError
+from httpx2 import AsyncClient, HTTPStatusError
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +54,7 @@ async def main():
 
 if __name__ == "__main__":
     from datetime import datetime
+
     property_key = "tags"
     results = asyncio.run(main())
     output_text = ""

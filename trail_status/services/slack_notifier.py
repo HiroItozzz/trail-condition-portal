@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-import httpx
+import httpx2
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ class SlackNotifier:
                 ],
             }
 
-            response = httpx.post(self.webhook_url, json=message, timeout=10)
+            response = httpx2.post(self.webhook_url, json=message, timeout=10)
             response.raise_for_status()
             logger.info(f"Slack通知を送信しました: {source_name}")
             return True
@@ -105,7 +105,7 @@ class SlackNotifier:
                 ],
             }
 
-            response = httpx.post(self.webhook_url, json=message, timeout=10)
+            response = httpx2.post(self.webhook_url, json=message, timeout=10)
             response.raise_for_status()
             logger.info(f"Slackエラー通知を送信しました: {source_name}")
             return True

@@ -2,11 +2,11 @@ import json
 from pathlib import Path
 from pprint import pprint
 
-import httpx
+import httpx2
 
 
 def get_typelist():
-    r = httpx.get("https://api.yamareco.com/api/v1/getTypelist")
+    r = httpx2.get("https://api.yamareco.com/api/v1/getTypelist")
     return r.json()
 
 

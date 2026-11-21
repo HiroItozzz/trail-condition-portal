@@ -7,7 +7,7 @@ from collections import namedtuple
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
-import httpx
+import httpx2
 import pytest
 import yaml
 
@@ -95,7 +95,7 @@ def disable_sample_save(monkeypatch):
 
 @pytest.fixture
 def mock_async_client(monkeypatch):
-    """httpx.AsyncClientをモック"""
+    """httpx2.AsyncClientをモック"""
     # 1. レスポンスの準備
     mock_response = MagicMock()
     mock_response.text = "<html>...</html>"
@@ -111,7 +111,7 @@ def mock_async_client(monkeypatch):
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=None)
 
-    monkeypatch.setattr(httpx, "AsyncClient", mock_factory)
+    monkeypatch.setattr(httpx2, "AsyncClient", mock_factory)
 
     return mock_client
 

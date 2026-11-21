@@ -4,7 +4,7 @@ import pathlib
 import shutil
 import sys
 
-import httpx
+import httpx2
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db.models import Max
@@ -45,9 +45,8 @@ class Command(BaseCommand):
         output_path.write_text(text, encoding="utf-8")
         print(f"取得したテキストを{output_path}に保存しました")
 
-
     async def fetch_url(self, url):
-        async with httpx.AsyncClient() as client:
+        async with httpx2.AsyncClient() as client:
             fetcher = DataFetcher(url)
             html = await fetcher.fetch_html(client)
 

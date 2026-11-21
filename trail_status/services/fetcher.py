@@ -2,7 +2,7 @@ import hashlib
 import logging
 from typing import Optional
 
-import httpx
+import httpx2
 import trafilatura
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
@@ -19,17 +19,17 @@ class DataFetcher:
     @retry(
         stop=stop_after_attempt(3),  # 3回リトライ
         wait=wait_exponential(multiplier=1, min=2, max=10),  # 指数バックオフ（2s, 4s, 8s...）
-        retry=retry_if_exception_type((httpx.HTTPError, httpx.ConnectError)),
+        retry=retry_if_exception_type((httpx2.HTTPError, httpx2.ConnectError)),
         reraise=True,  # 3回失敗したら最後のエラーを投げる
     )
-    async def fetch_html(self, client: httpx.AsyncClient) -> str:
+    async def fetch_html(self, client: httpx2.AsyncClient) -> str:
         """生HTMLのスクレイピング"""
         try:
             response = await client.get(self.url, headers=self.headers)
             response.raise_for_status()
             return response.text
 
-        except httpx.HTTPStatusError as e:
+        except httpx2.HTTPStatusError as e:
             logger.error(f"HTTP error occurred: {e.response.status_code} for {self.url}")
             raise e
         except Exception as e:

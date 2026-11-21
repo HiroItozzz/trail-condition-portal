@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-import httpx
+import httpx2
 import pytest
 from tenacity import wait_none
 
@@ -73,7 +73,7 @@ class TestPipeline:
     async def test_process_source_data_full_flow(self, monkeypatch, mock_api_keys, mock_async_client):
         """パイプラインの全体フロー検証（Gemini クライアント使用）
 
-        - httpx.AsyncClient: mock_async_client でモック化
+        - httpx2.AsyncClient: mock_async_client でモック化
         - LLMクライアント: FakeGeminiClient で ConversationalAi メソッドをモック化
         - リトライ・エラーハンドリングは実装動作を検証
         """
@@ -203,7 +203,7 @@ class TestPipeline:
     @pytest.mark.asyncio
     async def test_http_failure_is_reported_after_retries(self, monkeypatch, mock_api_keys, mock_async_client):
         """HTTP取得が毎回失敗する場合は3回リトライした上で処理エラーになる"""
-        mock_async_client.get.side_effect = httpx.ConnectError("接続失敗")
+        mock_async_client.get.side_effect = httpx2.ConnectError("接続失敗")
         # リトライの待ち時間を0にしてテストを高速化
         monkeypatch.setattr(DataFetcher.fetch_html.retry, "wait", wait_none())
 

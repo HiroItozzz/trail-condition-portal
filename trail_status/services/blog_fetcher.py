@@ -8,7 +8,7 @@ from pathlib import Path
 
 import feedparser
 from feedparser import FeedParserDict
-from httpx import AsyncClient, HTTPStatusError
+from httpx2 import AsyncClient, HTTPStatusError
 from pydantic import BaseModel, Field, model_validator
 
 logger = logging.getLogger(__name__)

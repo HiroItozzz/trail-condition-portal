@@ -2,7 +2,8 @@ import asyncio
 import logging
 from typing import Callable
 
-import httpx
+import httpx2
+
 from .fetcher import DataFetcher
 from .llm_client import ConversationalAi, LlmConfig
 from .llm_stats import LlmStats
@@ -32,7 +33,7 @@ class AiPipeline:
             f"パイプライン処理開始 - 対象: {len(self.source_data_list)}件, モデル: {self.ai_model or 'デフォルト'}"
         )
 
-        async with httpx.AsyncClient() as client:
+        async with httpx2.AsyncClient() as client:
             tasks = []
             for source_data in self.source_data_list:
                 # コア処理
@@ -46,7 +47,7 @@ class AiPipeline:
 
     # コア処理
     async def process_single_source_data(
-        self, client: httpx.AsyncClient, source_data: SourceSchemaSingle
+        self, client: httpx2.AsyncClient, source_data: SourceSchemaSingle
     ) -> ResultSingle:
         """単一ソースデータの処理パイプライン（純粋async）"""
         logger.debug(f"処理開始: {source_data.name} (ID: {source_data.id})")

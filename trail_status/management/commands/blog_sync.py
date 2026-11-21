@@ -3,7 +3,7 @@ import logging
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from httpx import AsyncClient
+from httpx2 import AsyncClient
 
 from trail_status.models import BlogFeed, DataSource
 from trail_status.services.blog_fetcher import BlogFeedSchema, BlogFetcher

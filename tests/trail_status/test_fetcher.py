@@ -1,6 +1,6 @@
 from unittest.mock import AsyncMock, MagicMock
 
-import httpx
+import httpx2
 import pytest
 
 from trail_status.services.fetcher import DataFetcher
@@ -19,8 +19,8 @@ class TestFetcher(SetUp):
         "side_effect,expected,call_count",
         [
             (
-                httpx.HTTPStatusError("ネットワークエラー", request=MagicMock(), response=MagicMock()),
-                httpx.HTTPStatusError,
+                httpx2.HTTPStatusError("ネットワークエラー", request=MagicMock(), response=MagicMock()),
+                httpx2.HTTPStatusError,
                 3,
             ),
             (Exception, Exception, 1),
